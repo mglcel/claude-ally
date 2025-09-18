@@ -618,6 +618,95 @@ read_with_default() {
     handle_suggestion "text" "$prompt" "$default" "$variable_name"
 }
 
+# Enhanced function for text input with direct suggestion display
+read_with_suggestion() {
+    local prompt="$1"
+    local suggestion="$2"
+    local variable_name="$3"
+
+    echo ""
+    if [[ -n "$suggestion" ]]; then
+        echo -e "${CYAN}🤖 Claude suggests: ${BOLD}$suggestion${NC}"
+        echo ""
+        local default_prompt="$prompt [default: $suggestion]"
+        read -p "$default_prompt: " user_input
+
+        if [[ -z "$user_input" ]]; then
+            eval "$variable_name=\"$suggestion\""
+            echo -e "${GREEN}✅ Using Claude's suggestion: $suggestion${NC}"
+        else
+            eval "$variable_name=\"$user_input\""
+            echo -e "${GREEN}✅ Using custom value: $user_input${NC}"
+        fi
+    else
+        read -p "$prompt: " user_input
+        eval "$variable_name=\"$user_input\""
+        echo -e "${GREEN}✅ Using value: $user_input${NC}"
+    fi
+}
+
+# Helper function to show database options with optional suggestion highlighting
+show_database_options() {
+    local var_name="${1:-DB_CHOICE}"
+    local suggested_choice="${2:-}"
+
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo -e "${BOLD}Available Database Technologies:${NC}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    # Display options with suggestion highlighting
+    for i in {1..8}; do
+        local option_text=""
+        case $i in
+            1) option_text="PostgreSQL" ;;
+            2) option_text="MySQL" ;;
+            3) option_text="MongoDB" ;;
+            4) option_text="SQLite" ;;
+            5) option_text="Redis" ;;
+            6) option_text="Multiple databases" ;;
+            7) option_text="No database" ;;
+            8) option_text="Other" ;;
+        esac
+
+        if [[ "$i" == "$suggested_choice" ]]; then
+            echo -e "${GREEN}${BOLD}$i.${NC} ${BOLD}$option_text${NC} ${CYAN}🤖 (Claude's suggestion)${NC}"
+        else
+            echo -e "${CYAN}$i.${NC} $option_text"
+        fi
+    done
+
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+
+    local choice
+    local default_prompt="Select database (1-8)"
+    if [[ -n "$suggested_choice" ]]; then
+        default_prompt="Select database (1-8) [default: $suggested_choice]"
+    fi
+
+    while true; do
+        read -p "$default_prompt: " choice
+
+        # Use suggested choice as default if no input and suggestion exists
+        if [[ -z "$choice" && -n "$suggested_choice" ]]; then
+            choice="$suggested_choice"
+        fi
+
+        if [[ "$choice" =~ ^[1-8]$ ]]; then
+            eval "$var_name=\"$choice\""
+            if [[ "$choice" == "$suggested_choice" ]]; then
+                echo -e "${GREEN}✅ Selected: $choice (Claude's suggestion)${NC}"
+            else
+                echo -e "${GREEN}✅ Selected: $choice${NC}"
+            fi
+            break
+        else
+            echo -e "${RED}Invalid choice. Please enter a number between 1-8.${NC}"
+        fi
+    done
+}
+
 # Helper function to show project type options with optional suggestion highlighting
 show_project_type_options() {
     local var_name="${1:-PROJECT_TYPE_CHOICE}"
@@ -687,7 +776,7 @@ get_project_info() {
     echo -e "${BLUE}📋 PROJECT INFORMATION${NC}"
     echo "------------------------------"
 
-    read_with_default "Project name:" "$PROJECT_NAME_SUGGESTION" "PROJECT_NAME"
+    read_with_suggestion "Project name" "$PROJECT_NAME_SUGGESTION" "PROJECT_NAME"
 
     # Project type selection - show options with Claude's suggestion highlighted
 
@@ -726,18 +815,9 @@ get_project_info() {
         *) PROJECT_TYPE="web-app" ;;
     esac
 
-    read_with_default "Tech stack (e.g., 'Java/Spring Boot, React, PostgreSQL'):" "$TECH_STACK_SUGGESTION" "TECH_STACK"
+    read_with_suggestion "Tech stack (e.g., 'Java/Spring Boot, React, PostgreSQL')" "$TECH_STACK_SUGGESTION" "TECH_STACK"
 
-    echo ""
-    echo "Database technology:"
-    echo "1. PostgreSQL"
-    echo "2. MySQL"
-    echo "3. MongoDB"
-    echo "4. SQLite"
-    echo "5. Redis"
-    echo "6. Multiple databases"
-    echo "7. No database"
-    echo "8. Other"
+    # Database technology selection - show options with Claude's suggestion highlighted
 
     # Map Claude suggestion to choice number
     local suggested_db_choice=""
@@ -752,15 +832,8 @@ get_project_info() {
         *) suggested_db_choice="" ;;
     esac
 
-    if [[ -n "$suggested_db_choice" ]]; then
-        echo -e "${CYAN}🤖 Claude suggests: ${BOLD}$suggested_db_choice ($DATABASE_TECH_SUGGESTION)${NC}"
-        read -p "Select database (1-8) [Press Enter for suggestion]: " DB_CHOICE
-        if [[ -z "$DB_CHOICE" ]]; then
-            DB_CHOICE="$suggested_db_choice"
-        fi
-    else
-        read -p "Select database (1-8): " DB_CHOICE
-    fi
+    # Show options directly with suggestion highlighted
+    show_database_options "DB_CHOICE" "$suggested_db_choice"
 
     case $DB_CHOICE in
         1) DATABASE_TECH="PostgreSQL" ;;
@@ -780,7 +853,7 @@ get_security_info() {
     echo -e "${BLUE}🔒 SECURITY & COMPLIANCE${NC}"
     echo "------------------------------"
 
-    read_with_default "Most critical assets (e.g., 'user data, payment info, API keys'):" "$CRITICAL_ASSETS_SUGGESTION" "CRITICAL_ASSETS"
+    read_with_suggestion "Most critical assets (e.g., 'user data, payment info, API keys')" "$CRITICAL_ASSETS_SUGGESTION" "CRITICAL_ASSETS"
 
     echo ""
     echo "Compliance requirements:"
@@ -832,9 +905,9 @@ get_technical_info() {
     echo -e "${BLUE}⚙️ TECHNICAL DETAILS${NC}"
     echo "------------------------------"
 
-    read_with_default "Common issues you face (e.g., 'performance bottlenecks, memory leaks'):" "$COMMON_ISSUES_SUGGESTION" "COMMON_ISSUES"
+    read_with_suggestion "Common issues you face (e.g., 'performance bottlenecks, memory leaks')" "$COMMON_ISSUES_SUGGESTION" "COMMON_ISSUES"
 
-    read_with_default "File structure overview (e.g., 'src/main/java, gradle build'):" "$FILE_STRUCTURE_SUGGESTION" "FILE_STRUCTURE"
+    read_with_suggestion "File structure overview (e.g., 'src/main/java, gradle build')" "$FILE_STRUCTURE_SUGGESTION" "FILE_STRUCTURE"
 
     echo ""
     echo "Deployment target:"
