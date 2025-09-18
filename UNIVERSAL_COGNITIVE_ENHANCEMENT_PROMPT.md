@@ -469,7 +469,7 @@ Critical_Patterns:
 ## (Fill in the [bracketed] sections with your project details first)
 
 ## **PROJECT CONTEXT TO FILL**
-```
+
 PROJECT_NAME: [Your project name]
 PROJECT_TYPE: [web-app/mobile-app/desktop-app/backend-service/data-pipeline/embedded-system]
 TECH_STACK: [Languages and frameworks - e.g., "Java/Spring, Kotlin/Android, Go/Gin, Python/Django, Rust/Actix"]
@@ -479,7 +479,6 @@ MANDATORY_REQUIREMENTS: [Non-negotiable requirements - e.g., "GDPR compliance", 
 COMMON_ISSUES: [Recurring problems - e.g., "memory leaks", "concurrency bugs", "performance bottlenecks", "deployment issues"]
 FILE_STRUCTURE: [Brief overview - e.g., "src/main/java, gradle build, Docker containers"]
 DEPLOYMENT_TARGET: [Where it runs - e.g., "cloud containers", "mobile devices", "desktop OS", "embedded hardware"]
-```
 
 ## **SYSTEM COMPONENTS TO IMPLEMENT**
 
