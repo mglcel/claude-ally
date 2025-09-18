@@ -75,7 +75,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# Note: excluding lib64/ but NOT lib/ since we have a lib/ directory for shell modules
 lib64/
 parts/
 sdist/
