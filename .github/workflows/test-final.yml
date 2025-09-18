@@ -1,0 +1,102 @@
+name: 🧪 Final Test Suite
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Type of tests to run'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - validate
+
+jobs:
+  # System validation only
+  validate:
+    name: 🔍 Final Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Test our fixed validation logic
+        run: |
+          echo "🔍 Testing claude-ally project structure validation..."
+          echo ""
+
+          # Test the EXACT logic that should work
+          required_files=(
+            "claude-ally.sh"
+            "setup.sh"
+            "lib/stack-detector.sh"
+            "lib/progress-indicator.sh"
+            "lib/error-handler.sh"
+            "contribute-stack.sh"
+            "README.md"
+          )
+
+          echo "Checking required files:"
+          for file in "${required_files[@]}"; do
+            if [[ -f "$file" ]]; then
+              echo "✅ $file found"
+            else
+              echo "❌ $file missing"
+              echo "Current directory contents:"
+              ls -la
+              echo "Lib directory contents:"
+              ls -la lib/ || echo "lib directory not found"
+              exit 1
+            fi
+          done
+
+          echo ""
+          echo "Checking required directories:"
+          required_dirs=("tests" "stacks" "lib")
+          for dir in "${required_dirs[@]}"; do
+            if [[ -d "$dir" ]]; then
+              echo "✅ $dir/ directory found"
+            else
+              echo "❌ $dir/ directory missing"
+              echo "Available directories:"
+              ls -la
+              exit 1
+            fi
+          done
+
+          echo ""
+          echo "🎉 All validation checks passed!"
+
+      - name: Run claude-ally validation
+        run: |
+          echo "🧪 Running claude-ally system validation..."
+          chmod +x claude-ally.sh
+          ./claude-ally.sh validate
+
+      - name: Run unit tests
+        run: |
+          echo "🧩 Running unit tests..."
+          chmod +x tests/run_all_tests.sh
+          chmod +x tests/unit/test_stack_detector.sh
+          ./tests/run_all_tests.sh unit
+
+  # Results
+  results:
+    name: 📊 Final Results
+    runs-on: ubuntu-latest
+    needs: [validate]
+    if: always()
+
+    steps:
+      - name: Report results
+        run: |
+          echo "📊 Final Test Results"
+          echo "Validation: ${{ needs.validate.result }}"
+
+          if [[ "${{ needs.validate.result }}" == "success" ]]; then
+            echo "🎉 ALL TESTS PASSED! GitHub Actions workflow is now working!"
+          else
+            echo "❌ Tests failed. Check validation job for details."
+            exit 1
+          fi
