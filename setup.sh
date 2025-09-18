@@ -3,8 +3,18 @@
 # Claude Ally Setup Script - Enhanced with Claude Intelligence
 # Generates a customized prompt for creating your project's CLAUDE.md file.
 # Now with Claude-powered repository analysis for intelligent defaults!
+# Version 2.0 - Optimized Performance & Error Handling
 
 set -e
+
+# Load optimization modules
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Source optimization modules if available (fail silently if not present)
+[[ -f "$SCRIPT_DIR/error-handler.sh" ]] && source "$SCRIPT_DIR/error-handler.sh" && setup_error_trapping 2>/dev/null || true
+[[ -f "$SCRIPT_DIR/config-manager.sh" ]] && source "$SCRIPT_DIR/config-manager.sh" 2>/dev/null || true
+[[ -f "$SCRIPT_DIR/cache-manager.sh" ]] && source "$SCRIPT_DIR/cache-manager.sh" 2>/dev/null || true
+[[ -f "$SCRIPT_DIR/performance-monitor.sh" ]] && source "$SCRIPT_DIR/performance-monitor.sh" 2>/dev/null || true
 
 # Colors for output
 RED='\033[0;31m'
@@ -130,7 +140,25 @@ attempt_automatic_claude_analysis() {
     local tech_stack=""
     local database_tech="None"
 
-    if [[ -f "$PROJECT_DIR/package.json" ]]; then
+    # Try modular stack detection first
+    if [[ -f "$SCRIPT_DIR/stack-detector.sh" ]]; then
+        source "$SCRIPT_DIR/stack-detector.sh"
+        local modular_result
+        if modular_result=$(detect_project_stack "$PROJECT_DIR" 2>/dev/null); then
+            local stack_id detected_tech_stack detected_project_type detected_confidence
+            IFS='|' read -r stack_id detected_tech_stack detected_project_type detected_confidence <<< "$modular_result"
+
+            if [[ $detected_confidence -ge 60 ]]; then
+                tech_stack="$detected_tech_stack"
+                project_type="$detected_project_type"
+                confidence="HIGH"
+                echo -e "${GREEN}🧬 Modular detection: $stack_id (confidence: $detected_confidence%)${NC}"
+            fi
+        fi
+    fi
+
+    # Fallback to legacy detection if modular detection didn't find anything
+    if [[ -z "$tech_stack" ]] && [[ -f "$PROJECT_DIR/package.json" ]]; then
         if grep -q '"react"' "$PROJECT_DIR/package.json"; then
             tech_stack="JavaScript/Node.js, React"
             if grep -q '"express"' "$PROJECT_DIR/package.json"; then
@@ -165,7 +193,17 @@ attempt_automatic_claude_analysis() {
 
         confidence="HIGH"
     elif [[ -f "$PROJECT_DIR/requirements.txt" ]] || [[ -f "$PROJECT_DIR/pyproject.toml" ]]; then
-        if grep -q -i "django" "$PROJECT_DIR/requirements.txt" 2>/dev/null || grep -q -i "django" "$PROJECT_DIR/pyproject.toml" 2>/dev/null; then
+        # AI/ML project detection first (highest priority)
+        if grep -q -i "torch\|tensorflow\|sklearn\|transformers\|gradio" "$PROJECT_DIR/requirements.txt" 2>/dev/null || grep -q -i "torch\|tensorflow\|sklearn\|transformers\|gradio" "$PROJECT_DIR/pyproject.toml" 2>/dev/null; then
+            if grep -q -i "torch\|transformers" "$PROJECT_DIR/requirements.txt" 2>/dev/null; then
+                tech_stack="Python/PyTorch, AI/ML"
+            elif grep -q -i "tensorflow" "$PROJECT_DIR/requirements.txt" 2>/dev/null; then
+                tech_stack="Python/TensorFlow, AI/ML"
+            else
+                tech_stack="Python/AI/ML"
+            fi
+            project_type="ai-ml-service"
+        elif grep -q -i "django" "$PROJECT_DIR/requirements.txt" 2>/dev/null || grep -q -i "django" "$PROJECT_DIR/pyproject.toml" 2>/dev/null; then
             tech_stack="Python/Django"
             project_type="web-app"
         elif grep -q -i "flask" "$PROJECT_DIR/requirements.txt" 2>/dev/null || grep -q -i "flask" "$PROJECT_DIR/pyproject.toml" 2>/dev/null; then
@@ -237,6 +275,49 @@ attempt_automatic_claude_analysis() {
         tech_stack="Shell scripting, Markdown, Git"
         project_type="backend-service"
         confidence="HIGH"
+    elif [[ -f "$PROJECT_DIR/build.gradle.kts" ]] || [[ -f "$PROJECT_DIR/build.gradle" ]]; then
+        # Kotlin/Android/Gradle project
+        if grep -q "kotlin.*multiplatform" "$PROJECT_DIR/build.gradle.kts" 2>/dev/null || grep -q "kotlin.*multiplatform" "$PROJECT_DIR/build.gradle" 2>/dev/null; then
+            tech_stack="Kotlin Multiplatform Mobile"
+            project_type="mobile-app"
+        elif grep -q "com.android.application" "$PROJECT_DIR/build.gradle.kts" 2>/dev/null || grep -q "com.android.application" "$PROJECT_DIR/build.gradle" 2>/dev/null; then
+            tech_stack="Kotlin/Android"
+            project_type="mobile-app"
+        elif grep -q "jetbrainsCompose" "$PROJECT_DIR/build.gradle.kts" 2>/dev/null; then
+            tech_stack="Kotlin/Compose Multiplatform"
+            project_type="mobile-app"
+        elif grep -q "spring" "$PROJECT_DIR/build.gradle.kts" 2>/dev/null || grep -q "spring" "$PROJECT_DIR/build.gradle" 2>/dev/null; then
+            tech_stack="Kotlin/Spring"
+            project_type="backend-service"
+        else
+            tech_stack="Kotlin/Gradle"
+            project_type="backend-service"
+        fi
+        confidence="HIGH"
+    elif [[ -f "$PROJECT_DIR/settings.gradle.kts" ]] && [[ -d "$PROJECT_DIR/composeApp" ]]; then
+        # Definitely a Compose Multiplatform project
+        tech_stack="Kotlin Multiplatform Mobile, Compose"
+        project_type="mobile-app"
+        confidence="HIGH"
+    elif [[ -f "$PROJECT_DIR/config.xml" ]] && [[ -f "$PROJECT_DIR/package.json" ]]; then
+        # Cordova hybrid mobile app
+        if grep -q "cordova-" "$PROJECT_DIR/package.json"; then
+            if grep -q "mapbox\|leaflet" "$PROJECT_DIR/package.json"; then
+                tech_stack="JavaScript/Cordova, Maps"
+            else
+                tech_stack="JavaScript/Cordova"
+            fi
+            project_type="cordova-hybrid-app"
+            confidence="HIGH"
+        fi
+    elif [[ -f "$PROJECT_DIR/index.html" ]] && [[ ! -f "$PROJECT_DIR/package.json" ]] && [[ ! -f "$PROJECT_DIR/requirements.txt" ]] && [[ ! -f "$PROJECT_DIR/composer.json" ]]; then
+        # Static website - only HTML files, no backend framework
+        tech_stack="HTML, CSS, JavaScript"
+        project_type="static-website"
+        if [[ "$project_name" == *"deprecated"* ]] || [[ "$project_name" == *"legacy"* ]]; then
+            project_type="legacy-website"
+        fi
+        confidence="HIGH"
     fi
 
     # Analyze critical assets
@@ -257,6 +338,14 @@ attempt_automatic_claude_analysis() {
         common_issues="dependency version conflicts, memory usage"
     elif [[ "$tech_stack" == *"Go"* ]]; then
         common_issues="concurrency management, error handling"
+    elif [[ "$tech_stack" == *"Kotlin"* ]]; then
+        if [[ "$tech_stack" == *"Multiplatform"* ]]; then
+            common_issues="platform-specific code compilation, shared code compatibility"
+        elif [[ "$tech_stack" == *"Android"* ]]; then
+            common_issues="memory leaks, ANR issues, fragmentation"
+        else
+            common_issues="coroutine management, null safety, compilation time"
+        fi
     elif [[ "$project_name" == *"claude-ally"* ]]; then
         common_issues="prompt customization complexity, setup time"
     fi
@@ -269,6 +358,18 @@ attempt_automatic_claude_analysis() {
     if [[ -f "$PROJECT_DIR/package.json" ]]; then
         file_structure="$file_structure, npm package"
     fi
+    if [[ -f "$PROJECT_DIR/build.gradle.kts" ]] || [[ -f "$PROJECT_DIR/build.gradle" ]]; then
+        file_structure="Gradle build system"
+        if [[ -d "$PROJECT_DIR/composeApp" ]]; then
+            file_structure="$file_structure, Compose Multiplatform modules"
+        fi
+        if [[ -d "$PROJECT_DIR/shared" ]]; then
+            file_structure="$file_structure, shared code modules"
+        fi
+        if [[ -d "$PROJECT_DIR/iosApp" ]]; then
+            file_structure="$file_structure, iOS app module"
+        fi
+    fi
     if [[ -f "$PROJECT_DIR/Dockerfile" ]]; then
         file_structure="$file_structure, Docker containers"
     fi
@@ -278,10 +379,14 @@ attempt_automatic_claude_analysis() {
 
     # Determine deployment target
     local deployment_target="cloud containers"
-    if [[ -f "$PROJECT_DIR/Dockerfile" ]]; then
+    if [[ "$project_type" == "mobile-app" ]]; then
+        if [[ "$tech_stack" == *"Multiplatform"* ]]; then
+            deployment_target="mobile devices, multiple platforms"
+        else
+            deployment_target="mobile devices"
+        fi
+    elif [[ -f "$PROJECT_DIR/Dockerfile" ]]; then
         deployment_target="cloud containers"
-    elif [[ "$project_type" == "mobile-app" ]]; then
-        deployment_target="mobile devices"
     elif [[ "$project_name" == *"claude-ally"* ]]; then
         deployment_target="developer workstations"
     fi
@@ -460,7 +565,11 @@ get_project_info() {
     echo "4. Backend service/API"
     echo "5. Data pipeline"
     echo "6. Embedded system"
-    echo "7. Other"
+    echo "7. AI/ML service"
+    echo "8. Static website"
+    echo "9. Cordova hybrid app"
+    echo "10. Legacy website"
+    echo "11. Other"
 
     # Map Claude suggestion to choice number
     local suggested_choice=""
@@ -471,17 +580,21 @@ get_project_info() {
         "backend-service") suggested_choice="4" ;;
         "data-pipeline") suggested_choice="5" ;;
         "embedded-system") suggested_choice="6" ;;
+        "ai-ml-service") suggested_choice="7" ;;
+        "static-website") suggested_choice="8" ;;
+        "cordova-hybrid-app") suggested_choice="9" ;;
+        "legacy-website") suggested_choice="10" ;;
         *) suggested_choice="" ;;
     esac
 
     if [[ -n "$suggested_choice" ]]; then
         echo -e "${CYAN}🤖 Claude suggests: ${BOLD}$suggested_choice ($PROJECT_TYPE_SUGGESTION)${NC}"
-        read -p "Select project type (1-7) [Press Enter for suggestion]: " PROJECT_TYPE_CHOICE
+        read -p "Select project type (1-11) [Press Enter for suggestion]: " PROJECT_TYPE_CHOICE
         if [[ -z "$PROJECT_TYPE_CHOICE" ]]; then
             PROJECT_TYPE_CHOICE="$suggested_choice"
         fi
     else
-        read -p "Select project type (1-7): " PROJECT_TYPE_CHOICE
+        read -p "Select project type (1-11): " PROJECT_TYPE_CHOICE
     fi
 
     case $PROJECT_TYPE_CHOICE in
@@ -491,7 +604,11 @@ get_project_info() {
         4) PROJECT_TYPE="backend-service" ;;
         5) PROJECT_TYPE="data-pipeline" ;;
         6) PROJECT_TYPE="embedded-system" ;;
-        7) read -p "Please specify: " PROJECT_TYPE ;;
+        7) PROJECT_TYPE="ai-ml-service" ;;
+        8) PROJECT_TYPE="static-website" ;;
+        9) PROJECT_TYPE="cordova-hybrid-app" ;;
+        10) PROJECT_TYPE="legacy-website" ;;
+        11) read -p "Please specify: " PROJECT_TYPE ;;
         *) PROJECT_TYPE="web-app" ;;
     esac
 
@@ -1097,6 +1214,14 @@ main() {
         echo "4. Claude will create your CLAUDE.md file and set up the system"
         echo ""
         echo -e "${BOLD}💡 TIP: Use '$SCRIPT_DIR/validate.sh $filename' to check prompt quality${NC}"
+
+        # Check for contribution opportunities
+        echo ""
+        echo -e "${CYAN}🔍 Checking for contribution opportunities...${NC}"
+        if [[ -f "$SCRIPT_DIR/contribute-stack.sh" ]]; then
+            bash "$SCRIPT_DIR/contribute-stack.sh" "$PROJECT_DIR" "$PROJECT_NAME" "$SCRIPT_DIR"
+        fi
+
         echo ""
         echo -e "${GREEN}🚀 Your project will then have the same sophisticated Claude${NC}"
         echo -e "${GREEN}   cognitive enhancement system we built together!${NC}"

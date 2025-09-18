@@ -604,6 +604,47 @@ Embedded_Resource_Patterns (CRITICAL - Resource Constraints):
     - "Communication", "protocol", "serial" → Communication reliability
     - "Safety", "fault tolerance", "watchdog" → Safety-critical validation
 
+AI/ML SERVICE PATTERNS
+AI_ML_Patterns (CRITICAL - Model Performance & Data Security):
+  CRITICAL_AI_ML:
+    - "Model", "training", "inference" → Model performance and accuracy
+    - "Dataset", "preprocessing", "feature" → Data quality and bias validation
+    - "GPU", "CUDA", "memory" → Resource utilization and optimization
+  HIGH_PRIORITY:
+    - "Hyperparameter", "tuning", "optimization" → Model performance tuning
+    - "Privacy", "anonymization", "PII" → Data privacy and security
+    - "Checkpoint", "versioning", "registry" → Model lifecycle management
+
+STATIC WEBSITE PATTERNS
+Static_Web_Patterns (HIGH - Security & Performance):
+  CRITICAL_STATIC:
+    - "XSS", "content security", "sanitization" → Client-side security
+    - "CDN", "caching", "compression" → Performance optimization
+    - "SEO", "accessibility", "viewport" → User experience validation
+  HIGH_PRIORITY:
+    - "Form", "validation", "submission" → Client-side validation
+    - "Analytics", "tracking", "privacy" → User tracking compliance
+
+CORDOVA HYBRID APP PATTERNS
+Cordova_Hybrid_Patterns (HIGH - Cross-Platform & Performance):
+  CRITICAL_CORDOVA:
+    - "Plugin", "native", "bridge" → Native integration security
+    - "Device", "permission", "capability" → Device access validation
+    - "Offline", "storage", "sync" → Data management and synchronization
+  HIGH_PRIORITY:
+    - "Performance", "memory", "battery" → Mobile performance optimization
+    - "Update", "deployment", "versioning" → App lifecycle management
+
+LEGACY WEBSITE PATTERNS
+Legacy_Web_Patterns (CRITICAL - Security & Maintenance):
+  CRITICAL_LEGACY:
+    - "Deprecated", "EOL", "vulnerability" → Security vulnerability assessment
+    - "Migration", "modernization", "compatibility" → Upgrade path analysis
+    - "jQuery", "legacy browser", "polyfill" → Compatibility requirement validation
+  HIGH_PRIORITY:
+    - "Documentation", "knowledge transfer", "maintainability" → Legacy code management
+    - "Performance", "optimization", "refactoring" → Performance improvement analysis
+
 YOUR PROJECT PATTERNS (Replace with your specific technology):
 [Your_Tech_Stack]_Specific_Patterns (PRIORITY_LEVEL):
   CRITICAL_[YOUR_DOMAIN]_ISSUES:

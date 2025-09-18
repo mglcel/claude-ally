@@ -1,0 +1,385 @@
+#!/bin/bash
+# Stack Contribution Feature
+# Helps users contribute new stack detection modules to claude-ally
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
+NC='\033[0m' # No Color
+
+# Cross-platform compatibility
+detect_os() {
+    case "$(uname -s)" in
+        Linux*)     echo "linux";;
+        Darwin*)    echo "macos";;
+        CYGWIN*|MINGW*|MSYS*) echo "windows";;
+        *)          echo "unknown";;
+    esac
+}
+
+# Check if we can call Claude
+check_claude_availability() {
+    if command -v claude &> /dev/null; then
+        return 0
+    elif [[ -f "/usr/local/bin/claude" ]] || [[ -f "/usr/bin/claude" ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# Analyze project using Claude for new stack detection
+analyze_unknown_stack_with_claude() {
+    local project_dir="$1"
+    local project_name="$2"
+
+    echo -e "${CYAN}🤖 Using Claude to analyze unknown stack...${NC}"
+
+    # Create analysis prompt for Claude
+    local analysis_file="/tmp/stack_analysis_$(date +%s).md"
+
+    cat > "$analysis_file" << EOF
+# New Stack Detection Analysis for Claude-Ally
+
+Please analyze this project directory and determine if it represents a technology stack that should be added to claude-ally's detection system.
+
+**Project Directory:** \`$project_dir\`
+**Project Name:** $project_name
+
+## Analysis Request:
+
+1. **Stack Identification**: What is the primary technology stack? (e.g., "Svelte + Tauri", "Flutter Web", "Nuxt.js + Supabase")
+
+2. **Detection Patterns**: What files/patterns would reliably identify this stack?
+   - Configuration files (package.json patterns, specific configs)
+   - Directory structure
+   - Dependencies that are unique indicators
+
+3. **Project Type**: What category does this fit? (web-app, mobile-app, desktop-app, ai-ml-service, etc.)
+
+4. **Critical Patterns**: What are the CRITICAL and HIGH_PRIORITY patterns for this stack that Claude should watch for?
+
+5. **Is this worth adding?**: Should this be added to claude-ally? (YES/NO with reasoning)
+
+## Project Files Analysis:
+$(find "$project_dir" -maxdepth 2 -name "*.json" -o -name "*.toml" -o -name "*.yaml" -o -name "*.yml" -o -name "*.config.*" -o -name "Dockerfile" -o -name "README*" | head -10)
+
+Please provide a structured analysis that I can use to generate a new stack detection module.
+
+Expected format:
+- **STACK_ID**: short-name (e.g., "svelte-tauri")
+- **TECH_STACK**: descriptive name (e.g., "Svelte/Tauri Desktop")
+- **PROJECT_TYPE**: category
+- **CONFIDENCE_PATTERNS**: list of detection patterns
+- **WORTH_ADDING**: YES/NO with reasoning
+- **DETECTION_CODE**: suggested bash detection logic
+EOF
+
+    # Call Claude if available
+    if check_claude_availability; then
+        echo -e "${BLUE}📝 Calling Claude for analysis...${NC}"
+
+        local claude_result
+        if claude_result=$(claude < "$analysis_file" 2>/dev/null); then
+            echo -e "${GREEN}✅ Claude analysis completed${NC}"
+            echo "$claude_result" > "/tmp/claude_stack_analysis_$(date +%s).md"
+            echo "$claude_result"
+            rm -f "$analysis_file"
+            return 0
+        else
+            echo -e "${RED}❌ Failed to call Claude${NC}"
+            rm -f "$analysis_file"
+            return 1
+        fi
+    else
+        echo -e "${YELLOW}⚠️ Claude not available, manual analysis needed${NC}"
+        echo "Analysis prompt saved to: $analysis_file"
+        echo "Please copy this file content to Claude manually and analyze the project."
+        return 1
+    fi
+}
+
+# Generate stack detection module from Claude analysis
+generate_stack_module() {
+    local stack_id="$1"
+    local tech_stack="$2"
+    local project_type="$3"
+    local detection_patterns="$4"
+    local output_dir="$5"
+
+    local module_file="$output_dir/stacks/${stack_id}.sh"
+
+    echo -e "${CYAN}📝 Generating stack module: $module_file${NC}"
+
+    mkdir -p "$output_dir/stacks"
+
+    cat > "$module_file" << EOF
+#!/bin/bash
+# $tech_stack Stack Detection
+# Auto-generated contribution for claude-ally
+
+detect_${stack_id//-/_}() {
+    local project_dir="\$1"
+    local confidence=0
+    local tech_stack="$tech_stack"
+    local project_type="$project_type"
+
+    # TODO: Implement detection logic based on patterns:
+    # $detection_patterns
+
+    # Example detection logic (customize based on analysis):
+    # if [[ -f "\$project_dir/specific-config.json" ]]; then
+    #     confidence=\$((confidence + 40))
+    # fi
+
+    # Minimum confidence threshold
+    if [[ \$confidence -ge 50 ]]; then
+        echo "${stack_id}|\$tech_stack|\$project_type|\$confidence"
+        return 0
+    fi
+
+    return 1
+}
+
+get_${stack_id//-/_}_patterns() {
+    cat << 'EOL'
+${tech_stack^^} PATTERNS
+${tech_stack//-/_}_Patterns (HIGH - Technology Specific):
+  CRITICAL_${tech_stack^^}:
+    - "pattern1" → Description of what to validate
+    - "pattern2" → Description of what to check
+  HIGH_PRIORITY:
+    - "pattern3" → Additional validation needed
+    - "pattern4" → Performance or security check
+EOL
+}
+
+get_${stack_id//-/_}_assets() {
+    echo "technology-specific assets, configuration files, API keys"
+}
+
+get_${stack_id//-/_}_requirements() {
+    echo "technology-specific requirements"
+}
+
+get_${stack_id//-/_}_issues() {
+    echo "common technology-specific issues"
+}
+EOF
+
+    chmod +x "$module_file"
+    echo -e "${GREEN}✅ Module generated: $module_file${NC}"
+    return 0
+}
+
+# Propose pull request contribution
+propose_contribution() {
+    local project_dir="$1"
+    local project_name="$2"
+    local claude_ally_dir="$3"
+
+    echo ""
+    echo -e "${PURPLE}🚀 STACK CONTRIBUTION OPPORTUNITY DETECTED${NC}"
+    echo -e "${BOLD}================================================${NC}"
+    echo ""
+    echo -e "Project: ${BOLD}$project_name${NC}"
+    echo -e "Location: $project_dir"
+    echo ""
+    echo -e "${CYAN}It looks like this project uses a technology stack that isn't yet"
+    echo -e "supported by claude-ally's automatic detection system!${NC}"
+    echo ""
+    echo -e "${YELLOW}Would you like to contribute this stack detection to claude-ally?${NC}"
+    echo -e "This would help other developers using similar technology stacks."
+    echo ""
+
+    local contribute_choice
+    read -p "Contribute to claude-ally? (Y/n): " contribute_choice
+
+    if [[ "$contribute_choice" =~ ^[Nn] ]]; then
+        echo -e "${BLUE}No problem! Continuing with setup...${NC}"
+        return 1
+    fi
+
+    echo ""
+    echo -e "${CYAN}🔍 Analyzing project for contribution...${NC}"
+
+    # Analyze with Claude if available
+    local analysis_result
+    if analyze_unknown_stack_with_claude "$project_dir" "$project_name"; then
+        echo ""
+        echo -e "${GREEN}✅ Stack analysis completed!${NC}"
+        echo ""
+        echo -e "${YELLOW}Based on the analysis, would you like to generate the contribution files?${NC}"
+
+        local generate_choice
+        read -p "Generate contribution files? (Y/n): " generate_choice
+
+        if [[ ! "$generate_choice" =~ ^[Nn] ]]; then
+            # Generate contribution template
+            local contrib_dir="/tmp/claude-ally-contribution-$(date +%s)"
+            mkdir -p "$contrib_dir"
+
+            echo -e "${CYAN}📝 Generating contribution template...${NC}"
+
+            # Create contribution guide
+            cat > "$contrib_dir/CONTRIBUTION_GUIDE.md" << 'EOF'
+# Stack Detection Contribution Guide
+
+Thank you for contributing a new stack detection module to claude-ally!
+
+## Files Generated:
+- `stacks/[stack-name].sh` - Detection module
+- `CONTRIBUTION_GUIDE.md` - This guide
+
+## Next Steps:
+
+1. **Review and customize** the generated detection module
+2. **Test** the detection logic with your project
+3. **Fork** the claude-ally repository on GitHub
+4. **Add** your stack module to the `stacks/` directory
+5. **Update** the README.md with your new stack support
+6. **Create** a pull request with your contribution
+
+## Testing Your Module:
+
+```bash
+# Source your module
+source stacks/your-stack.sh
+
+# Test detection
+detect_your_stack "/path/to/test/project"
+```
+
+## Pull Request Checklist:
+
+- [ ] Detection logic works reliably
+- [ ] Patterns are comprehensive and specific
+- [ ] Module follows the established format
+- [ ] README.md updated with new stack support
+- [ ] Tested with multiple projects of this type
+
+## Contact:
+
+Feel free to open an issue on GitHub if you need help with your contribution!
+EOF
+
+            echo -e "${GREEN}✅ Contribution template created at: $contrib_dir${NC}"
+
+            # Extract contribution details for GitHub PR
+            local stack_info
+            if stack_info=$(echo "$claude_result" | grep -A5 "STACK_ID\|TECH_STACK\|PROJECT_TYPE"); then
+                local stack_id tech_stack project_type
+
+                # Parse Claude's analysis
+                stack_id=$(echo "$claude_result" | grep "STACK_ID" | sed 's/.*STACK_ID.*: *`\([^`]*\)`.*/\1/' | head -1)
+                tech_stack=$(echo "$claude_result" | grep "TECH_STACK" | sed 's/.*TECH_STACK.*: *`\([^`]*\)`.*/\1/' | head -1)
+                project_type=$(echo "$claude_result" | grep "PROJECT_TYPE" | sed 's/.*PROJECT_TYPE.*: *`\([^`]*\)`.*/\1/' | head -1)
+
+                if [[ -n "$stack_id" ]] && [[ -n "$tech_stack" ]]; then
+                    echo ""
+                    echo -e "${PURPLE}🚀 GITHUB INTEGRATION AVAILABLE${NC}"
+                    echo -e "${BOLD}================================${NC}"
+
+                    # Check if GitHub PR script exists
+                    if [[ -f "$claude_ally_dir/github-pr.sh" ]]; then
+                        echo -e "${YELLOW}Would you like to create a pull request directly to the claude-ally GitHub repository?${NC}"
+                        echo -e "${CYAN}This will automatically:${NC}"
+                        echo "  🍴 Fork the repository"
+                        echo "  📥 Clone your fork"
+                        echo "  🔧 Create your stack detection module"
+                        echo "  📤 Push changes"
+                        echo "  🔄 Create pull request"
+                        echo ""
+
+                        local github_pr_choice
+                        read -p "Create GitHub pull request automatically? (Y/n): " github_pr_choice
+
+                        if [[ ! "$github_pr_choice" =~ ^[Nn] ]]; then
+                            echo ""
+                            if bash "$claude_ally_dir/github-pr.sh" "$stack_id" "$tech_stack" "$project_type" "Auto-detected patterns" "$project_dir" "$project_name"; then
+                                echo -e "${GREEN}🎉 Your contribution has been submitted to GitHub!${NC}"
+                                return 0
+                            else
+                                echo -e "${YELLOW}⚠️ Automated GitHub PR failed, providing manual instructions...${NC}"
+                            fi
+                        fi
+                    fi
+                fi
+            fi
+
+            echo ""
+            echo -e "${CYAN}Manual contribution options:${NC}"
+            echo -e "1. Review files in: ${BOLD}$contrib_dir${NC}"
+            echo -e "2. Customize the detection logic for your stack"
+            echo -e "3. Fork claude-ally on GitHub: https://github.com/mglcel/claude-ally/fork"
+            echo -e "4. Submit a pull request with your new stack module"
+            echo ""
+
+            # Open directory if possible
+            local os_type
+            os_type=$(detect_os)
+            case "$os_type" in
+                "macos")
+                    open "$contrib_dir" 2>/dev/null || true
+                    ;;
+                "linux")
+                    xdg-open "$contrib_dir" 2>/dev/null || true
+                    ;;
+                "windows")
+                    explorer "$contrib_dir" 2>/dev/null || true
+                    ;;
+            esac
+
+            return 0
+        fi
+    else
+        echo -e "${YELLOW}⚠️ Automated analysis not available${NC}"
+        echo -e "${CYAN}You can still contribute manually:${NC}"
+        echo ""
+        echo -e "1. Analyze your project's unique technology patterns"
+        echo -e "2. Create a detection module based on the claude-ally format"
+        echo -e "3. Fork the repository and submit a pull request"
+        echo ""
+        echo -e "${BLUE}See existing modules in the stacks/ directory for examples${NC}"
+        return 1
+    fi
+
+    return 1
+}
+
+# Main contribution workflow
+main() {
+    local project_dir="${1:-$(pwd)}"
+    local project_name="${2:-$(basename "$project_dir")}"
+    local claude_ally_dir="${3:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
+
+    echo -e "${CYAN}🔍 Checking for contribution opportunities...${NC}"
+
+    # Source the stack detector
+    source "$claude_ally_dir/stack-detector.sh"
+
+    # Check if this is a known stack
+    if detect_project_stack "$project_dir" > /dev/null; then
+        echo -e "${GREEN}✅ This stack is already supported by claude-ally${NC}"
+        return 1
+    fi
+
+    # Check if this looks like an interesting unknown stack
+    if analyze_unknown_stack "$project_dir" "$project_name" > /dev/null; then
+        propose_contribution "$project_dir" "$project_name" "$claude_ally_dir"
+        return $?
+    else
+        echo -e "${BLUE}ℹ️ No new stack patterns detected for contribution${NC}"
+        return 1
+    fi
+}
+
+# Run if called directly
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$@"
+fi
