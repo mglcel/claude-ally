@@ -618,42 +618,44 @@ read_with_default() {
     handle_suggestion "text" "$prompt" "$default" "$variable_name"
 }
 
+# Helper function to show project type options (global scope)
+show_project_type_options() {
+    local var_name="${1:-PROJECT_TYPE_CHOICE}"
+
+    echo "Select project type:"
+    echo "1. Web application"
+    echo "2. Mobile app"
+    echo "3. Desktop application"
+    echo "4. Backend service/API"
+    echo "5. Data pipeline"
+    echo "6. Embedded system"
+    echo "7. AI/ML service"
+    echo "8. Static website"
+    echo "9. Cordova hybrid app"
+    echo "10. Legacy website"
+    echo "11. Other"
+    echo ""
+
+    local choice
+    while true; do
+        read -p "Select project type (1-11): " choice
+        if [[ "$choice" =~ ^[1-9]$|^1[01]$ ]]; then
+            eval "$var_name=\"$choice\""
+            echo -e "${GREEN}✅ Selected: $choice${NC}"
+            break
+        else
+            echo -e "${RED}Invalid choice. Please enter a number between 1-11.${NC}"
+        fi
+    done
+}
+
 get_project_info() {
     echo -e "${BLUE}📋 PROJECT INFORMATION${NC}"
     echo "------------------------------"
 
     read_with_default "Project name:" "$PROJECT_NAME_SUGGESTION" "PROJECT_NAME"
 
-    # Helper function to show project type options
-    show_project_type_options() {
-        local var_name="${1:-PROJECT_TYPE_CHOICE}"
-
-        echo "Select project type:"
-        echo "1. Web application"
-        echo "2. Mobile app"
-        echo "3. Desktop application"
-        echo "4. Backend service/API"
-        echo "5. Data pipeline"
-        echo "6. Embedded system"
-        echo "7. AI/ML service"
-        echo "8. Static website"
-        echo "9. Cordova hybrid app"
-        echo "10. Legacy website"
-        echo "11. Other"
-        echo ""
-
-        local choice
-        while true; do
-            read -p "Select project type (1-11): " choice
-            if [[ "$choice" =~ ^[1-9]$|^1[01]$ ]]; then
-                eval "$var_name=\"$choice\""
-                echo -e "${GREEN}✅ Selected: $choice${NC}"
-                break
-            else
-                echo -e "${RED}Invalid choice. Please enter a number between 1-11.${NC}"
-            fi
-        done
-    }
+    # Project type selection using global helper function
 
     # Map Claude suggestion to choice number
     local suggested_choice=""
