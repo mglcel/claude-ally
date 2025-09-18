@@ -618,34 +618,64 @@ read_with_default() {
     handle_suggestion "text" "$prompt" "$default" "$variable_name"
 }
 
-# Helper function to show project type options (global scope)
+# Helper function to show project type options with optional suggestion highlighting
 show_project_type_options() {
     local var_name="${1:-PROJECT_TYPE_CHOICE}"
+    local suggested_choice="${2:-}"
 
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo -e "${BOLD}Available Project Types:${NC}"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo -e "${CYAN}1.${NC} Web application"
-    echo -e "${CYAN}2.${NC} Mobile app"
-    echo -e "${CYAN}3.${NC} Desktop application"
-    echo -e "${CYAN}4.${NC} Backend service/API"
-    echo -e "${CYAN}5.${NC} Data pipeline"
-    echo -e "${CYAN}6.${NC} Embedded system"
-    echo -e "${CYAN}7.${NC} AI/ML service"
-    echo -e "${CYAN}8.${NC} Static website"
-    echo -e "${CYAN}9.${NC} Cordova hybrid app"
-    echo -e "${CYAN}10.${NC} Legacy website"
-    echo -e "${CYAN}11.${NC} Other"
+
+    # Display options with suggestion highlighting
+    for i in {1..11}; do
+        local option_text=""
+        case $i in
+            1) option_text="Web application" ;;
+            2) option_text="Mobile app" ;;
+            3) option_text="Desktop application" ;;
+            4) option_text="Backend service/API" ;;
+            5) option_text="Data pipeline" ;;
+            6) option_text="Embedded system" ;;
+            7) option_text="AI/ML service" ;;
+            8) option_text="Static website" ;;
+            9) option_text="Cordova hybrid app" ;;
+            10) option_text="Legacy website" ;;
+            11) option_text="Other" ;;
+        esac
+
+        if [[ "$i" == "$suggested_choice" ]]; then
+            echo -e "${GREEN}${BOLD}$i.${NC} ${BOLD}$option_text${NC} ${CYAN}🤖 (Claude's suggestion)${NC}"
+        else
+            echo -e "${CYAN}$i.${NC} $option_text"
+        fi
+    done
+
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
 
     local choice
+    local default_prompt="Select project type (1-11)"
+    if [[ -n "$suggested_choice" ]]; then
+        default_prompt="Select project type (1-11) [default: $suggested_choice]"
+    fi
+
     while true; do
-        read -p "Select project type (1-11): " choice
+        read -p "$default_prompt: " choice
+
+        # Use suggested choice as default if no input and suggestion exists
+        if [[ -z "$choice" && -n "$suggested_choice" ]]; then
+            choice="$suggested_choice"
+        fi
+
         if [[ "$choice" =~ ^[1-9]$|^1[01]$ ]]; then
             eval "$var_name=\"$choice\""
-            echo -e "${GREEN}✅ Selected: $choice${NC}"
+            if [[ "$choice" == "$suggested_choice" ]]; then
+                echo -e "${GREEN}✅ Selected: $choice (Claude's suggestion)${NC}"
+            else
+                echo -e "${GREEN}✅ Selected: $choice${NC}"
+            fi
             break
         else
             echo -e "${RED}Invalid choice. Please enter a number between 1-11.${NC}"
@@ -659,7 +689,7 @@ get_project_info() {
 
     read_with_default "Project name:" "$PROJECT_NAME_SUGGESTION" "PROJECT_NAME"
 
-    # Project type selection using global helper function
+    # Project type selection - show options with Claude's suggestion highlighted
 
     # Map Claude suggestion to choice number
     local suggested_choice=""
@@ -678,7 +708,8 @@ get_project_info() {
     esac
 
     echo ""
-    handle_suggestion "choice" "Select project type" "$suggested_choice" "PROJECT_TYPE_CHOICE" "show_project_type_options" "^[1-9]$|^1[01]$"
+    # Show options directly with suggestion highlighted
+    show_project_type_options "PROJECT_TYPE_CHOICE" "$suggested_choice"
 
     case $PROJECT_TYPE_CHOICE in
         1) PROJECT_TYPE="web-app" ;;
