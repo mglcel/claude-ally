@@ -41,9 +41,10 @@ load_modules() {
     done
 
     # Setup error trapping if available
-    if declare -f setup_error_trapping > /dev/null; then
-        setup_error_trapping 2>/dev/null || true
-    fi
+    # Temporarily disabled to debug setup issues
+    # if declare -f setup_error_trapping > /dev/null; then
+    #     setup_error_trapping 2>/dev/null || true
+    # fi
 
     # Initialize progress indicators if available
     if declare -f init_progress_config > /dev/null; then
@@ -135,7 +136,7 @@ validate_system() {
     else
         echo "1. Checking core files..."
     fi
-    local core_files=("setup.sh" "stack-detector.sh" "contribute-stack.sh")
+    local core_files=("setup.sh" "lib/stack-detector.sh" "contribute-stack.sh")
     for file in "${core_files[@]}"; do
         if [[ -f "$SCRIPT_DIR/$file" ]]; then
             echo -e "  ✅ $file"
