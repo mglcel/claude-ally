@@ -241,12 +241,8 @@ main() {
     case "$command" in
         "setup")
             if [[ -f "$SCRIPT_DIR/setup.sh" ]]; then
-                # Don't use progress wrapper for setup since it's interactive
-                if declare -f time_operation > /dev/null; then
-                    time_operation "setup" bash "$SCRIPT_DIR/setup.sh" "$@"
-                else
-                    bash "$SCRIPT_DIR/setup.sh" "$@"
-                fi
+                # Don't use time_operation for setup since it's interactive and captures output
+                bash "$SCRIPT_DIR/setup.sh" "$@"
             else
                 if declare -f show_error > /dev/null; then
                     show_error "Setup script not found"
