@@ -532,23 +532,89 @@ parse_claude_suggestions() {
     fi
 }
 
+# Unified function to handle suggestions with user choices
+handle_suggestion() {
+    local suggestion_type="$1"        # "text" or "choice"
+    local prompt="$2"                 # The main prompt text
+    local suggestion="$3"             # Claude's suggestion
+    local variable_name="$4"          # Variable to store result
+    local options_callback="${5:-}"   # Optional function to show options for choice type
+    local validation_pattern="${6:-}" # Optional regex pattern for validation
+
+    if [[ -z "$suggestion" ]]; then
+        # No suggestion available, fall back to direct input
+        if [[ "$suggestion_type" == "choice" && -n "$options_callback" ]]; then
+            $options_callback
+        else
+            while true; do
+                read -p "$prompt: " user_input
+                if [[ -z "$validation_pattern" || "$user_input" =~ $validation_pattern ]]; then
+                    eval "$variable_name=\"$user_input\""
+                    break
+                else
+                    echo -e "${RED}Invalid input. Please try again.${NC}"
+                fi
+            done
+        fi
+        return
+    fi
+
+    # Show Claude's suggestion
+    echo ""
+    echo -e "${CYAN}🤖 Claude suggests: ${BOLD}$suggestion${NC}"
+    echo ""
+    echo "What would you like to do?"
+    echo "  1) Accept Claude's suggestion"
+    if [[ "$suggestion_type" == "choice" ]]; then
+        echo "  2) Choose from all available options"
+    else
+        echo "  2) Enter a custom value"
+    fi
+    echo ""
+
+    local choice
+    while true; do
+        read -p "Choose (1-2): " choice
+        case "$choice" in
+            1|"")
+                eval "$variable_name=\"$suggestion\""
+                echo -e "${GREEN}✅ Using Claude's suggestion: $suggestion${NC}"
+                break
+                ;;
+            2)
+                if [[ "$suggestion_type" == "choice" && -n "$options_callback" ]]; then
+                    # Show all options and get user choice
+                    echo ""
+                    $options_callback
+                else
+                    # Get custom text input
+                    while true; do
+                        read -p "$prompt: " user_input
+                        if [[ -z "$validation_pattern" || "$user_input" =~ $validation_pattern ]]; then
+                            eval "$variable_name=\"$user_input\""
+                            echo -e "${GREEN}✅ Using custom value: $user_input${NC}"
+                            break
+                        else
+                            echo -e "${RED}Invalid input. Please try again.${NC}"
+                        fi
+                    done
+                fi
+                break
+                ;;
+            *)
+                echo -e "${RED}Invalid choice. Please enter 1 or 2.${NC}"
+                ;;
+        esac
+    done
+}
+
+# Simplified function for text input with suggestions
 read_with_default() {
     local prompt="$1"
     local default="$2"
     local variable_name="$3"
 
-    if [[ -n "$default" ]]; then
-        echo -e "${CYAN}🤖 Claude suggests: ${BOLD}$default${NC}"
-        read -p "$prompt [Press Enter for suggestion or type new value]: " user_input
-        if [[ -z "$user_input" ]]; then
-            eval "$variable_name=\"$default\""
-        else
-            eval "$variable_name=\"$user_input\""
-        fi
-    else
-        read -p "$prompt " user_input
-        eval "$variable_name=\"$user_input\""
-    fi
+    handle_suggestion "text" "$prompt" "$default" "$variable_name"
 }
 
 get_project_info() {
@@ -557,19 +623,31 @@ get_project_info() {
 
     read_with_default "Project name:" "$PROJECT_NAME_SUGGESTION" "PROJECT_NAME"
 
-    echo ""
-    echo "Project type:"
-    echo "1. Web application"
-    echo "2. Mobile app"
-    echo "3. Desktop application"
-    echo "4. Backend service/API"
-    echo "5. Data pipeline"
-    echo "6. Embedded system"
-    echo "7. AI/ML service"
-    echo "8. Static website"
-    echo "9. Cordova hybrid app"
-    echo "10. Legacy website"
-    echo "11. Other"
+    # Helper function to show project type options
+    show_project_type_options() {
+        echo "Select project type:"
+        echo "1. Web application"
+        echo "2. Mobile app"
+        echo "3. Desktop application"
+        echo "4. Backend service/API"
+        echo "5. Data pipeline"
+        echo "6. Embedded system"
+        echo "7. AI/ML service"
+        echo "8. Static website"
+        echo "9. Cordova hybrid app"
+        echo "10. Legacy website"
+        echo "11. Other"
+        echo ""
+
+        while true; do
+            read -p "Select project type (1-11): " PROJECT_TYPE_CHOICE
+            if [[ "$PROJECT_TYPE_CHOICE" =~ ^[1-9]$|^1[01]$ ]]; then
+                break
+            else
+                echo -e "${RED}Invalid choice. Please enter a number between 1-11.${NC}"
+            fi
+        done
+    }
 
     # Map Claude suggestion to choice number
     local suggested_choice=""
@@ -587,15 +665,8 @@ get_project_info() {
         *) suggested_choice="" ;;
     esac
 
-    if [[ -n "$suggested_choice" ]]; then
-        echo -e "${CYAN}🤖 Claude suggests: ${BOLD}$suggested_choice ($PROJECT_TYPE_SUGGESTION)${NC}"
-        read -p "Select project type (1-11) [Press Enter for suggestion]: " PROJECT_TYPE_CHOICE
-        if [[ -z "$PROJECT_TYPE_CHOICE" ]]; then
-            PROJECT_TYPE_CHOICE="$suggested_choice"
-        fi
-    else
-        read -p "Select project type (1-11): " PROJECT_TYPE_CHOICE
-    fi
+    echo ""
+    handle_suggestion "choice" "Select project type" "$suggested_choice" "PROJECT_TYPE_CHOICE" "show_project_type_options" "^[1-9]$|^1[01]$"
 
     case $PROJECT_TYPE_CHOICE in
         1) PROJECT_TYPE="web-app" ;;
