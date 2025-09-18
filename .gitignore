@@ -1,0 +1,339 @@
+# Claude-Ally .gitignore
+# Prevents test artifacts and temporary files from polluting user projects
+
+# ================================
+# Test Artifacts & Temporary Files
+# ================================
+
+# Test workspace directories
+/tmp/claude-ally-*
+/tmp/e2e-*
+claude-ally-test-*
+claude-ally-integration-test*
+claude-ally-e2e-*
+
+# Test fixture directories created during testing
+**/claude-ally-test-fixtures/
+**/e2e-workspace/
+
+# Generated test projects and artifacts
+test-nextjs-ai/
+test-react-app/
+test-python-ai/
+test-cordova/
+python-ml/
+cordova-app/
+nextjs-ai-project/
+python-ml-project/
+cordova-mobile-project/
+
+# ================================
+# Node.js & JavaScript Test Artifacts
+# ================================
+
+# Dependencies installed during testing
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Next.js build artifacts
+.next/
+out/
+.vercel
+
+# React/TypeScript test artifacts
+build/
+dist/
+*.tsbuildinfo
+.eslintcache
+
+# ================================
+# Python Test Artifacts
+# ================================
+
+# Python virtual environments created during testing
+venv/
+env/
+.env/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Python cache and build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# PyTorch models and datasets (can be large)
+*.pth
+*.model
+datasets/
+models/*.bin
+
+# ================================
+# Mobile Development Artifacts
+# ================================
+
+# Cordova build artifacts
+platforms/
+plugins/
+www/
+hooks/
+
+# Android
+*.apk
+*.ap_
+*.dex
+local.properties
+
+# iOS
+*.xcodeproj
+*.xcworkspace
+DerivedData/
+*.mobileprovision
+*.ipa
+
+# ================================
+# Language-Specific Artifacts
+# ================================
+
+# Java
+*.class
+*.war
+*.ear
+*.jar
+target/
+.gradle/
+build/
+gradle-app.setting
+!gradle-wrapper.jar
+
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work
+
+# Rust
+target/
+Cargo.lock
+
+# PHP
+vendor/
+composer.lock
+
+# ================================
+# IDE & Editor Files
+# ================================
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# ================================
+# System Files
+# ================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ================================
+# Cache & Configuration
+# ================================
+
+# Claude-ally cache and config
+.claude-ally/
+.claude-ally-*
+claude-ally-cache/
+*.claude-ally.cache
+
+# Performance monitoring data
+performance-*.log
+memory-*.log
+benchmark-*.txt
+
+# ================================
+# Security & Secrets
+# ================================
+
+# Environment files with potential secrets
+.env
+.env.local
+.env.*.local
+.env.test
+.env.production
+
+# SSH keys
+id_rsa
+id_rsa.pub
+*.pem
+*.key
+
+# API keys and tokens
+*.token
+api-keys.txt
+secrets.txt
+
+# ================================
+# Build & Distribution
+# ================================
+
+# Compressed files
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# ================================
+# Test Coverage & Reports
+# ================================
+
+# Coverage reports
+coverage/
+*.lcov
+.nyc_output/
+
+# Test reports
+test-results/
+junit.xml
+coverage.xml
+*.tap
+*.xml
+
+# ================================
+# Documentation Generation
+# ================================
+
+# Generated documentation
+docs/_build/
+site/
+_site/
+
+# ================================
+# Version Control
+# ================================
+
+# Git merge conflicts
+*.orig
+
+# Patch files
+*.patch
+*.diff
+
+# ================================
+# Claude-Ally Specific Exclusions
+# ================================
+
+# Generated prompts during development
+claude_prompt_*.txt
+generated_prompt_*.md
+
+# Stack contribution drafts
+contribution_draft_*.md
+stack_analysis_*.json
+
+# Performance benchmarks
+benchmark_results_*.log
+performance_report_*.json
+
+# Development testing
+dev-test-*/
+scratch/
+playground/
