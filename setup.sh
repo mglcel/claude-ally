@@ -52,8 +52,8 @@ detect_directories() {
         echo -e "${YELLOW}⚠️  You're running this script from the claude-ally directory itself.${NC}"
         echo "This will analyze the claude-ally project instead of your project."
         echo ""
-        read -p "Do you want to continue analyzing claude-ally? (y/N): " ANALYZE_SELF
-        if [[ ! "$ANALYZE_SELF" =~ ^[Yy]$ ]]; then
+        read -p "Do you want to continue analyzing claude-ally? (Y/n): " ANALYZE_SELF
+        if [[ "$ANALYZE_SELF" =~ ^[Nn]$ ]]; then
             echo -e "${CYAN}💡 TIP: Run this script from your project directory:${NC}"
             echo "   cd /path/to/your/project"
             echo "   $SCRIPT_DIR/setup.sh"
