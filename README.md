@@ -9,7 +9,7 @@
 1. **Download**: Get `UNIVERSAL_COGNITIVE_ENHANCEMENT_PROMPT.md` from this repository
 2. **Choose Template**: Find your tech stack in the copy-paste templates section
 3. **Customize**: Fill in `[bracketed]` sections with your project details
-4. **Apply**: Copy the prompt section and paste to a new Claude conversation
+4. **Copy-Paste**: Look for the `🤖 COPY THIS PROMPT TO CLAUDE` section - everything in the code block
 5. **Test**: Ask Claude "Help me add user authentication" and watch the magic happen
 
 **Expected Result**: Claude will immediately provide security analysis, best practices, and implementation specific to your tech stack.

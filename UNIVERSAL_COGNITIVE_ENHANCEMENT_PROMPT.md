@@ -462,9 +462,11 @@ Critical_Patterns:
 ---
 
 # 🤖 **COPY THIS PROMPT TO CLAUDE**
-## (Fill in the [bracketed] sections with your project details first)
 
----
+**Copy everything from the line below until "END OF PROMPT TO COPY" and paste it to a new Claude conversation:**
+
+```
+## (Fill in the [bracketed] sections with your project details first)
 
 ## **PROJECT CONTEXT TO FILL**
 ```
@@ -971,8 +973,7 @@ Context_Awareness_Problems:
 3. **Ready signal** that I'm waiting for your first task
 
 **If I don't acknowledge the setup or respond generically, the prompt may not have worked properly.**
-
----
+```
 
 # 🛠️ **END OF PROMPT TO COPY**
 
