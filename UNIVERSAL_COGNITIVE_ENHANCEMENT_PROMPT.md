@@ -743,12 +743,43 @@ LOW_CONFIDENCE_Learning:
 
 ---
 
-**⚡ IMPORTANT: After you paste this prompt, I (Claude) should respond with:**
-1. **Confirmation** that I understand your project domain and tech stack
-2. **Summary** of the key patterns I'll be watching for
-3. **Ready signal** that I'm waiting for your first task
+## **IMPLEMENTATION REQUIREMENTS - MANDATORY FIRST STEPS**
 
-**If I don't acknowledge the setup or respond generically, the prompt may not have worked properly.**
+**⚡ CRITICAL: After confirming this setup, you MUST immediately:**
+
+### **STEP 1: Create CLAUDE.md File**
+Create a `CLAUDE.md` file in the project root with the complete cognitive enhancement system configured for this specific project. Include:
+- All the patterns above, customized with the actual [PROJECT_NAME], [TECH_STACK], etc.
+- The learning protocol for continuous improvement
+- Project-specific security and compatibility requirements
+- Clear documentation for future Claude conversations
+
+### **STEP 2: Implement Learning System**
+Set up the proactive learning protocol by:
+- Adding the confidence-based learning assessment system
+- Creating a system for documenting pattern improvements
+- Establishing the HIGH/MEDIUM/LOW confidence criteria
+- Setting up the mechanism for CLAUDE.md updates based on learning
+
+### **STEP 3: Validate System Setup**
+Confirm the cognitive enhancement system is working by:
+- Testing pattern recognition with a sample task
+- Verifying security analysis triggers correctly
+- Checking that tech stack expertise is active
+- Ensuring the learning protocol responds to task outcomes
+
+**ONLY AFTER completing these implementation steps should you signal readiness for development tasks.**
+
+---
+
+**⚡ EXPECTED RESPONSE: After you paste this prompt, I (Claude) should:**
+1. **Confirm** understanding of your project domain and tech stack
+2. **Immediately create** the CLAUDE.md file with your customized system
+3. **Implement** the learning protocol for continuous improvement
+4. **Validate** the system setup with a test
+5. **Signal readiness** for your first development task
+
+**If I don't create the CLAUDE.md file and implement the system, the prompt setup is incomplete.**
 ```
 
 # 🛠️ **END OF PROMPT TO COPY**
