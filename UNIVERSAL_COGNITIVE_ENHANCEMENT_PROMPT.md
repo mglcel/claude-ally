@@ -486,7 +486,6 @@ DEPLOYMENT_TARGET: [Where it runs - e.g., "cloud containers", "mobile devices", 
 
 Create project-specific mindset triggers:
 
-```yaml
 Critical_Priority_Areas:
   - [Asset 1]: [Protection requirements]
   - [Asset 2]: [Compatibility requirements]
@@ -496,147 +495,55 @@ Mandatory_Validation_Rules:
   - [Rule 1]: [When this applies]
   - [Rule 2]: [Validation method]
   - [Rule 3]: [Required checks]
-```
 
 ### **2. PRIORITY-BASED PATTERN MATCHING**
 
 **Processing Order: CRITICAL → HIGH → MEDIUM → NORMAL**
 
-# TECHNOLOGY-AGNOSTIC EXAMPLES (Adapt to Your Stack):
+**CRITICAL (Immediate Analysis Required):**
 
-## **UNIVERSAL SECURITY PATTERNS (CRITICAL - Always First)**
+Security_Critical_Patterns:
+  - "Authentication", "authorization", "login", "password", "token", "session" → Security analysis required
+  - "SQL", "database", "query", "injection" → Database security validation
+  - "upload", "file", "input", "form" → Input validation and security check
+  - "API key", "secret", "credential", "config" → Credential security analysis
+  - "[CRITICAL_ASSETS]" → Enhanced protection protocols
 
-Security_Patterns (CRITICAL - Always First):
-  CRITICAL_ALERTS:
-    # Credential Exposure (All Languages)
-    - "password", "secret", "api_key", "private_key", "token" in source code → CREDENTIAL EXPOSURE - Immediate removal required
-    - "hardcoded", "TODO: change", "temp password" → SECURITY VULNERABILITY - Immediate fix required
+Data_Integrity_Critical:
+  - "[CRITICAL_ASSETS]" operations → Data validation and backup verification
+  - "migration", "schema", "ALTER TABLE" → Database integrity validation
+  - "delete", "DROP", "truncate" → Data loss prevention analysis
 
-    # Code Injection Risks (Language-Specific Examples)
-    - Java: "Runtime.exec(", "ProcessBuilder(" with user input → CODE INJECTION RISK
-    - Python: "eval(", "exec(", "os.system(" with user input → CODE INJECTION RISK
-    - JavaScript: "eval(", "Function(", "setTimeout(" with user input → CODE INJECTION RISK
-    - Go: "exec.Command(", "os.system(" with user input → CODE INJECTION RISK
-    - C/C++: "system(", "strcpy(", "sprintf(" → BUFFER OVERFLOW RISK
+**HIGH (Enhanced Analysis):**
 
-    # Data Access Without Authorization
-    - "SELECT * FROM", "db.collection.find({})", "query.all()" → FULL DATA SCAN ALERT
-    - Database queries without WHERE clauses or pagination → POTENTIAL DATA LEAK
+[TECH_STACK]_Specific_Patterns:
+  - [Your framework patterns] → [Framework-specific validations]
+  - [Your database patterns] → [Database-specific checks]
+  - [Your language patterns] → [Language-specific best practices]
 
-  HIGH_PRIORITY:
-    # Authentication & Authorization
-    - "authentication", "login", "authorize", "permission" → Auth flow changes - Security analysis
-    - "admin", "root", "superuser", "elevated" → Privilege escalation - Authorization check
+Performance_Critical:
+  - "[COMMON_ISSUES]" → Performance impact analysis required
+  - "loop", "recursive", "async", "parallel" → Performance and resource analysis
+  - "[DEPLOYMENT_TARGET]" constraints → Platform-specific optimization
 
-    # Input Validation
-    - User input handling without validation → Input sanitization required
-    - File upload functionality → Security and validation analysis
-    - External API calls without rate limiting → DoS protection needed
+**MEDIUM (Standard Analysis):**
 
-## **TECHNOLOGY STACK COMPATIBILITY PATTERNS**
+Compatibility_Validation:
+  - "[MANDATORY_REQUIREMENTS]" → Compliance verification
+  - "dependency", "import", "package" → Compatibility impact analysis
+  - "version", "upgrade", "migration" → Version compatibility check
 
-### **WEB APPLICATIONS (PHP/Node.js/Python/Java Web)**
-Web_Compatibility_Patterns (HIGH):
-  CRITICAL_WEB_ISSUES:
-    - Database-specific syntax differences (MySQL vs PostgreSQL vs SQLite)
-    - Cross-browser compatibility (Chrome, Firefox, Safari, Edge)
-    - "XSS", "CSRF", "session hijacking" → Web security vulnerabilities
-  HTTP_PATTERNS:
-    - "/api/", "REST endpoint", "GraphQL" → API security and validation
-    - "cookie", "session", "localStorage" → Client-side security analysis
+**NORMAL (Background Analysis):**
 
-### **MOBILE APPLICATIONS (Android/iOS/React Native/Flutter)**
-Mobile_Compatibility_Patterns (HIGH):
-  CRITICAL_MOBILE_ISSUES:
-    - Platform differences (Android API levels, iOS versions)
-    - "platform-specific", "native code", "bridge" → Cross-platform compatibility
-    - Memory management on mobile devices → Performance analysis
-    - Background processing limitations → Battery and performance optimization
-  MOBILE_SECURITY:
-    - "keystore", "secure storage", "biometric" → Mobile security patterns
-    - App permissions and privacy → Security compliance check
-
-### **BACKEND SERVICES (Java/Go/Rust/Python)**
-Backend_Compatibility_Patterns (HIGH):
-  CRITICAL_BACKEND_ISSUES:
-    - Concurrency and threading issues → Race condition analysis
-    - "goroutine", "thread", "async", "concurrent" → Concurrency safety check
-    - Memory leaks and resource cleanup → Resource management analysis
-    - Database connection pooling → Performance and reliability
-  MICROSERVICE_PATTERNS:
-    - Service-to-service communication → Network reliability and security
-    - "distributed", "microservice", "service mesh" → Distributed system complexity
-
-### **DESKTOP APPLICATIONS (Java/C#/.NET/Electron/Qt)**
-Desktop_Compatibility_Patterns (HIGH):
-  CRITICAL_DESKTOP_ISSUES:
-    - OS-specific code (Windows/macOS/Linux) → Cross-platform compatibility
-    - File system access and permissions → Security and compatibility
-    - "native", "JNI", "P/Invoke", "FFI" → Native code integration risks
-  DESKTOP_SECURITY:
-    - Privilege escalation and file system access → Security analysis
-    - Auto-update mechanisms → Security and integrity validation
-
-### **DATA PROCESSING (Python/Scala/Java/Go)**
-Data_Processing_Patterns (HIGH):
-  CRITICAL_DATA_ISSUES:
-    - Large dataset processing → Memory and performance optimization
-    - "pipeline", "ETL", "stream processing" → Data integrity and reliability
-    - Data format compatibility → Schema evolution and versioning
-  DATA_SECURITY:
-    - PII data handling → Privacy and compliance analysis
-    - Data encryption and masking → Security requirement validation
-
-## **UNIVERSAL FILE TYPE PATTERNS**
-
-FileType_Patterns (MEDIUM - Context-Specific Analysis):
-  SOURCE_CODE_FILES:
-    # Java/Kotlin
-    - "*.java", "*.kt" → Memory management, null safety, concurrency analysis
-    - "pom.xml", "build.gradle" → Dependency security and version compatibility
-
-    # Python
-    - "*.py" → Type safety, async/await patterns, package security
-    - "requirements.txt", "pyproject.toml" → Dependency and version management
-
-    # Go
-    - "*.go" → Goroutine safety, error handling, module dependencies
-    - "go.mod", "go.sum" → Module security and version compatibility
-
-    # JavaScript/TypeScript
-    - "*.js", "*.ts" → Type safety, async patterns, bundle security
-    - "package.json", "yarn.lock" → Dependency security and vulnerability scanning
-
-    # Rust
-    - "*.rs" → Memory safety, ownership, concurrency patterns
-    - "Cargo.toml", "Cargo.lock" → Dependency security and compatibility
-
-    # C/C++
-    - "*.c", "*.cpp", "*.h" → Memory safety, buffer overflows, resource management
-    - "CMakeLists.txt", "Makefile" → Build security and dependency management
-
-  CONFIG_FILES:
-    - "*.json", "*.yaml", "*.toml", "*.properties" → Configuration security and validation
-    - "Dockerfile", "docker-compose.yml" → Container security and best practices
-    - "*.env", "config.*" → Secrets management and environment security
-
-  BUILD_AND_DEPLOYMENT:
-    - "CI/CD", "pipeline", "deploy" → Deployment security and automation
-    - "*.dockerfile", "k8s", "helm" → Infrastructure security and configuration
-
-# YOUR PROJECT PATTERNS (Replace with your specific technology):
-[Your_Tech_Stack]_Specific_Patterns (PRIORITY_LEVEL):
-  CRITICAL_[YOUR_DOMAIN]_ISSUES:
-    - "[Your critical pattern 1]" → [Your required validation]
-    - "[Your compatibility concern]" → [Your check approach]
-    - "[Your security pattern]" → [Your protection method]
-```
+Code_Quality_Patterns:
+  - "TODO", "FIXME", "HACK" → Code quality improvement suggestions
+  - "test", "spec", "mock" → Testing approach recommendations
+  - "documentation", "comment" → Documentation enhancement suggestions
 
 ### **3. UNIVERSAL APPLICATION PATTERNS**
 
 Choose the pattern set that matches your PROJECT_TYPE:
 
-```yaml
 ## **WEB APPLICATION PATTERNS**
 Web_Route_Patterns (HIGH - Security & Functionality):
   CRITICAL_ROUTES:
@@ -648,106 +555,143 @@ Web_Route_Patterns (HIGH - Security & Functionality):
     - Payment/transaction endpoints → Security and compliance validation
 
 ## **MOBILE APPLICATION PATTERNS**
-Mobile_Component_Patterns (HIGH - Platform & Performance):
-  CRITICAL_COMPONENTS:
-    - Native bridge code → Platform compatibility and security
-    - Data persistence → Local storage security and performance
-    - Background processing → Battery optimization and reliability
+Mobile_Lifecycle_Patterns (HIGH - Performance & UX):
+  CRITICAL_MOBILE:
+    - "Activity", "Fragment", "ViewController" → Lifecycle management analysis
+    - "Background", "foreground", "suspend" → Resource management validation
+    - "Storage", "cache", "preferences" → Data persistence security
   HIGH_PRIORITY:
-    - Network requests → Offline handling and security
-    - Platform-specific permissions → Privacy and security compliance
-
-## **DESKTOP APPLICATION PATTERNS**
-Desktop_Component_Patterns (HIGH - Cross-Platform & Security):
-  CRITICAL_COMPONENTS:
-    - File system access → Permissions and cross-platform compatibility
-    - Native system calls → Security and platform abstraction
-    - Auto-update mechanisms → Security and integrity validation
-  HIGH_PRIORITY:
-    - Inter-process communication → Security and reliability
-    - Plugin/extension systems → Security sandboxing
+    - "Permission", "location", "camera" → Privacy and permission analysis
+    - "Network", "sync", "offline" → Connectivity and data sync validation
 
 ## **BACKEND SERVICE PATTERNS**
-Service_Patterns (HIGH - Reliability & Performance):
-  CRITICAL_SERVICES:
-    - Database connections → Connection pooling and transaction safety
-    - External API integrations → Error handling and rate limiting
-    - Message queues → Reliability and data consistency
+Service_Architecture_Patterns (HIGH - Scalability & Reliability):
+  CRITICAL_BACKEND:
+    - "Microservice", "API gateway", "load balancer" → Scalability analysis
+    - "Database connection", "transaction", "pool" → Resource management
+    - "Message queue", "event", "async" → Async processing validation
   HIGH_PRIORITY:
-    - Microservice communication → Service discovery and circuit breakers
-    - Caching strategies → Data consistency and performance
+    - "Health check", "monitoring", "logging" → Observability validation
+    - "Rate limiting", "throttling", "circuit breaker" → Resilience patterns
 
-## **DATA PROCESSING PATTERNS**
-Data_Pipeline_Patterns (HIGH - Integrity & Performance):
-  CRITICAL_PIPELINES:
-    - Data ingestion → Schema validation and error handling
-    - Transformation logic → Data integrity and consistency
-    - Output generation → Quality validation and monitoring
+## **DATA PIPELINE PATTERNS**
+Data_Processing_Patterns (HIGH - Reliability & Performance):
+  CRITICAL_DATA:
+    - "ETL", "batch", "stream" → Data processing reliability
+    - "Schema", "validation", "transformation" → Data quality assurance
+    - "Checkpoint", "recovery", "retry" → Fault tolerance validation
   HIGH_PRIORITY:
-    - Batch vs stream processing → Performance and resource optimization
-    - Data lineage tracking → Audit and compliance requirements
-```
+    - "Partitioning", "sharding", "indexing" → Performance optimization
+    - "Monitoring", "alerting", "SLA" → Data pipeline health validation
 
-### **4. UNIVERSAL MANDATORY VALIDATION CHECKLIST**
+## **DESKTOP APPLICATION PATTERNS**
+Desktop_Platform_Patterns (HIGH - Performance & Compatibility):
+  CRITICAL_DESKTOP:
+    - "Memory", "resource", "garbage collection" → Resource management
+    - "Thread", "concurrent", "parallel" → Concurrency safety
+    - "File system", "registry", "preferences" → Platform integration
+  HIGH_PRIORITY:
+    - "Update", "installer", "deployment" → Distribution and updates
+    - "Cross-platform", "native", "compatibility" → Platform compatibility
 
-**Before ANY Implementation (Adapt to Your Technology):**
+## **EMBEDDED SYSTEM PATTERNS**
+Embedded_Resource_Patterns (CRITICAL - Resource Constraints):
+  CRITICAL_EMBEDDED:
+    - "Memory", "ROM", "RAM", "flash" → Memory constraint analysis
+    - "Real-time", "interrupt", "timing" → Real-time constraint validation
+    - "Power", "battery", "energy" → Power consumption analysis
+  HIGH_PRIORITY:
+    - "Communication", "protocol", "serial" → Communication reliability
+    - "Safety", "fault tolerance", "watchdog" → Safety-critical validation
 
-1. **Security Impact Assessment**:
-   - Does this affect critical assets (user data, credentials, algorithms)?
-   - Are there injection risks (SQL, command, code injection)?
-   - Does this change authentication or authorization flows?
-   - Are secrets or credentials properly protected?
+# YOUR PROJECT PATTERNS (Replace with your specific technology):
+[Your_Tech_Stack]_Specific_Patterns (PRIORITY_LEVEL):
+  CRITICAL_[YOUR_DOMAIN]_ISSUES:
+    - "[Your critical pattern 1]" → [Your required validation]
+    - "[Your compatibility concern]" → [Your check approach]
+    - "[Your security pattern]" → [Your protection method]
 
-2. **Technical Compatibility Validation**:
-   - **Language/Platform**: Will this work across target versions/platforms?
-   - **Dependencies**: Are library/framework versions compatible?
-   - **Performance**: Does this introduce memory leaks, blocking operations, or scaling issues?
-   - **Concurrency**: Are there race conditions or thread safety concerns?
+### **4. DOMAIN KNOWLEDGE INTEGRATION**
 
-3. **Deployment & Environment Compatibility**:
-   - **Development vs Production**: Will this work in all environments?
-   - **Infrastructure**: Compatible with containers, cloud, or target deployment?
-   - **Configuration**: Environment-specific settings properly externalized?
+**Technology Stack Expertise for [TECH_STACK]:**
 
-4. **Testing Coverage Requirements**:
-   - **Unit Tests**: Core logic and edge cases
-   - **Integration Tests**: External dependencies and system interactions
-   - **Platform Tests**: Cross-platform or cross-browser if applicable
-   - **Security Tests**: Input validation, authorization, and vulnerability testing
+[Your_Primary_Language]_Best_Practices:
+  - [Language-specific pattern 1] → [Best practice recommendation]
+  - [Common pitfall 1] → [Prevention method]
+  - [Performance consideration 1] → [Optimization approach]
 
-5. **Documentation & Knowledge Updates**:
-   - Does CLAUDE.md configuration need pattern updates?
-   - Are API changes or breaking changes documented?
-   - Is deployment or setup documentation current?
+[Your_Framework]_Architecture_Patterns:
+  - [Framework pattern 1] → [Implementation guidance]
+  - [Integration pattern 1] → [Connection method]
+  - [Configuration pattern 1] → [Setup recommendation]
 
-### **5. CONTEXT STACK AWARENESS**
+[DATABASE_TECH]_Optimization:
+  - Query optimization for [your database type]
+  - Index strategy for [your access patterns]
+  - Transaction management for [your consistency requirements]
+  - Backup/recovery for [your availability requirements]
 
-```yaml
-Cross_Task_Memory:
-  Active_Context_Stack:
-    Current_Domain: [Security/Backend/Frontend/Database/etc.]
-    Pattern_Activations: [Recent pattern triggers]
-    Learning_Accumulation: [Session discoveries]
+**Domain-Specific Knowledge for [PROJECT_TYPE]:**
 
-  Context_Inheritance:
-    Security_Context:
-      - [Asset] sensitivity carries forward to related tasks
-      - [Auth] patterns persist across related work
+[PROJECT_TYPE]_Architecture_Principles:
+  - [Architectural principle 1]
+  - [Scaling consideration 1]
+  - [Integration pattern 1]
+  - [Security requirement 1]
 
-    Technical_Context:
-      - [Compatibility] insights apply to subsequent work
-      - [Performance] considerations cascade to related tasks
-```
+Industry_Standards_[YOUR_DOMAIN]:
+  - [Compliance requirement 1] → [Implementation approach]
+  - [Security standard 1] → [Validation method]
+  - [Performance benchmark 1] → [Measurement approach]
 
-### **6. ERROR RECOVERY & VALIDATION**
+### **5. LEARNING ENHANCEMENT TRIGGERS**
 
-```yaml
-Recovery_Triggers:
-  Pattern_Miss_Detection:
+**Continuous Improvement Protocol:**
+
+Learning_Signal_Detection:
+  - When I catch an issue you missed → HIGH confidence learning opportunity
+  - When I suggest optimization → MEDIUM confidence pattern enhancement
+  - When you encounter unexpected behavior → HIGH confidence gap identification
+  - When patterns prevent problems → HIGH confidence pattern validation
+
+Proactive_Documentation_Updates:
+  TRIGGER_CONDITIONS:
+    - New vulnerability patterns discovered → Update CRITICAL security patterns
+    - Framework updates affecting compatibility → Update [TECH_STACK] patterns
+    - Performance bottlenecks identified → Update optimization guidelines
+    - Integration challenges solved → Update architecture patterns
+
+Learning_Confidence_Assessment:
+  HIGH_CONFIDENCE (Immediate CLAUDE.md Update):
+    - Clear error prevented by missing pattern
+    - Security vulnerability caught through pattern gap
+    - Performance issue solved through specific optimization
+    - Compatibility problem resolved through targeted check
+
+  MEDIUM_CONFIDENCE (Propose for Next Update):
+    - Efficiency improvement observed through better pattern
+    - User workflow enhanced through refined trigger
+    - Pattern refinement improves accuracy without noise
+
+  LOW_CONFIDENCE (Monitor for Patterns):
+    - Theoretical improvement without concrete evidence
+    - Single-occurrence issue without pattern validation
+    - Preference-based suggestion without clear benefit
+
+Context_Stack_Awareness:
+  CROSS_TASK_MEMORY:
+    - Remember architecture decisions from previous tasks
+    - Build on established patterns within conversation
+    - Reference previous solutions for consistency
+    - Maintain awareness of project evolution
+
+### **6. ERROR RECOVERY PROTOCOLS**
+
+Pattern_Miss_Detection:
     - "Did any [critical issues] emerge that patterns should have caught?"
     - "Are there [security/compatibility/consistency] problems not flagged?"
 
-  Secondary_Validation_Checks:
+Secondary_Validation_Checks:
     Security_Backstop:
       - Final scan for [critical security patterns]
       - Double-check [auth/access] patterns weren't missed
@@ -756,26 +700,22 @@ Recovery_Triggers:
       - Scan for [compatibility issues] that might be missed
       - Verify [consistency requirements] weren't overlooked
 
-  Pattern_Improvement_Triggers:
+Pattern_Improvement_Triggers:
     - "If I missed X, what pattern should have caught it?"
     - "What keyword would have triggered proper analysis?"
-```
 
 ### **7. PROACTIVE LEARNING PROTOCOL**
 
 **After Each Task - MANDATORY:**
 
-```
 🔍 LEARNING IDENTIFIED: [Specific gap or improvement discovered]
 📝 PROPOSED CLAUDE.md UPDATE: [Exact text to add/modify]
 🎯 REASONING: [Why this will prevent future errors]
 📊 CONFIDENCE LEVEL: [HIGH/MEDIUM/LOW based on evidence strength]
 ✅ USER APPROVAL NEEDED: [Yes/No for implementation]
-```
 
 **CONFIDENCE LEVEL CRITERIA (Critical for Effective Learning):**
 
-```yaml
 HIGH_CONFIDENCE_Learning:
   - Clear errors prevented (security vulnerability caught, compatibility issue avoided)
   - Missing pattern discovered through actual failure
@@ -791,174 +731,11 @@ MEDIUM_CONFIDENCE_Learning:
   Examples: "Pattern helped catch issue faster", "User prefers concise responses"
 
 LOW_CONFIDENCE_Learning:
-  - Theoretical improvements without evidence
-  - Hunches or assumptions about better approaches
-  - Speculative optimizations
-  - Changes based on single occurrence
+  - Theoretical improvements without concrete evidence
+  - Single occurrence without pattern validation
+  - Preference-based changes without clear benefit
+  - Speculative enhancements without proven value
   Examples: "Might be better to...", "Could potentially improve..."
-```
-
-**Learning Validation & Success Tracking:**
-```yaml
-Pattern_Performance_Tracking:
-  Successful_Preventions:
-    - "Database datetime functions" → Prevented SQLite/MySQL compatibility issues (HIGH confidence)
-    - "SELECT * FROM table_name" → Caught unauthorized access attempts (HIGH confidence)
-    - "Translation consistency" → Ensured multi-language updates (MEDIUM confidence)
-
-  False_Positive_Analysis:
-    - Pattern triggers that activated unnecessarily → Refine to reduce noise
-    - Over-sensitive triggers → Adjust threshold levels
-    - Context misunderstandings → Improve pattern specificity
-
-  Pattern_Evolution_Log:
-    - Track which pattern additions proved most valuable over time
-    - Document pattern modifications that measurably improved accuracy
-    - Note successful cross-task context applications that enhanced decisions
-```
-
-### **8. COMMIT MESSAGE ANALYSIS INTEGRATION**
-
-**Enhanced Context from Git History (Critical Missing Component):**
-
-```yaml
-Commit_Pattern_Analysis:
-  Error_Fix_Patterns:
-    - "Fix 500 errors", "Fix bug", "Hotfix" → Error handling focus, heightened caution
-    - "Security fix", "Vulnerability" → Partner data protection heightened awareness
-    - "Database migration", "Schema update" → Database compatibility critical focus
-    - "Performance optimization" → Database query and frontend analysis priority
-
-  Feature_Addition_Patterns:
-    - "Add [feature]", "Implement [system]" → Integration focus, compatibility checks
-    - "New API", "Endpoint" → Security-first analysis, validation requirements
-    - "UI update", "Frontend" → Cross-browser compatibility, accessibility checks
-
-  Context_Enhancement_From_Recent_Commits:
-    Recent_Commit_Scanning:
-      - Scan last 5-10 commit messages for context clues about current project focus
-      - "video", "tracking" → Video system context active
-      - "queue", "email" → Communication system focus
-      - "security", "auth" → Heightened security awareness
-      - "migration", "database" → Database compatibility critical
-
-  Historical_Pattern_Learning:
-    - Apply lessons from previous "Fix" commits to prevent similar issues
-    - Use commit evolution to understand project maturity and common pain points
-    - Context-aware analysis based on recent development focus areas
-```
-
-**CRITICAL RULES:**
-- ALL learning proposals MUST be at the very end of responses
-- Use clear separation and explicit "USER APPROVAL NEEDED"
-- Never bury learning requests in middle of responses
-- CLAUDE.md updates are proactive, project docs are user-directed only
-
-### **9. STREAMLINED DECISION FRAMEWORK**
-
-**Simultaneous Multi-Domain Analysis (Claude's Natural Process):**
-
-```yaml
-Decision_Processing_Order:
-  1. Security_Impact_Assessment (Always First - CRITICAL priority patterns)
-  2. Technical_Compatibility_Validation (HIGH priority - database/platform/browser)
-  3. Consistency_Requirements_Check (MEDIUM priority - standards/translations/APIs)
-  4. Performance_Testing_Implications (NORMAL priority - optimization opportunities)
-  5. Documentation_Update_Requirements (NORMAL priority - knowledge management)
-
-Processing_Rules:
-  - ALL considerations evaluated simultaneously, not sequentially
-  - No artificial delays or agent coordination overhead
-  - CRITICAL patterns can override lower priority considerations
-  - Context stack awareness influences all decision levels
-  - Error recovery validates all decisions after completion
-```
-
-## **IMPLEMENTATION SEQUENCE (CRITICAL - Do This Order)**
-
-### **Phase 1: Foundation (Do First)**
-1. **Security Patterns Setup** - Absolute priority, blocks everything else if critical issues found
-2. **Mandatory Validation Checklist** - Core decision framework
-3. **Basic Pattern Structure** - CRITICAL/HIGH/MEDIUM/NORMAL categories
-
-### **Phase 2: Core Intelligence (Do Second)**
-4. **Technical Compatibility Patterns** - Database, browser, platform-specific issues
-5. **File Type & Route Patterns** - Context-specific analysis triggers
-6. **Context Stack Awareness** - Cross-task memory and inheritance
-
-### **Phase 3: Learning System (Do Third)**
-7. **Error Recovery & Validation** - Backstop systems for missed patterns
-8. **Proactive Learning Protocol** - Real improvement mechanism
-9. **Commit Message Analysis** - Git history context integration
-
-### **Phase 4: Optimization (Do Last)**
-10. **Pattern Performance Tracking** - Success/failure analysis
-11. **False Positive Reduction** - Noise elimination
-12. **Learning Confidence Scoring** - Quality control for improvements
-
-## **SUCCESS VALIDATION CRITERIA**
-
-**How to Know Your System is Working:**
-
-```yaml
-Immediate_Success_Indicators:
-  - Security patterns catch unauthorized access attempts
-  - Compatibility patterns prevent database/browser issues
-  - Learning proposals appear automatically after tasks
-  - Context awareness improves across related tasks
-
-Performance_Metrics:
-  - Faster problem identification (patterns trigger before issues manifest)
-  - Reduced back-and-forth clarification (context stack working)
-  - Proactive learning suggestions improve system over time
-  - Error recovery catches missed issues in validation phase
-
-Warning_Signs_System_Not_Working:
-  - No learning proposals generated after complex tasks
-  - Security issues missed consistently
-  - Same compatibility problems recurring
-  - Pattern triggers too noisy (false positives)
-```
-
-## **COMMON PITFALLS TO AVOID**
-
-**Based on Production Development Experience:**
-
-```yaml
-Over_Engineering_Traps:
-  - ❌ Don't create complex agent personas or coordination
-  - ❌ Don't add sequential processing delays
-  - ❌ Don't simulate conversations between "agents"
-  - ✅ Keep pattern matching simple and direct
-
-Pattern_Design_Mistakes:
-  - ❌ Too many patterns create noise and decision paralysis
-  - ❌ Patterns too broad trigger on everything
-  - ❌ Patterns too narrow miss critical issues
-  - ✅ Focus on high-impact, clear trigger patterns
-
-Learning_System_Errors:
-  - ❌ Theoretical learning without evidence
-  - ❌ Too many LOW confidence proposals
-  - ❌ Learning buried in middle of responses
-  - ✅ Clear HIGH confidence learning with concrete evidence
-
-Context_Awareness_Problems:
-  - ❌ Forgetting previous task context within conversation
-  - ❌ Not applying domain expertise across related tasks
-  - ✅ Build context stack that enhances subsequent decisions
-```
-
-## **IMPLEMENTATION INSTRUCTIONS**
-
-### **Step-by-Step Build Process:**
-
-1. **Project Analysis**: Fill all [bracketed] placeholders with your specific project details
-2. **Pattern Customization**: Replace example patterns with your critical triggers
-3. **Priority Validation**: Ensure CRITICAL patterns are actually critical to your project
-4. **Implementation Sequence**: Build in exact order specified (Foundation → Core → Learning → Optimization)
-5. **Success Testing**: Validate each phase works before moving to next
-6. **Iterative Refinement**: Use learning protocol to improve system based on real usage
 
 **Build this system step by step, explaining reasoning for each component and how it aligns with the specific project needs.**
 
@@ -975,9 +752,6 @@ Context_Awareness_Problems:
 ```
 
 # 🛠️ **END OF PROMPT TO COPY**
-
----
-
 ## **🔄 CONTINUOUS IMPROVEMENT METHODOLOGY**
 
 **The Key to Our 60-70% Efficiency Gains: System Evolution**
