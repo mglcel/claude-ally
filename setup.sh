@@ -11,10 +11,10 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Source optimization modules if available (fail silently if not present)
-[[ -f "$SCRIPT_DIR/error-handler.sh" ]] && source "$SCRIPT_DIR/error-handler.sh" && setup_error_trapping 2>/dev/null || true
-[[ -f "$SCRIPT_DIR/config-manager.sh" ]] && source "$SCRIPT_DIR/config-manager.sh" 2>/dev/null || true
-[[ -f "$SCRIPT_DIR/cache-manager.sh" ]] && source "$SCRIPT_DIR/cache-manager.sh" 2>/dev/null || true
-[[ -f "$SCRIPT_DIR/performance-monitor.sh" ]] && source "$SCRIPT_DIR/performance-monitor.sh" 2>/dev/null || true
+[[ -f "$SCRIPT_DIR/lib/error-handler.sh" ]] && source "$SCRIPT_DIR/lib/error-handler.sh" && setup_error_trapping 2>/dev/null || true
+[[ -f "$SCRIPT_DIR/lib/config-manager.sh" ]] && source "$SCRIPT_DIR/lib/config-manager.sh" 2>/dev/null || true
+[[ -f "$SCRIPT_DIR/lib/cache-manager.sh" ]] && source "$SCRIPT_DIR/lib/cache-manager.sh" 2>/dev/null || true
+[[ -f "$SCRIPT_DIR/lib/performance-monitor.sh" ]] && source "$SCRIPT_DIR/lib/performance-monitor.sh" 2>/dev/null || true
 
 # Colors for output
 RED='\033[0;31m'
@@ -141,8 +141,8 @@ attempt_automatic_claude_analysis() {
     local database_tech="None"
 
     # Try modular stack detection first
-    if [[ -f "$SCRIPT_DIR/stack-detector.sh" ]]; then
-        source "$SCRIPT_DIR/stack-detector.sh"
+    if [[ -f "$SCRIPT_DIR/lib/stack-detector.sh" ]]; then
+        source "$SCRIPT_DIR/lib/stack-detector.sh"
         local modular_result
         if modular_result=$(detect_project_stack "$PROJECT_DIR" 2>/dev/null); then
             local stack_id detected_tech_stack detected_project_type detected_confidence
@@ -783,6 +783,150 @@ show_tech_stack_options() {
     done
 }
 
+# Helper function to show critical assets options with optional suggestion highlighting
+show_critical_assets_options() {
+    local var_name="${1:-ASSETS_CHOICE}"
+    local suggested_choice="${2:-}"
+
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo -e "${BOLD}Common Critical Assets:${NC}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    # Display options with suggestion highlighting
+    for i in {1..12}; do
+        local option_text=""
+        case $i in
+            1) option_text="User data, payment info, API keys" ;;
+            2) option_text="Source code, intellectual property" ;;
+            3) option_text="Database, customer records" ;;
+            4) option_text="Authentication tokens, session data" ;;
+            5) option_text="Financial data, transaction logs" ;;
+            6) option_text="Personal information, privacy data" ;;
+            7) option_text="Configuration files, environment variables" ;;
+            8) option_text="Cognitive enhancement prompts, user project configurations" ;;
+            9) option_text="Machine learning models, training data" ;;
+            10) option_text="Business logic, proprietary algorithms" ;;
+            11) option_text="Infrastructure access, deployment keys" ;;
+            12) option_text="Custom (enter your own)" ;;
+        esac
+
+        if [[ "$i" == "$suggested_choice" ]]; then
+            echo -e "${GREEN}${BOLD}$i.${NC} ${BOLD}$option_text${NC} ${CYAN}🤖 (Claude's suggestion)${NC}"
+        else
+            echo -e "${CYAN}$i.${NC} $option_text"
+        fi
+    done
+
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+
+    local choice
+    local default_prompt="Select critical assets (1-12)"
+    if [[ -n "$suggested_choice" ]]; then
+        default_prompt="Select critical assets (1-12) [default: $suggested_choice]"
+    fi
+
+    while true; do
+        read -p "$default_prompt: " choice
+
+        # Use suggested choice as default if no input and suggestion exists
+        if [[ -z "$choice" && -n "$suggested_choice" ]]; then
+            choice="$suggested_choice"
+        fi
+
+        if [[ "$choice" =~ ^[1-9]$|^1[0-2]$ ]]; then
+            if [[ "$choice" == "12" ]]; then
+                # Custom option - ask for input
+                read -p "Enter your critical assets: " custom_assets
+                eval "$var_name=\"custom:$custom_assets\""
+                echo -e "${GREEN}✅ Selected: Custom - $custom_assets${NC}"
+            else
+                eval "$var_name=\"$choice\""
+                if [[ "$choice" == "$suggested_choice" ]]; then
+                    echo -e "${GREEN}✅ Selected: $choice (Claude's suggestion)${NC}"
+                else
+                    echo -e "${GREEN}✅ Selected: $choice${NC}"
+                fi
+            fi
+            break
+        else
+            echo -e "${RED}Invalid choice. Please enter a number between 1-12.${NC}"
+        fi
+    done
+}
+
+# Helper function to show common issues options with optional suggestion highlighting
+show_common_issues_options() {
+    local var_name="${1:-ISSUES_CHOICE}"
+    local suggested_choice="${2:-}"
+
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo -e "${BOLD}Common Development Issues:${NC}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    # Display options with suggestion highlighting
+    for i in {1..10}; do
+        local option_text=""
+        case $i in
+            1) option_text="Performance bottlenecks, memory leaks" ;;
+            2) option_text="Deployment issues, environment setup" ;;
+            3) option_text="Testing challenges, CI/CD problems" ;;
+            4) option_text="Security vulnerabilities, authentication" ;;
+            5) option_text="Database performance, query optimization" ;;
+            6) option_text="API integration, third-party services" ;;
+            7) option_text="User interface bugs, browser compatibility" ;;
+            8) option_text="Scalability issues, load handling" ;;
+            9) option_text="Code quality, technical debt" ;;
+            10) option_text="Custom (enter your own)" ;;
+        esac
+
+        if [[ "$i" == "$suggested_choice" ]]; then
+            echo -e "${GREEN}${BOLD}$i.${NC} ${BOLD}$option_text${NC} ${CYAN}🤖 (Claude's suggestion)${NC}"
+        else
+            echo -e "${CYAN}$i.${NC} $option_text"
+        fi
+    done
+
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+
+    local choice
+    local default_prompt="Select common issues (1-10)"
+    if [[ -n "$suggested_choice" ]]; then
+        default_prompt="Select common issues (1-10) [default: $suggested_choice]"
+    fi
+
+    while true; do
+        read -p "$default_prompt: " choice
+
+        # Use suggested choice as default if no input and suggestion exists
+        if [[ -z "$choice" && -n "$suggested_choice" ]]; then
+            choice="$suggested_choice"
+        fi
+
+        if [[ "$choice" =~ ^[1-9]$|^10$ ]]; then
+            if [[ "$choice" == "10" ]]; then
+                # Custom option - ask for input
+                read -p "Enter your common issues: " custom_issues
+                eval "$var_name=\"custom:$custom_issues\""
+                echo -e "${GREEN}✅ Selected: Custom - $custom_issues${NC}"
+            else
+                eval "$var_name=\"$choice\""
+                if [[ "$choice" == "$suggested_choice" ]]; then
+                    echo -e "${GREEN}✅ Selected: $choice (Claude's suggestion)${NC}"
+                else
+                    echo -e "${GREEN}✅ Selected: $choice${NC}"
+                fi
+            fi
+            break
+        else
+            echo -e "${RED}Invalid choice. Please enter a number between 1-10.${NC}"
+        fi
+    done
+}
+
 # Helper function to show compliance options with optional suggestion highlighting
 show_compliance_options() {
     local var_name="${1:-COMPLIANCE_CHOICE}"
@@ -1093,7 +1237,44 @@ get_security_info() {
     echo -e "${BLUE}🔒 SECURITY & COMPLIANCE${NC}"
     echo "------------------------------"
 
-    read_with_suggestion "Most critical assets (e.g., 'user data, payment info, API keys')" "$CRITICAL_ASSETS_SUGGESTION" "CRITICAL_ASSETS"
+    # Critical assets selection - show options with Claude's suggestion highlighted
+
+    # Map Claude suggestion to choice number
+    local suggested_assets_choice=""
+    case "$CRITICAL_ASSETS_SUGGESTION" in
+        *"user data"*|*"payment"*|*"API keys"*) suggested_assets_choice="1" ;;
+        *"source code"*|*"intellectual property"*) suggested_assets_choice="2" ;;
+        *"database"*|*"customer records"*) suggested_assets_choice="3" ;;
+        *"authentication"*|*"session"*) suggested_assets_choice="4" ;;
+        *"financial"*|*"transaction"*) suggested_assets_choice="5" ;;
+        *"personal"*|*"privacy"*) suggested_assets_choice="6" ;;
+        *"configuration"*|*"environment"*) suggested_assets_choice="7" ;;
+        *"cognitive enhancement"*|*"user project configurations"*) suggested_assets_choice="8" ;;
+        *"machine learning"*|*"training data"*) suggested_assets_choice="9" ;;
+        *"business logic"*|*"algorithms"*) suggested_assets_choice="10" ;;
+        *"infrastructure"*|*"deployment"*) suggested_assets_choice="11" ;;
+        *) suggested_assets_choice="12" ;; # Custom for anything else
+    esac
+
+    # Show options directly with suggestion highlighted
+    show_critical_assets_options "ASSETS_CHOICE" "$suggested_assets_choice"
+
+    # Map choice back to critical assets string
+    case $ASSETS_CHOICE in
+        1) CRITICAL_ASSETS="User data, payment info, API keys" ;;
+        2) CRITICAL_ASSETS="Source code, intellectual property" ;;
+        3) CRITICAL_ASSETS="Database, customer records" ;;
+        4) CRITICAL_ASSETS="Authentication tokens, session data" ;;
+        5) CRITICAL_ASSETS="Financial data, transaction logs" ;;
+        6) CRITICAL_ASSETS="Personal information, privacy data" ;;
+        7) CRITICAL_ASSETS="Configuration files, environment variables" ;;
+        8) CRITICAL_ASSETS="Cognitive enhancement prompts, user project configurations" ;;
+        9) CRITICAL_ASSETS="Machine learning models, training data" ;;
+        10) CRITICAL_ASSETS="Business logic, proprietary algorithms" ;;
+        11) CRITICAL_ASSETS="Infrastructure access, deployment keys" ;;
+        custom:*) CRITICAL_ASSETS="${ASSETS_CHOICE#custom:}" ;;
+        *) CRITICAL_ASSETS="$CRITICAL_ASSETS_SUGGESTION" ;;
+    esac
 
     # Compliance requirements selection - show options with Claude's suggestion highlighted
 
@@ -1130,7 +1311,40 @@ get_technical_info() {
     echo -e "${BLUE}⚙️ TECHNICAL DETAILS${NC}"
     echo "------------------------------"
 
-    read_with_suggestion "Common issues you face (e.g., 'performance bottlenecks, memory leaks')" "$COMMON_ISSUES_SUGGESTION" "COMMON_ISSUES"
+    # Common issues selection - show options with Claude's suggestion highlighted
+
+    # Map Claude suggestion to choice number
+    local suggested_issues_choice=""
+    case "$COMMON_ISSUES_SUGGESTION" in
+        *"performance"*|*"memory"*) suggested_issues_choice="1" ;;
+        *"deployment"*|*"environment"*) suggested_issues_choice="2" ;;
+        *"testing"*|*"CI/CD"*) suggested_issues_choice="3" ;;
+        *"security"*|*"authentication"*) suggested_issues_choice="4" ;;
+        *"database"*|*"query"*) suggested_issues_choice="5" ;;
+        *"API"*|*"integration"*) suggested_issues_choice="6" ;;
+        *"UI"*|*"browser"*) suggested_issues_choice="7" ;;
+        *"scalability"*|*"load"*) suggested_issues_choice="8" ;;
+        *"code quality"*|*"technical debt"*) suggested_issues_choice="9" ;;
+        *) suggested_issues_choice="10" ;; # Custom for anything else
+    esac
+
+    # Show options directly with suggestion highlighted
+    show_common_issues_options "ISSUES_CHOICE" "$suggested_issues_choice"
+
+    # Map choice back to common issues string
+    case $ISSUES_CHOICE in
+        1) COMMON_ISSUES="Performance bottlenecks, memory leaks" ;;
+        2) COMMON_ISSUES="Deployment issues, environment setup" ;;
+        3) COMMON_ISSUES="Testing challenges, CI/CD problems" ;;
+        4) COMMON_ISSUES="Security vulnerabilities, authentication" ;;
+        5) COMMON_ISSUES="Database performance, query optimization" ;;
+        6) COMMON_ISSUES="API integration, third-party services" ;;
+        7) COMMON_ISSUES="User interface bugs, browser compatibility" ;;
+        8) COMMON_ISSUES="Scalability issues, load handling" ;;
+        9) COMMON_ISSUES="Code quality, technical debt" ;;
+        custom:*) COMMON_ISSUES="${ISSUES_CHOICE#custom:}" ;;
+        *) COMMON_ISSUES="$COMMON_ISSUES_SUGGESTION" ;;
+    esac
 
     read_with_suggestion "File structure overview (e.g., 'src/main/java, gradle build')" "$FILE_STRUCTURE_SUGGESTION" "FILE_STRUCTURE"
 

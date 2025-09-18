@@ -24,12 +24,12 @@ VERSION="2.0.0"
 # Load all modules
 load_modules() {
     local modules=(
-        "error-handler.sh"
-        "config-manager.sh"
-        "cache-manager.sh"
-        "performance-monitor.sh"
-        "progress-indicator.sh"
-        "stack-detector.sh"
+        "lib/error-handler.sh"
+        "lib/config-manager.sh"
+        "lib/cache-manager.sh"
+        "lib/performance-monitor.sh"
+        "lib/progress-indicator.sh"
+        "lib/stack-detector.sh"
         "contribute-stack.sh"
         "github-pr.sh"
     )
@@ -148,7 +148,7 @@ validate_system() {
     # Check optimization modules
     echo ""
     echo "2. Checking optimization modules..."
-    local opt_modules=("error-handler.sh" "config-manager.sh" "cache-manager.sh" "performance-monitor.sh")
+    local opt_modules=("lib/error-handler.sh" "lib/config-manager.sh" "lib/cache-manager.sh" "lib/performance-monitor.sh")
     for module in "${opt_modules[@]}"; do
         if [[ -f "$SCRIPT_DIR/$module" ]]; then
             echo -e "  ✅ $module"

@@ -74,7 +74,7 @@ assert_success() {
 # Setup test environment
 setup() {
     # Source the stack detector
-    source "$ROOT_DIR/stack-detector.sh"
+    source "$ROOT_DIR/lib/stack-detector.sh"
 
     # Create test fixtures
     mkdir -p /tmp/claude-ally-test-fixtures
