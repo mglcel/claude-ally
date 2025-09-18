@@ -582,10 +582,11 @@ handle_suggestion() {
                 break
                 ;;
             2)
+                echo ""
                 if [[ "$suggestion_type" == "choice" && -n "$options_callback" ]]; then
                     # Show all options and get user choice
-                    echo ""
                     $options_callback
+                    break
                 else
                     # Get custom text input
                     while true; do
@@ -598,8 +599,8 @@ handle_suggestion() {
                             echo -e "${RED}Invalid input. Please try again.${NC}"
                         fi
                     done
+                    break
                 fi
-                break
                 ;;
             *)
                 echo -e "${RED}Invalid choice. Please enter 1 or 2.${NC}"
