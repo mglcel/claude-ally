@@ -1145,11 +1145,15 @@ show_project_type_options() {
             8) option_text="Static website" ;;
             9) option_text="Cordova hybrid app" ;;
             10) option_text="Legacy website" ;;
-            11) option_text="Other" ;;
+            11) option_text="CLI tool / Other" ;;
         esac
 
         if [[ "$i" == "$suggested_choice" ]]; then
-            echo -e "${GREEN}${BOLD}$i.${NC} ${BOLD}$option_text${NC} ${CYAN}🤖 (Claude's suggestion)${NC}"
+            if [[ "$i" == "11" ]]; then
+                echo -e "${GREEN}${BOLD}$i.${NC} ${BOLD}CLI tool${NC} ${CYAN}🤖 (Claude's suggestion)${NC}"
+            else
+                echo -e "${GREEN}${BOLD}$i.${NC} ${BOLD}$option_text${NC} ${CYAN}🤖 (Claude's suggestion)${NC}"
+            fi
         else
             echo -e "${CYAN}$i.${NC} $option_text"
         fi
@@ -1212,6 +1216,7 @@ get_project_info() {
         "static-website") suggested_choice="8" ;;
         "cordova-hybrid-app") suggested_choice="9" ;;
         "legacy-website") suggested_choice="10" ;;
+        "cli-tool") suggested_choice="11" ;;
         *) suggested_choice="" ;;
     esac
     echo "DEBUG: suggested_choice='$suggested_choice'" >&2
@@ -1231,7 +1236,14 @@ get_project_info() {
         8) PROJECT_TYPE="static-website" ;;
         9) PROJECT_TYPE="cordova-hybrid-app" ;;
         10) PROJECT_TYPE="legacy-website" ;;
-        11) read -p "Please specify: " PROJECT_TYPE ;;
+        11)
+            if [[ "$PROJECT_TYPE_SUGGESTION" == "cli-tool" ]]; then
+                PROJECT_TYPE="cli-tool"
+                echo -e "${GREEN}✅ Selected: CLI tool (Claude's suggestion)${NC}"
+            else
+                read -p "Please specify: " PROJECT_TYPE
+            fi
+            ;;
         *) PROJECT_TYPE="web-app" ;;
     esac
 
@@ -1590,20 +1602,54 @@ setup_claude_automatically() {
     local prompt_content
     prompt_content=$(cat "$filename")
 
-    # Create a message for Claude
-    echo "📝 Sending the following request to Claude:"
-    echo "----------------------------------------"
-    echo "Please set up the cognitive enhancement system for this project using the following configuration:"
-    echo ""
-    echo "$prompt_content"
-    echo ""
-    echo "----------------------------------------"
-    echo ""
-    echo -e "${YELLOW}📋 CLAUDE INVOCATION NEEDED${NC}"
-    echo "Please copy the prompt above and paste it to Claude."
-    echo "Claude will create your CLAUDE.md file and set up the system."
-    echo ""
-    read -p "Press Enter when Claude has finished setting up the system..."
+    # Check if we can invoke Claude directly
+    if command -v claude &> /dev/null; then
+        echo "📝 Calling Claude CLI directly..."
+        local claude_request="Please set up the cognitive enhancement system for this project using the following configuration:
+
+$prompt_content
+
+Please create a CLAUDE.md file with the appropriate cognitive enhancement configuration for this project. Respond with the contents of the CLAUDE.md file."
+
+        echo -e "${CYAN}⏳ Waiting for Claude's response...${NC}"
+
+        # Try to invoke Claude directly and capture response
+        local claude_response
+        if claude_response=$(echo "$claude_request" | claude --print 2>/dev/null); then
+            echo -e "${GREEN}✅ Claude responded successfully!${NC}"
+
+            # Create the CLAUDE.md file with Claude's response
+            echo "$claude_response" > "$PROJECT_DIR/CLAUDE.md"
+            echo -e "${GREEN}✅ CLAUDE.md file created automatically!${NC}"
+
+        else
+            echo -e "${YELLOW}⚠️ Direct Claude invocation failed, falling back to manual mode${NC}"
+            echo ""
+            echo "📝 Please copy the following request to Claude:"
+            echo "----------------------------------------"
+            echo "Please set up the cognitive enhancement system for this project using the following configuration:"
+            echo ""
+            echo "$prompt_content"
+            echo ""
+            echo "----------------------------------------"
+            echo ""
+            read -p "Press Enter when Claude has finished setting up the system..."
+        fi
+    else
+        echo -e "${YELLOW}📋 CLAUDE INVOCATION NEEDED${NC}"
+        echo "Please copy the prompt above and paste it to Claude."
+        echo "Claude will create your CLAUDE.md file and set up the system."
+        echo ""
+        echo "📝 Request for Claude:"
+        echo "----------------------------------------"
+        echo "Please set up the cognitive enhancement system for this project using the following configuration:"
+        echo ""
+        echo "$prompt_content"
+        echo ""
+        echo "----------------------------------------"
+        echo ""
+        read -p "Press Enter when Claude has finished setting up the system..."
+    fi
 
     # Check if CLAUDE.md was created
     if [[ -f "$PROJECT_DIR/CLAUDE.md" ]]; then
