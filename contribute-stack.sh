@@ -366,7 +366,7 @@ main() {
     # Check if this is a known stack
     if detect_project_stack "$project_dir" > /dev/null; then
         echo -e "${GREEN}✅ This stack is already supported by claude-ally${NC}"
-        return 1
+        return 0  # Success - stack is already supported
     fi
 
     # Check if this looks like an interesting unknown stack
@@ -375,7 +375,7 @@ main() {
         return $?
     else
         echo -e "${BLUE}ℹ️ No new stack patterns detected for contribution${NC}"
-        return 1
+        return 0  # Success - no contribution needed
     fi
 }
 
