@@ -83,7 +83,7 @@ check_claude_availability() {
     fi
 
     # Check if this appears to be a claude-code session (common env vars)
-    if [[ -n "$CLAUDE_CODE_SESSION" ]] || [[ -n "$CLAUDE_PROJECT_ROOT" ]]; then
+    if [[ -n "$CLAUDE_CODE_SESSION" ]] || [[ -n "$CLAUDE_PROJECT_ROOT" ]] || [[ -n "$CLAUDECODE" ]] || [[ -n "$CLAUDE_CODE_ENTRYPOINT" ]]; then
         echo -e "${GREEN}✅ Claude Code environment detected${NC}"
         CLAUDE_AVAILABLE=true
         return 0
@@ -424,7 +424,7 @@ analyze_repository() {
     echo ""
 
     # Create a temporary file for analysis
-    CLAUDE_SUGGESTIONS_FILE=$(mktemp /tmp/claude_analysis_XXXXXX.md)
+    CLAUDE_SUGGESTIONS_FILE=$(mktemp /tmp/claude_analysis.XXXXXX.md)
 
     # Generate repository analysis prompt
     cat > "$CLAUDE_SUGGESTIONS_FILE" << 'EOF'
