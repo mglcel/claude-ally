@@ -28,6 +28,7 @@ load_modules() {
         "config-manager.sh"
         "cache-manager.sh"
         "performance-monitor.sh"
+        "progress-indicator.sh"
         "stack-detector.sh"
         "contribute-stack.sh"
         "github-pr.sh"
@@ -42,6 +43,11 @@ load_modules() {
     # Setup error trapping if available
     if declare -f setup_error_trapping > /dev/null; then
         setup_error_trapping 2>/dev/null || true
+    fi
+
+    # Initialize progress indicators if available
+    if declare -f init_progress_config > /dev/null; then
+        init_progress_config 2>/dev/null || true
     fi
 }
 
@@ -111,13 +117,24 @@ show_help() {
 
 # Validate system setup
 validate_system() {
-    echo -e "${CYAN}🔍 Validating claude-ally system...${NC}"
-    echo ""
+    # Start multi-step validation if available
+    if declare -f start_multi_step > /dev/null; then
+        start_multi_step 5 "System Validation"
+    else
+        echo -e "${CYAN}🔍 Validating claude-ally system...${NC}"
+        echo ""
+    fi
 
     local issues=0
 
     # Check core files
-    echo "1. Checking core files..."
+    if declare -f execute_step > /dev/null; then
+        if execute_step "Checking core files" "sleep 0.5"; then
+            echo "Core files validation:"
+        fi
+    else
+        echo "1. Checking core files..."
+    fi
     local core_files=("setup.sh" "stack-detector.sh" "contribute-stack.sh")
     for file in "${core_files[@]}"; do
         if [[ -f "$SCRIPT_DIR/$file" ]]; then
@@ -195,13 +212,22 @@ validate_system() {
         echo -e "  ⚠️ Configuration validation not available"
     fi
 
-    echo ""
-    if [[ $issues -eq 0 ]]; then
-        echo -e "${GREEN}✅ System validation completed successfully!${NC}"
-        echo -e "${CYAN}🚀 Claude-ally is ready for use${NC}"
+    # Finish multi-step operation if available
+    if declare -f finish_multi_step > /dev/null; then
+        if [[ $issues -eq 0 ]]; then
+            finish_multi_step true
+        else
+            finish_multi_step false
+        fi
     else
-        echo -e "${YELLOW}⚠️ System validation completed with $issues issues${NC}"
-        echo -e "${CYAN}💡 Run 'claude-ally recovery' to attempt automatic fixes${NC}"
+        echo ""
+        if [[ $issues -eq 0 ]]; then
+            echo -e "${GREEN}✅ System validation completed successfully!${NC}"
+            echo -e "${CYAN}🚀 Claude-ally is ready for use${NC}"
+        else
+            echo -e "${YELLOW}⚠️ System validation completed with $issues issues${NC}"
+            echo -e "${CYAN}💡 Run 'claude-ally recovery' to attempt automatic fixes${NC}"
+        fi
     fi
 }
 
@@ -215,30 +241,60 @@ main() {
     case "$command" in
         "setup")
             if [[ -f "$SCRIPT_DIR/setup.sh" ]]; then
-                if declare -f time_operation > /dev/null; then
+                # Use progress wrapper for setup if available
+                if declare -f with_progress_output > /dev/null; then
+                    with_progress_output "Setting up cognitive enhancement system" "dots" bash "$SCRIPT_DIR/setup.sh" "$@"
+                elif declare -f time_operation > /dev/null; then
                     time_operation "setup" bash "$SCRIPT_DIR/setup.sh" "$@"
                 else
                     bash "$SCRIPT_DIR/setup.sh" "$@"
                 fi
             else
-                echo -e "${RED}❌ Setup script not found${NC}"
+                if declare -f show_error > /dev/null; then
+                    show_error "Setup script not found"
+                else
+                    echo -e "${RED}❌ Setup script not found${NC}"
+                fi
                 exit 1
             fi
             ;;
         "detect")
             if declare -f detect_project_stack > /dev/null; then
                 local project_dir="${1:-$(pwd)}"
-                echo -e "${CYAN}🔍 Detecting project stack: $project_dir${NC}"
+
+                # Start progress indicator if available
+                if declare -f start_progress > /dev/null; then
+                    start_progress "Detecting project stack: $project_dir" "spinner"
+                else
+                    echo -e "${CYAN}🔍 Detecting project stack: $project_dir${NC}"
+                fi
 
                 if result=$(detect_project_stack "$project_dir"); then
+                    if declare -f stop_progress > /dev/null; then
+                        stop_progress
+                    fi
+
                     local stack_id tech_stack project_type confidence
                     IFS='|' read -r stack_id tech_stack project_type confidence <<< "$result"
-                    echo -e "${GREEN}✅ Detected: $tech_stack${NC}"
+
+                    if declare -f show_success > /dev/null; then
+                        show_success "Detected: $tech_stack"
+                    else
+                        echo -e "${GREEN}✅ Detected: $tech_stack${NC}"
+                    fi
                     echo -e "${BLUE}   Type: $project_type${NC}"
                     echo -e "${YELLOW}   Confidence: $confidence%${NC}"
                 else
-                    echo -e "${YELLOW}⚠️ Unknown stack detected${NC}"
-                    echo -e "${CYAN}💡 Run 'claude-ally contribute' to add this stack${NC}"
+                    if declare -f stop_progress > /dev/null; then
+                        stop_progress
+                    fi
+                    if declare -f show_warning > /dev/null; then
+                        show_warning "Unknown stack detected"
+                        show_info "Run 'claude-ally contribute' to add this stack"
+                    else
+                        echo -e "${YELLOW}⚠️ Unknown stack detected${NC}"
+                        echo -e "${CYAN}💡 Run 'claude-ally contribute' to add this stack${NC}"
+                    fi
                 fi
             else
                 echo -e "${RED}❌ Stack detector not available${NC}"
@@ -274,8 +330,20 @@ main() {
         "cache")
             if declare -f cache_stats > /dev/null; then
                 case "${1:-stats}" in
-                    "stats") cache_stats ;;
-                    "clean") clean_cache ;;
+                    "stats")
+                        if declare -f with_progress > /dev/null; then
+                            with_progress "Analyzing cache statistics" "minimal" cache_stats
+                        else
+                            cache_stats
+                        fi
+                        ;;
+                    "clean")
+                        if declare -f with_progress > /dev/null; then
+                            with_progress "Cleaning cache entries" "spinner" clean_cache
+                        else
+                            clean_cache
+                        fi
+                        ;;
                     *) echo "Cache commands: stats, clean" ;;
                 esac
             else

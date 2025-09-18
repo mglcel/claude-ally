@@ -39,7 +39,8 @@ create_default_config() {
   "ui": {
     "colors": true,
     "verbose": false,
-    "progress_bars": true
+    "progress_bars": true,
+    "progress_style": "spinner"
   },
   "telemetry": {
     "enabled": false,

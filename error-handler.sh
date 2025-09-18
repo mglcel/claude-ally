@@ -26,6 +26,9 @@ get_error_message() {
     esac
 }
 
+# Prevent recursive error handling
+ERROR_HANDLING_ACTIVE=false
+
 # Error log file
 ERROR_LOG="$HOME/.claude-ally/error.log"
 
@@ -60,6 +63,12 @@ handle_error() {
     local exit_code="$1"
     local error_context="$2"
 
+    # Prevent recursive error handling
+    if [[ "$ERROR_HANDLING_ACTIVE" == "true" ]]; then
+        return 0
+    fi
+    ERROR_HANDLING_ACTIVE=true
+
     case "$exit_code" in
         127)
             echo -e "${RED}❌ Command not found${NC}"
@@ -80,6 +89,8 @@ handle_error() {
             suggest_general_recovery "$error_context"
             ;;
     esac
+
+    ERROR_HANDLING_ACTIVE=false
 }
 
 # Suggest command installation
@@ -142,15 +153,20 @@ suggest_general_recovery() {
     echo "  4. Try running with verbose mode: bash -x script.sh"
     echo "  5. Report issue at: https://github.com/mglcel/claude-ally/issues"
 
-    # Offer to open error log
-    local open_log_choice
-    read -p "Would you like to view the error log? (y/N): " open_log_choice
-
-    if [[ "$open_log_choice" =~ ^[Yy] ]]; then
-        if command -v less &> /dev/null; then
-            less "$ERROR_LOG"
+    # Non-blocking offer to open error log with timeout
+    if [[ -t 0 ]]; then  # Only ask if running interactively
+        local open_log_choice=""
+        echo -n "Would you like to view the error log? (y/N, 5s timeout): "
+        if read -t 5 open_log_choice 2>/dev/null; then
+            if [[ "$open_log_choice" =~ ^[Yy] ]]; then
+                if command -v less &> /dev/null; then
+                    less "$ERROR_LOG"
+                else
+                    cat "$ERROR_LOG"
+                fi
+            fi
         else
-            cat "$ERROR_LOG"
+            echo " [timeout - skipping]"
         fi
     fi
 }
@@ -241,7 +257,21 @@ recovery_mode() {
 setup_error_trapping() {
     set -eE  # Exit on error, inherit ERR trap
     trap 'handle_error $? "$BASH_COMMAND"' ERR
-    trap 'log_error 130 "Script interrupted" "${FUNCNAME[1]}" "${LINENO}"' INT
+    trap 'handle_interrupt' INT
+}
+
+# Handle interruption signals (Ctrl+C)
+handle_interrupt() {
+    # Prevent recursive handling
+    if [[ "$ERROR_HANDLING_ACTIVE" == "true" ]]; then
+        exit 130
+    fi
+
+    ERROR_HANDLING_ACTIVE=true
+    log_error 130 "Script interrupted" "${FUNCNAME[1]}" "${LINENO}"
+    echo -e "\n${YELLOW}⚠️ Script interrupted by user${NC}"
+    ERROR_HANDLING_ACTIVE=false
+    exit 130
 }
 
 # Clean up error trapping

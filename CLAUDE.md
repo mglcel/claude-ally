@@ -25,6 +25,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Configuration**: `config-manager.sh` - Settings and cache management
 - **Error Handling**: `error-handler.sh` - Comprehensive error recovery system
 - **Performance**: `performance-monitor.sh` - System monitoring and optimization
+- **Progress Indicators**: `progress-indicator.sh` - Visual feedback for long-running operations
 
 ## Development Patterns
 
@@ -210,7 +211,8 @@ get_your_stack_requirements() {
   "ui": {
     "colors": true,
     "verbose": false,
-    "progress_bars": true
+    "progress_bars": true,
+    "progress_style": "spinner"
   },
   "performance": {
     "monitor_enabled": true,
@@ -248,6 +250,35 @@ get_your_stack_requirements() {
 - Parallel detection processing
 - Memory-efficient algorithms
 - Progressive result loading
+
+## Progress Indicators & User Experience
+
+### Visual Feedback System
+- **Spinner Animation**: Rotating indicators for active operations (⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏)
+- **Dots Animation**: Progressive dots for longer operations
+- **Progress Bars**: Percentage-based progress for known-duration tasks
+- **Multi-Step Progress**: Structured progress for complex operations with step tracking
+
+### Progress Styles
+- `spinner`: Animated spinner with elapsed time (default)
+- `dots`: Animated dots progression
+- `bar`: Progress bar with percentage (for measurable progress)
+- `minimal`: Simple status with timer
+
+### Configuration Options
+```bash
+# Enable/disable progress indicators
+./claude-ally.sh config set ui.progress_bars true
+
+# Set progress style
+./claude-ally.sh config set ui.progress_style "spinner"
+```
+
+### Integration Examples
+- **Detection**: Shows spinner while analyzing project structure
+- **Validation**: Multi-step progress through system checks
+- **Cache Operations**: Progress feedback for cleaning and statistics
+- **Setup**: Visual feedback during cognitive enhancement setup
 
 ## Security Considerations
 
