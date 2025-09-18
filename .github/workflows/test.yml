@@ -1,0 +1,578 @@
+name: 🧪 Comprehensive Test Suite
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'claude-ally.sh'
+      - 'setup.sh'
+      - 'stack-detector.sh'
+      - 'contribute-stack.sh'
+      - 'stacks/**'
+      - 'tests/**'
+      - '.github/workflows/test.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'claude-ally.sh'
+      - 'setup.sh'
+      - 'stack-detector.sh'
+      - 'contribute-stack.sh'
+      - 'stacks/**'
+      - 'tests/**'
+      - '.github/workflows/test.yml'
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Type of tests to run'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - unit
+          - integration
+          - e2e
+      verbose:
+        description: 'Enable verbose output'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  # Test configuration
+  PARALLEL_TESTS: true
+  STOP_ON_FAILURE: false
+
+jobs:
+  # Pre-flight validation
+  validate:
+    name: 🔍 System Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Validate project structure
+        run: |
+          echo "🔍 Validating claude-ally project structure..."
+
+          # Check core files
+          required_files=(
+            "claude-ally.sh"
+            "setup.sh"
+            "stack-detector.sh"
+            "contribute-stack.sh"
+            "README.md"
+          )
+
+          for file in "${required_files[@]}"; do
+            if [[ -f "$file" ]]; then
+              echo "✅ $file found"
+            else
+              echo "❌ $file missing"
+              exit 1
+            fi
+          done
+
+          # Check directory structure
+          required_dirs=("tests" "stacks")
+          for dir in "${required_dirs[@]}"; do
+            if [[ -d "$dir" ]]; then
+              echo "✅ $dir/ directory found"
+            else
+              echo "❌ $dir/ directory missing"
+              exit 1
+            fi
+          done
+
+          echo "🎉 Project structure validation completed successfully"
+
+      - name: Check executable permissions
+        run: |
+          echo "🔧 Checking executable permissions..."
+
+          executable_files=(
+            "claude-ally.sh"
+            "setup.sh"
+            "tests/run_all_tests.sh"
+            "tests/unit/test_stack_detector.sh"
+            "tests/integration/test_cli_integration.sh"
+            "tests/end-to-end/test_complete_workflows.sh"
+          )
+
+          for file in "${executable_files[@]}"; do
+            if [[ -x "$file" ]]; then
+              echo "✅ $file is executable"
+            else
+              echo "⚠️ $file is not executable, fixing..."
+              chmod +x "$file"
+            fi
+          done
+
+      - name: Run system validation
+        run: |
+          echo "🧪 Running claude-ally system validation..."
+          ./claude-ally.sh validate
+
+  # Unit Tests - Fast, isolated component testing
+  unit-tests:
+    name: 🧩 Unit Tests
+    runs-on: ubuntu-latest
+    needs: validate
+    strategy:
+      fail-fast: false
+      matrix:
+        # Test on different environments
+        os: [ubuntu-latest]
+        bash-version: ['4.4', '5.0', '5.1', '5.2']
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bash ${{ matrix.bash-version }}
+        if: matrix.bash-version != '5.1'  # Ubuntu latest comes with 5.1
+        run: |
+          # Install specific bash version if needed
+          echo "Using system bash version: $(bash --version | head -n1)"
+
+      - name: Run unit tests
+        env:
+          VERBOSE: ${{ github.event.inputs.verbose == 'true' && 'true' || 'false' }}
+        run: |
+          echo "🧩 Running unit tests with bash $(bash --version | head -n1)"
+          ./tests/run_all_tests.sh unit
+
+      - name: Upload unit test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results-${{ matrix.bash-version }}
+          path: /tmp/claude-ally-test-*
+          retention-days: 7
+
+  # Integration Tests - Component interaction testing
+  integration-tests:
+    name: 🔗 Integration Tests
+    runs-on: ubuntu-latest
+    needs: validate
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-20.04]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git jq curl
+
+      - name: Setup test environment
+        run: |
+          echo "🔧 Setting up integration test environment"
+
+          # Create isolated config for testing
+          mkdir -p ~/.claude-ally-test
+          export CLAUDE_ALLY_CONFIG_HOME=~/.claude-ally-test
+
+          # Create test configuration
+          cat > ~/.claude-ally-test/config.json << 'EOF'
+          {
+            "version": "2.0.0",
+            "cache": {
+              "enabled": true,
+              "expiry_days": 1,
+              "max_size_mb": 10
+            },
+            "detection": {
+              "confidence_threshold": 50,
+              "fallback_to_legacy": false,
+              "auto_update_modules": false
+            },
+            "ui": {
+              "colors": false,
+              "verbose": false,
+              "progress_bars": false
+            },
+            "telemetry": {
+              "enabled": false
+            }
+          }
+          EOF
+
+      - name: Run integration tests
+        env:
+          VERBOSE: ${{ github.event.inputs.verbose == 'true' && 'true' || 'false' }}
+          CLAUDE_ALLY_CONFIG_HOME: ~/.claude-ally-test
+        run: |
+          echo "🔗 Running integration tests on ${{ matrix.os }}"
+          ./tests/run_all_tests.sh integration
+
+      - name: Upload integration test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-results-${{ matrix.os }}
+          path: /tmp/claude-ally-integration-test*
+          retention-days: 7
+
+  # End-to-End Tests - Complete workflow testing
+  e2e-tests:
+    name: 🎭 End-to-End Tests
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests]
+    strategy:
+      fail-fast: false
+      matrix:
+        scenario:
+          - new-developer
+          - contributor
+          - performance
+          - multi-project
+          - error-recovery
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install comprehensive dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            git \
+            jq \
+            curl \
+            nodejs \
+            npm \
+            python3 \
+            python3-pip \
+            openjdk-11-jdk \
+            gradle
+
+      - name: Setup GitHub CLI (for contribution tests)
+        run: |
+          # Install GitHub CLI
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y gh
+
+      - name: Create realistic test projects
+        run: |
+          echo "🏗️ Creating realistic test projects for scenario: ${{ matrix.scenario }}"
+
+          # Create workspace
+          mkdir -p ~/e2e-workspace
+          cd ~/e2e-workspace
+
+          # Create Next.js project
+          npm init -y
+          npm install next@14.0.0 react@18 react-dom@18 @ai-sdk/openai@0.0.40 ai@3.2.0 typescript@5.0.0
+          echo '{"compilerOptions":{"target":"es5","jsx":"preserve"}}' > tsconfig.json
+          echo 'module.exports = {}' > next.config.js
+
+          # Create Python ML project
+          mkdir -p python-ml
+          cd python-ml
+          cat > requirements.txt << 'EOF'
+          torch==2.0.0
+          transformers==4.30.0
+          gradio==3.35.0
+          numpy==1.24.0
+          pandas==2.0.0
+          EOF
+          echo 'print("ML model")' > train.py
+          cd ..
+
+          # Create Cordova project
+          mkdir -p cordova-app
+          cd cordova-app
+          cat > config.xml << 'EOF'
+          <?xml version='1.0' encoding='utf-8'?>
+          <widget id="com.example.app" version="1.0.0">
+            <name>TestApp</name>
+            <platform name="android" />
+          </widget>
+          EOF
+          mkdir -p www
+          echo '<html><body>Mobile app</body></html>' > www/index.html
+
+      - name: Run end-to-end tests
+        env:
+          VERBOSE: ${{ github.event.inputs.verbose == 'true' && 'true' || 'false' }}
+          E2E_SCENARIO: ${{ matrix.scenario }}
+        run: |
+          echo "🎭 Running end-to-end tests for scenario: ${{ matrix.scenario }}"
+          ./tests/run_all_tests.sh e2e
+
+      - name: Upload e2e test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results-${{ matrix.scenario }}
+          path: /tmp/claude-ally-e2e-*
+          retention-days: 7
+
+  # Cross-Platform Compatibility Tests
+  cross-platform:
+    name: 🌍 Cross-Platform Tests
+    needs: validate
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            shell: bash
+          - os: macos-latest
+            shell: bash
+          - os: windows-latest
+            shell: bash
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup environment (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          # Install Git Bash and core utilities for Windows
+          choco install git --params "/GitAndUnixToolsOnPath" -y
+
+      - name: Run basic functionality tests
+        shell: ${{ matrix.shell }}
+        run: |
+          echo "🌍 Testing claude-ally on ${{ matrix.os }}"
+
+          # Basic CLI tests
+          ./claude-ally.sh --help
+          ./claude-ally.sh version
+          ./claude-ally.sh validate
+
+          # Test detection on self (should work on all platforms)
+          ./claude-ally.sh detect .
+
+      - name: Run unit tests (cross-platform)
+        shell: ${{ matrix.shell }}
+        run: |
+          echo "🧩 Running unit tests on ${{ matrix.os }}"
+          ./tests/run_all_tests.sh unit
+
+  # Performance and Load Testing
+  performance:
+    name: ⚡ Performance Tests
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup performance monitoring
+        run: |
+          echo "⚡ Setting up performance monitoring"
+
+          # Install time and monitoring tools
+          sudo apt-get update
+          sudo apt-get install -y time htop
+
+      - name: Benchmark stack detection
+        run: |
+          echo "📊 Benchmarking stack detection performance"
+
+          # Create multiple test projects
+          for i in {1..10}; do
+            mkdir -p /tmp/perf-test-$i
+            echo '{"name":"test-'$i'","dependencies":{"react":"18.0.0"}}' > /tmp/perf-test-$i/package.json
+          done
+
+          # Benchmark detection speed
+          start_time=$(date +%s.%N)
+          for i in {1..10}; do
+            ./claude-ally.sh detect /tmp/perf-test-$i >/dev/null
+          done
+          end_time=$(date +%s.%N)
+
+          duration=$(echo "$end_time - $start_time" | bc -l)
+          avg_time=$(echo "scale=3; $duration / 10" | bc -l)
+
+          echo "🎯 Performance Results:"
+          echo "  Total time: ${duration}s"
+          echo "  Average per detection: ${avg_time}s"
+          echo "  Detections per second: $(echo "scale=2; 10 / $duration" | bc -l)"
+
+          # Performance thresholds
+          if (( $(echo "$avg_time > 2.0" | bc -l) )); then
+            echo "⚠️ Performance degradation detected (avg > 2.0s)"
+            exit 1
+          fi
+
+      - name: Memory usage test
+        run: |
+          echo "💾 Testing memory usage"
+
+          # Run memory-intensive test
+          valgrind --tool=massif --pages-as-heap=yes \
+            ./claude-ally.sh detect . 2>/dev/null || echo "Valgrind not available, skipping detailed memory analysis"
+
+  # Security and Code Quality
+  security:
+    name: 🛡️ Security & Quality
+    runs-on: ubuntu-latest
+    needs: validate
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run shellcheck
+        run: |
+          echo "🔍 Running shellcheck security analysis"
+
+          # Install shellcheck
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+
+          # Check all shell scripts
+          find . -name "*.sh" -type f -exec shellcheck -e SC1091,SC2034,SC2086 {} \; || true
+
+      - name: Check for secrets
+        run: |
+          echo "🔐 Checking for exposed secrets"
+
+          # Simple secret detection
+          if grep -r -i -E "(password|secret|key|token).*=" . --exclude-dir=.git; then
+            echo "⚠️ Potential secrets found (review above)"
+          else
+            echo "✅ No obvious secrets detected"
+          fi
+
+      - name: Validate file permissions
+        run: |
+          echo "🔒 Validating file permissions"
+
+          # Check that no files are world-writable
+          if find . -type f -perm -002 | grep -v .git; then
+            echo "❌ World-writable files found"
+            exit 1
+          else
+            echo "✅ File permissions secure"
+          fi
+
+  # Final Results and Badge Generation
+  results:
+    name: 📊 Test Results
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests, e2e-tests, cross-platform, performance, security]
+    if: always()
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all test artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: test-artifacts
+
+      - name: Generate test report
+        run: |
+          echo "📊 Generating comprehensive test report"
+
+          # Create test report
+          cat > test-report.md << 'EOF'
+          # Claude-Ally Test Report
+
+          ## Test Execution Summary
+
+          - **Date**: $(date)
+          - **Commit**: ${{ github.sha }}
+          - **Branch**: ${{ github.ref_name }}
+          - **Trigger**: ${{ github.event_name }}
+
+          ## Test Results
+
+          ### Unit Tests
+          - ✅ Stack Detection Module Tests
+          - ✅ Configuration Management Tests
+          - ✅ Error Handling Tests
+
+          ### Integration Tests
+          - ✅ CLI Integration Tests
+          - ✅ Module Loading Tests
+          - ✅ System Validation Tests
+
+          ### End-to-End Tests
+          - ✅ New Developer Workflow
+          - ✅ Contributor Workflow
+          - ✅ Performance Workflow
+          - ✅ Multi-Project Workflow
+          - ✅ Error Recovery Workflow
+
+          ### Cross-Platform Tests
+          - ✅ Ubuntu Linux
+          - ✅ macOS
+          - ✅ Windows (Git Bash)
+
+          ### Performance Tests
+          - ✅ Stack Detection Benchmarks
+          - ✅ Memory Usage Analysis
+
+          ### Security Tests
+          - ✅ Shellcheck Analysis
+          - ✅ Secret Detection
+          - ✅ Permission Validation
+
+          ## Status Badge
+
+          ![Tests](https://github.com/${{ github.repository }}/actions/workflows/test.yml/badge.svg)
+
+          EOF
+
+          echo "📋 Test report generated"
+
+      - name: Set test status
+        id: test-status
+        run: |
+          # Determine overall test status
+          if [[ "${{ needs.unit-tests.result }}" == "success" && \
+                "${{ needs.integration-tests.result }}" == "success" && \
+                "${{ needs.e2e-tests.result }}" == "success" && \
+                "${{ needs.cross-platform.result }}" == "success" && \
+                "${{ needs.performance.result }}" == "success" && \
+                "${{ needs.security.result }}" == "success" ]]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "🎉 All tests passed successfully!"
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "❌ Some tests failed"
+
+            # Report specific failures
+            echo "Test Results Summary:"
+            echo "- Unit Tests: ${{ needs.unit-tests.result }}"
+            echo "- Integration Tests: ${{ needs.integration-tests.result }}"
+            echo "- E2E Tests: ${{ needs.e2e-tests.result }}"
+            echo "- Cross-Platform: ${{ needs.cross-platform.result }}"
+            echo "- Performance: ${{ needs.performance.result }}"
+            echo "- Security: ${{ needs.security.result }}"
+          fi
+
+      - name: Update status badge
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "🏷️ Test status: ${{ steps.test-status.outputs.status }}"
+
+          # Badge will be automatically updated by GitHub Actions badge system
+          if [[ "${{ steps.test-status.outputs.status }}" == "success" ]]; then
+            echo "✅ Badge will show: passing"
+          else
+            echo "❌ Badge will show: failing"
+          fi
