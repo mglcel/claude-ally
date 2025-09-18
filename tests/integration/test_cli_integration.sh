@@ -149,38 +149,42 @@ test_cli_commands() {
 test_detection_workflow() {
     echo "Testing: Detection workflow integration"
 
-    # Create test React project
-    local test_dir="/tmp/claude-ally-integration-test/react-project"
+    # Create test Next.js AI project (supported stack)
+    local test_dir="/tmp/claude-ally-integration-test/nextjs-ai-project"
     mkdir -p "$test_dir"
 
     cat > "$test_dir/package.json" << 'EOF'
 {
-  "name": "test-react-app",
+  "name": "test-nextjs-ai-app",
   "version": "1.0.0",
   "dependencies": {
+    "next": "^14.0.0",
     "react": "^18.0.0",
-    "react-dom": "^18.0.0"
+    "react-dom": "^18.0.0",
+    "@ai-sdk/openai": "^0.0.40",
+    "ai": "^3.2.0"
   },
   "devDependencies": {
     "typescript": "^5.0.0",
     "@types/react": "^18.0.0"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build"
+    "dev": "next dev",
+    "build": "next build"
   }
 }
 EOF
 
-    echo "{}" > "$test_dir/tsconfig.json"
-    mkdir -p "$test_dir/src"
-    echo "import React from 'react';" > "$test_dir/src/App.tsx"
+    echo 'module.exports = {}' > "$test_dir/next.config.js"
+    echo '{}' > "$test_dir/tsconfig.json"
+    mkdir -p "$test_dir/app"
+    echo "export default function Page() { return <div>AI App</div> }" > "$test_dir/app/page.tsx"
 
     # Test detection
     local detection_result
     if detection_result=$(bash "$ROOT_DIR/claude-ally.sh" detect "$test_dir" 2>&1); then
         assert_contains "Detected:" "$detection_result" "Detection workflow identifies project"
-        assert_contains "React" "$detection_result" "Detection identifies React framework"
+        assert_contains "Next.js" "$detection_result" "Detection identifies Next.js framework"
         assert_contains "TypeScript" "$detection_result" "Detection identifies TypeScript"
         assert_contains "Confidence:" "$detection_result" "Detection shows confidence score"
     else
@@ -282,41 +286,23 @@ test_error_handling() {
 test_module_loading() {
     echo "Testing: Module loading integration"
 
-    # Create test script to check if modules are loadable
-    cat > /tmp/test_module_load.sh << 'EOF'
-#!/bin/bash
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/../../claude-ally.sh"
-
-# Check if key functions are available after loading
-if declare -f detect_project_stack > /dev/null; then
-    echo "detect_project_stack_available"
-fi
-
-if declare -f load_stack_modules > /dev/null; then
-    echo "load_stack_modules_available"
-fi
-
-if declare -f config_cli > /dev/null; then
-    echo "config_cli_available"
-fi
-EOF
-
-    chmod +x /tmp/test_module_load.sh
-
-    local module_output
-    if module_output=$(bash /tmp/test_module_load.sh 2>&1); then
-        if [[ "$module_output" == *"detect_project_stack_available"* ]]; then
-            echo -e "${GREEN}✅ PASS${NC} Stack detection module loaded successfully"
+    # Test that main CLI can load and execute detection (proof modules are loaded)
+    local detection_output
+    if detection_output=$(bash "$ROOT_DIR/claude-ally.sh" detect "$ROOT_DIR" 2>&1); then
+        if [[ "$detection_output" == *"Detected:"* ]] || [[ "$detection_output" == *"Unknown stack"* ]]; then
+            echo -e "${GREEN}✅ PASS${NC} Stack detection module loaded and functional"
             TESTS_PASSED=$((TESTS_PASSED + 1))
         else
-            echo -e "${RED}❌ FAIL${NC} Stack detection module not loaded"
+            echo -e "${RED}❌ FAIL${NC} Stack detection module not working properly"
+            echo "Output: $detection_output"
             TESTS_FAILED=$((TESTS_FAILED + 1))
         fi
-        TESTS_TOTAL=$((TESTS_TOTAL + 1))
+    else
+        echo -e "${RED}❌ FAIL${NC} Stack detection command failed"
+        echo "Output: $detection_output"
+        TESTS_FAILED=$((TESTS_FAILED + 1))
     fi
-
-    rm -f /tmp/test_module_load.sh
+    TESTS_TOTAL=$((TESTS_TOTAL + 1))
 }
 
 # Test: System validation integration

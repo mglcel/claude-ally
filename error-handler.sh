@@ -12,15 +12,19 @@ CYAN='\033[0;36m'
 BOLD='\033[1m'
 NC='\033[0m'
 
-# Error codes
-declare -A ERROR_CODES=(
-    [1]="General error"
-    [2]="Misuse of shell builtins"
-    [126]="Command invoked cannot execute"
-    [127]="Command not found"
-    [128]="Invalid argument to exit"
-    [130]="Script terminated by Control-C"
-)
+# Error codes (Bash 3.2 compatible)
+get_error_message() {
+    local code="$1"
+    case "$code" in
+        1) echo "General error" ;;
+        2) echo "Misuse of shell builtins" ;;
+        126) echo "Command invoked cannot execute" ;;
+        127) echo "Command not found" ;;
+        128) echo "Invalid argument to exit" ;;
+        130) echo "Script terminated by Control-C" ;;
+        *) echo "Unknown error (code: $code)" ;;
+    esac
+}
 
 # Error log file
 ERROR_LOG="$HOME/.claude-ally/error.log"
@@ -70,7 +74,8 @@ handle_error() {
             offer_resume_option
             ;;
         *)
-            local error_desc="${ERROR_CODES[$exit_code]:-Unknown error}"
+            local error_desc
+            error_desc=$(get_error_message "$exit_code")
             echo -e "${RED}❌ $error_desc (code: $exit_code)${NC}"
             suggest_general_recovery "$error_context"
             ;;

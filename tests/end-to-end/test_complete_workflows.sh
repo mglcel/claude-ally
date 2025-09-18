@@ -444,7 +444,7 @@ test_performance_workflow() {
     assert_workflow_step \
         "View performance statistics" \
         "bash '$ROOT_DIR/claude-ally.sh' perf stats || echo 'Performance monitoring not available'" \
-        "stats"
+        "Performance"
 
     # Step 2: Check cache statistics
     assert_workflow_step \

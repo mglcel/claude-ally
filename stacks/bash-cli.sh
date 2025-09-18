@@ -16,7 +16,7 @@ detect_bash_cli() {
 
     # Check for multiple executable shell scripts (indicates CLI tool)
     local shell_scripts
-    shell_scripts=$(find "$project_dir" -maxdepth 1 -name "*.sh" -perm +111 | wc -l)
+    shell_scripts=$(find "$project_dir" -maxdepth 1 -name "*.sh" -type f -exec test -x {} \; -print | wc -l)
     if [[ $shell_scripts -ge 3 ]]; then
         confidence=$((confidence + 25))
         features+=("Multiple shell scripts")
