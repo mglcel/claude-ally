@@ -988,6 +988,79 @@ show_compliance_options() {
     done
 }
 
+# Helper function to show file structure options with optional suggestion highlighting
+show_file_structure_options() {
+    local var_name="${1:-STRUCTURE_CHOICE}"
+    local suggested_choice="${2:-}"
+
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo -e "${BOLD}Common File Structures:${NC}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    # Display options with suggestion highlighting
+    for i in {1..12}; do
+        local option_text=""
+        case $i in
+            1) option_text="src/main/java, gradle build (Java/Spring)" ;;
+            2) option_text="app/src, public, package.json (React/Node.js)" ;;
+            3) option_text="src/components, pages, styles (Next.js)" ;;
+            4) option_text="app/models, views, controllers (Rails/Laravel)" ;;
+            5) option_text="src/main/python, requirements.txt (Python)" ;;
+            6) option_text="lib/, bin/, docs/, tests/ (Go/Rust)" ;;
+            7) option_text="Assets/, Source/, Config/ (.NET/C#)" ;;
+            8) option_text="platforms/, plugins/, www/ (Cordova)" ;;
+            9) option_text="lib/, android/, ios/ (Flutter)" ;;
+            10) option_text="shell scripts, markdown docs, validation tools" ;;
+            11) option_text="flat structure, single files" ;;
+            12) option_text="Custom (enter your own)" ;;
+        esac
+
+        if [[ "$i" == "$suggested_choice" ]]; then
+            echo -e "${GREEN}${BOLD}$i.${NC} ${BOLD}$option_text${NC} ${CYAN}🤖 (Claude's suggestion)${NC}"
+        else
+            echo -e "${CYAN}$i.${NC} $option_text"
+        fi
+    done
+
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+
+    local choice
+    local default_prompt="Select file structure (1-12)"
+    if [[ -n "$suggested_choice" ]]; then
+        default_prompt="Select file structure (1-12) [default: $suggested_choice]"
+    fi
+
+    while true; do
+        read -p "$default_prompt: " choice
+
+        # Use suggested choice as default if no input and suggestion exists
+        if [[ -z "$choice" && -n "$suggested_choice" ]]; then
+            choice="$suggested_choice"
+        fi
+
+        if [[ "$choice" =~ ^[1-9]$|^1[0-2]$ ]]; then
+            if [[ "$choice" == "12" ]]; then
+                # Custom option - ask for input
+                read -p "Enter your file structure: " custom_structure
+                eval "$var_name=\"custom:$custom_structure\""
+                echo -e "${GREEN}✅ Selected: Custom - $custom_structure${NC}"
+            else
+                eval "$var_name=\"$choice\""
+                if [[ "$choice" == "$suggested_choice" ]]; then
+                    echo -e "${GREEN}✅ Selected: $choice (Claude's suggestion)${NC}"
+                else
+                    echo -e "${GREEN}✅ Selected: $choice${NC}"
+                fi
+            fi
+            break
+        else
+            echo -e "${RED}Invalid choice. Please enter a number between 1-12.${NC}"
+        fi
+    done
+}
+
 # Helper function to show deployment options with optional suggestion highlighting
 show_deployment_options() {
     local var_name="${1:-DEPLOYMENT_CHOICE}"
@@ -1117,11 +1190,16 @@ get_project_info() {
     echo -e "${BLUE}📋 PROJECT INFORMATION${NC}"
     echo "------------------------------"
 
-    read_with_suggestion "Project name" "$PROJECT_NAME_SUGGESTION" "PROJECT_NAME"
+    echo -e "${BOLD}Project Name:${NC}"
+    echo -e "${CYAN}🤖 Claude's suggestion: ${BOLD}$PROJECT_NAME_SUGGESTION${NC}"
+    echo -e "Press ${YELLOW}Enter${NC} to accept suggestion or type a custom name:"
+    read -p "▶ " input
+    PROJECT_NAME="${input:-$PROJECT_NAME_SUGGESTION}"
 
     # Project type selection - show options with Claude's suggestion highlighted
 
     # Map Claude suggestion to choice number
+    echo "DEBUG: PROJECT_TYPE_SUGGESTION='$PROJECT_TYPE_SUGGESTION'" >&2
     local suggested_choice=""
     case "$PROJECT_TYPE_SUGGESTION" in
         "web-app") suggested_choice="1" ;;
@@ -1136,6 +1214,7 @@ get_project_info() {
         "legacy-website") suggested_choice="10" ;;
         *) suggested_choice="" ;;
     esac
+    echo "DEBUG: suggested_choice='$suggested_choice'" >&2
 
     echo ""
     # Show options directly with suggestion highlighted
@@ -1225,9 +1304,15 @@ get_project_info() {
         3) DATABASE_TECH="MongoDB" ;;
         4) DATABASE_TECH="SQLite" ;;
         5) DATABASE_TECH="Redis" ;;
-        6) read_with_default "Specify databases:" "" "DATABASE_TECH" ;;
+        6)
+            echo -e "${YELLOW}Please specify the databases:${NC}"
+            read -p "▶ " DATABASE_TECH
+            ;;
         7) DATABASE_TECH="None" ;;
-        8) read_with_default "Specify database:" "" "DATABASE_TECH" ;;
+        8)
+            echo -e "${YELLOW}Please specify the database:${NC}"
+            read -p "▶ " DATABASE_TECH
+            ;;
         *) DATABASE_TECH="PostgreSQL" ;;
     esac
 }
@@ -1299,9 +1384,19 @@ get_security_info() {
         2) MANDATORY_REQUIREMENTS="HIPAA compliance" ;;
         3) MANDATORY_REQUIREMENTS="SOC 2 compliance" ;;
         4) MANDATORY_REQUIREMENTS="PCI DSS compliance" ;;
-        5) read_with_default "Specify requirements:" "$MANDATORY_REQUIREMENTS_SUGGESTION" "MANDATORY_REQUIREMENTS" ;;
+        5)
+            echo -e "${YELLOW}Please specify the requirements:${NC}"
+            echo -e "${CYAN}Suggestion: $MANDATORY_REQUIREMENTS_SUGGESTION${NC}"
+            read -p "▶ " input
+            MANDATORY_REQUIREMENTS="${input:-$MANDATORY_REQUIREMENTS_SUGGESTION}"
+            ;;
         6) MANDATORY_REQUIREMENTS="None" ;;
-        7) read_with_default "Specify requirements:" "$MANDATORY_REQUIREMENTS_SUGGESTION" "MANDATORY_REQUIREMENTS" ;;
+        7)
+            echo -e "${YELLOW}Please specify the requirements:${NC}"
+            echo -e "${CYAN}Suggestion: $MANDATORY_REQUIREMENTS_SUGGESTION${NC}"
+            read -p "▶ " input
+            MANDATORY_REQUIREMENTS="${input:-$MANDATORY_REQUIREMENTS_SUGGESTION}"
+            ;;
         *) MANDATORY_REQUIREMENTS="" ;;
     esac
 }
@@ -1346,7 +1441,44 @@ get_technical_info() {
         *) COMMON_ISSUES="$COMMON_ISSUES_SUGGESTION" ;;
     esac
 
-    read_with_suggestion "File structure overview (e.g., 'src/main/java, gradle build')" "$FILE_STRUCTURE_SUGGESTION" "FILE_STRUCTURE"
+    # File structure selection - show options with Claude's suggestion highlighted
+
+    # Map Claude suggestion to choice number
+    local suggested_structure_choice=""
+    case "$FILE_STRUCTURE_SUGGESTION" in
+        *"src/main/java"*|*"gradle"*) suggested_structure_choice="1" ;;
+        *"app/src"*|*"package.json"*|*"node"*) suggested_structure_choice="2" ;;
+        *"components"*|*"pages"*|*"next"*) suggested_structure_choice="3" ;;
+        *"models"*|*"views"*|*"controllers"*) suggested_structure_choice="4" ;;
+        *"python"*|*"requirements.txt"*) suggested_structure_choice="5" ;;
+        *"lib/"*|*"bin/"*|*"docs/"*|*"tests/"*) suggested_structure_choice="6" ;;
+        *"Assets"*|*"Source"*|*"Config"*) suggested_structure_choice="7" ;;
+        *"platforms"*|*"plugins"*|*"cordova"*) suggested_structure_choice="8" ;;
+        *"android/"*|*"ios/"*|*"flutter"*) suggested_structure_choice="9" ;;
+        *"shell"*|*"markdown"*|*"validation"*) suggested_structure_choice="10" ;;
+        *"flat"*|*"single"*) suggested_structure_choice="11" ;;
+        *) suggested_structure_choice="12" ;; # Custom for anything else
+    esac
+
+    # Show options directly with suggestion highlighted
+    show_file_structure_options "STRUCTURE_CHOICE" "$suggested_structure_choice"
+
+    # Map choice back to file structure string
+    case $STRUCTURE_CHOICE in
+        1) FILE_STRUCTURE="src/main/java, gradle build (Java/Spring)" ;;
+        2) FILE_STRUCTURE="app/src, public, package.json (React/Node.js)" ;;
+        3) FILE_STRUCTURE="src/components, pages, styles (Next.js)" ;;
+        4) FILE_STRUCTURE="app/models, views, controllers (Rails/Laravel)" ;;
+        5) FILE_STRUCTURE="src/main/python, requirements.txt (Python)" ;;
+        6) FILE_STRUCTURE="lib/, bin/, docs/, tests/ (Go/Rust)" ;;
+        7) FILE_STRUCTURE="Assets/, Source/, Config/ (.NET/C#)" ;;
+        8) FILE_STRUCTURE="platforms/, plugins/, www/ (Cordova)" ;;
+        9) FILE_STRUCTURE="lib/, android/, ios/ (Flutter)" ;;
+        10) FILE_STRUCTURE="shell scripts, markdown docs, validation tools" ;;
+        11) FILE_STRUCTURE="flat structure, single files" ;;
+        custom:*) FILE_STRUCTURE="${STRUCTURE_CHOICE#custom:}" ;;
+        *) FILE_STRUCTURE="$FILE_STRUCTURE_SUGGESTION" ;;
+    esac
 
     # Deployment target selection - show options with Claude's suggestion highlighted
 
@@ -1371,8 +1503,18 @@ get_technical_info() {
         2) DEPLOYMENT_TARGET="mobile devices" ;;
         3) DEPLOYMENT_TARGET="desktop OS" ;;
         4) DEPLOYMENT_TARGET="embedded hardware" ;;
-        5) read_with_default "Specify platforms:" "$DEPLOYMENT_TARGET_SUGGESTION" "DEPLOYMENT_TARGET" ;;
-        6) read_with_default "Specify target:" "$DEPLOYMENT_TARGET_SUGGESTION" "DEPLOYMENT_TARGET" ;;
+        5)
+            echo -e "${YELLOW}Please specify the platforms:${NC}"
+            echo -e "${CYAN}Suggestion: $DEPLOYMENT_TARGET_SUGGESTION${NC}"
+            read -p "▶ " input
+            DEPLOYMENT_TARGET="${input:-$DEPLOYMENT_TARGET_SUGGESTION}"
+            ;;
+        6)
+            echo -e "${YELLOW}Please specify the target:${NC}"
+            echo -e "${CYAN}Suggestion: $DEPLOYMENT_TARGET_SUGGESTION${NC}"
+            read -p "▶ " input
+            DEPLOYMENT_TARGET="${input:-$DEPLOYMENT_TARGET_SUGGESTION}"
+            ;;
         *) DEPLOYMENT_TARGET="cloud containers" ;;
     esac
 }
