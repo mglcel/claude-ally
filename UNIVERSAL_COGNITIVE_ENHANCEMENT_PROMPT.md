@@ -466,9 +466,9 @@ Critical_Patterns:
 **Copy everything from the line below until "END OF PROMPT TO COPY" and paste it to a new Claude conversation:**
 
 ```
-## (Fill in the [bracketed] sections with your project details first)
+(Fill in the [bracketed] sections with your project details first)
 
-## **PROJECT CONTEXT TO FILL**
+PROJECT CONTEXT TO FILL
 
 PROJECT_NAME: [Your project name]
 PROJECT_TYPE: [web-app/mobile-app/desktop-app/backend-service/data-pipeline/embedded-system]
@@ -480,9 +480,9 @@ COMMON_ISSUES: [Recurring problems - e.g., "memory leaks", "concurrency bugs", "
 FILE_STRUCTURE: [Brief overview - e.g., "src/main/java, gradle build, Docker containers"]
 DEPLOYMENT_TARGET: [Where it runs - e.g., "cloud containers", "mobile devices", "desktop OS", "embedded hardware"]
 
-## **SYSTEM COMPONENTS TO IMPLEMENT**
+SYSTEM COMPONENTS TO IMPLEMENT
 
-### **1. CONTEXT-AWARE DECISION ENHANCEMENT**
+1. CONTEXT-AWARE DECISION ENHANCEMENT
 
 Create project-specific mindset triggers:
 
@@ -496,11 +496,11 @@ Mandatory_Validation_Rules:
   - [Rule 2]: [Validation method]
   - [Rule 3]: [Required checks]
 
-### **2. PRIORITY-BASED PATTERN MATCHING**
+2. PRIORITY-BASED PATTERN MATCHING
 
-**Processing Order: CRITICAL → HIGH → MEDIUM → NORMAL**
+Processing Order: CRITICAL → HIGH → MEDIUM → NORMAL
 
-**CRITICAL (Immediate Analysis Required):**
+CRITICAL (Immediate Analysis Required):
 
 Security_Critical_Patterns:
   - "Authentication", "authorization", "login", "password", "token", "session" → Security analysis required
@@ -514,7 +514,7 @@ Data_Integrity_Critical:
   - "migration", "schema", "ALTER TABLE" → Database integrity validation
   - "delete", "DROP", "truncate" → Data loss prevention analysis
 
-**HIGH (Enhanced Analysis):**
+HIGH (Enhanced Analysis):
 
 [TECH_STACK]_Specific_Patterns:
   - [Your framework patterns] → [Framework-specific validations]
@@ -526,25 +526,25 @@ Performance_Critical:
   - "loop", "recursive", "async", "parallel" → Performance and resource analysis
   - "[DEPLOYMENT_TARGET]" constraints → Platform-specific optimization
 
-**MEDIUM (Standard Analysis):**
+MEDIUM (Standard Analysis):
 
 Compatibility_Validation:
   - "[MANDATORY_REQUIREMENTS]" → Compliance verification
   - "dependency", "import", "package" → Compatibility impact analysis
   - "version", "upgrade", "migration" → Version compatibility check
 
-**NORMAL (Background Analysis):**
+NORMAL (Background Analysis):
 
 Code_Quality_Patterns:
   - "TODO", "FIXME", "HACK" → Code quality improvement suggestions
   - "test", "spec", "mock" → Testing approach recommendations
   - "documentation", "comment" → Documentation enhancement suggestions
 
-### **3. UNIVERSAL APPLICATION PATTERNS**
+3. UNIVERSAL APPLICATION PATTERNS
 
 Choose the pattern set that matches your PROJECT_TYPE:
 
-## **WEB APPLICATION PATTERNS**
+WEB APPLICATION PATTERNS
 Web_Route_Patterns (HIGH - Security & Functionality):
   CRITICAL_ROUTES:
     - "/api/", "REST endpoint", "GraphQL" → API security and rate limiting
@@ -554,7 +554,7 @@ Web_Route_Patterns (HIGH - Security & Functionality):
     - File upload endpoints → Security validation and file type checking
     - Payment/transaction endpoints → Security and compliance validation
 
-## **MOBILE APPLICATION PATTERNS**
+MOBILE APPLICATION PATTERNS
 Mobile_Lifecycle_Patterns (HIGH - Performance & UX):
   CRITICAL_MOBILE:
     - "Activity", "Fragment", "ViewController" → Lifecycle management analysis
@@ -564,7 +564,7 @@ Mobile_Lifecycle_Patterns (HIGH - Performance & UX):
     - "Permission", "location", "camera" → Privacy and permission analysis
     - "Network", "sync", "offline" → Connectivity and data sync validation
 
-## **BACKEND SERVICE PATTERNS**
+BACKEND SERVICE PATTERNS
 Service_Architecture_Patterns (HIGH - Scalability & Reliability):
   CRITICAL_BACKEND:
     - "Microservice", "API gateway", "load balancer" → Scalability analysis
@@ -574,7 +574,7 @@ Service_Architecture_Patterns (HIGH - Scalability & Reliability):
     - "Health check", "monitoring", "logging" → Observability validation
     - "Rate limiting", "throttling", "circuit breaker" → Resilience patterns
 
-## **DATA PIPELINE PATTERNS**
+DATA PIPELINE PATTERNS
 Data_Processing_Patterns (HIGH - Reliability & Performance):
   CRITICAL_DATA:
     - "ETL", "batch", "stream" → Data processing reliability
@@ -584,7 +584,7 @@ Data_Processing_Patterns (HIGH - Reliability & Performance):
     - "Partitioning", "sharding", "indexing" → Performance optimization
     - "Monitoring", "alerting", "SLA" → Data pipeline health validation
 
-## **DESKTOP APPLICATION PATTERNS**
+DESKTOP APPLICATION PATTERNS
 Desktop_Platform_Patterns (HIGH - Performance & Compatibility):
   CRITICAL_DESKTOP:
     - "Memory", "resource", "garbage collection" → Resource management
@@ -594,7 +594,7 @@ Desktop_Platform_Patterns (HIGH - Performance & Compatibility):
     - "Update", "installer", "deployment" → Distribution and updates
     - "Cross-platform", "native", "compatibility" → Platform compatibility
 
-## **EMBEDDED SYSTEM PATTERNS**
+EMBEDDED SYSTEM PATTERNS
 Embedded_Resource_Patterns (CRITICAL - Resource Constraints):
   CRITICAL_EMBEDDED:
     - "Memory", "ROM", "RAM", "flash" → Memory constraint analysis
@@ -604,16 +604,16 @@ Embedded_Resource_Patterns (CRITICAL - Resource Constraints):
     - "Communication", "protocol", "serial" → Communication reliability
     - "Safety", "fault tolerance", "watchdog" → Safety-critical validation
 
-# YOUR PROJECT PATTERNS (Replace with your specific technology):
+YOUR PROJECT PATTERNS (Replace with your specific technology):
 [Your_Tech_Stack]_Specific_Patterns (PRIORITY_LEVEL):
   CRITICAL_[YOUR_DOMAIN]_ISSUES:
     - "[Your critical pattern 1]" → [Your required validation]
     - "[Your compatibility concern]" → [Your check approach]
     - "[Your security pattern]" → [Your protection method]
 
-### **4. DOMAIN KNOWLEDGE INTEGRATION**
+4. DOMAIN KNOWLEDGE INTEGRATION
 
-**Technology Stack Expertise for [TECH_STACK]:**
+Technology Stack Expertise for [TECH_STACK]:
 
 [Your_Primary_Language]_Best_Practices:
   - [Language-specific pattern 1] → [Best practice recommendation]
@@ -631,7 +631,7 @@ Embedded_Resource_Patterns (CRITICAL - Resource Constraints):
   - Transaction management for [your consistency requirements]
   - Backup/recovery for [your availability requirements]
 
-**Domain-Specific Knowledge for [PROJECT_TYPE]:**
+Domain-Specific Knowledge for [PROJECT_TYPE]:
 
 [PROJECT_TYPE]_Architecture_Principles:
   - [Architectural principle 1]
@@ -644,9 +644,9 @@ Industry_Standards_[YOUR_DOMAIN]:
   - [Security standard 1] → [Validation method]
   - [Performance benchmark 1] → [Measurement approach]
 
-### **5. LEARNING ENHANCEMENT TRIGGERS**
+5. LEARNING ENHANCEMENT TRIGGERS
 
-**Continuous Improvement Protocol:**
+Continuous Improvement Protocol:
 
 Learning_Signal_Detection:
   - When I catch an issue you missed → HIGH confidence learning opportunity
@@ -685,7 +685,7 @@ Context_Stack_Awareness:
     - Reference previous solutions for consistency
     - Maintain awareness of project evolution
 
-### **6. ERROR RECOVERY PROTOCOLS**
+6. ERROR RECOVERY PROTOCOLS
 
 Pattern_Miss_Detection:
     - "Did any [critical issues] emerge that patterns should have caught?"
@@ -704,9 +704,9 @@ Pattern_Improvement_Triggers:
     - "If I missed X, what pattern should have caught it?"
     - "What keyword would have triggered proper analysis?"
 
-### **7. PROACTIVE LEARNING PROTOCOL**
+7. PROACTIVE LEARNING PROTOCOL
 
-**After Each Task - MANDATORY:**
+After Each Task - MANDATORY:
 
 🔍 LEARNING IDENTIFIED: [Specific gap or improvement discovered]
 📝 PROPOSED CLAUDE.md UPDATE: [Exact text to add/modify]
@@ -714,7 +714,7 @@ Pattern_Improvement_Triggers:
 📊 CONFIDENCE LEVEL: [HIGH/MEDIUM/LOW based on evidence strength]
 ✅ USER APPROVAL NEEDED: [Yes/No for implementation]
 
-**CONFIDENCE LEVEL CRITERIA (Critical for Effective Learning):**
+CONFIDENCE LEVEL CRITERIA (Critical for Effective Learning):
 
 HIGH_CONFIDENCE_Learning:
   - Clear errors prevented (security vulnerability caught, compatibility issue avoided)
@@ -737,21 +737,21 @@ LOW_CONFIDENCE_Learning:
   - Speculative enhancements without proven value
   Examples: "Might be better to...", "Could potentially improve..."
 
-**Build this system step by step, explaining reasoning for each component and how it aligns with the specific project needs.**
+Build this system step by step, explaining reasoning for each component and how it aligns with the specific project needs.
 
-**Remember: The goal is sophisticated intelligence that enhances natural decision-making, not complex artificial coordination.**
+Remember: The goal is sophisticated intelligence that enhances natural decision-making, not complex artificial coordination.
 
 ---
 
-## **IMPLEMENTATION REQUIREMENTS - MANDATORY FIRST STEPS**
+IMPLEMENTATION REQUIREMENTS - MANDATORY FIRST STEPS
 
-**⚡ CRITICAL: After confirming this setup, you MUST immediately:**
+⚡ CRITICAL: After confirming this setup, you MUST immediately:
 
-### **STEP 1: Create CLAUDE.md File**
+STEP 1: Create CLAUDE.md File
 Create a `CLAUDE.md` file in the project root with the complete cognitive enhancement system configured for this specific project. Include:
 
-**Required CLAUDE.md Structure:**
-```
+Required CLAUDE.md Structure:
+
 # CLAUDE.md
 
 ## Project Overview
@@ -768,9 +768,8 @@ Create a `CLAUDE.md` file in the project root with the complete cognitive enhanc
 
 ## Cross-Conversation Memory
 [Key architecture decisions and established patterns]
-```
 
-**Essential Components:**
+Essential Components:
 - All the patterns above, customized with actual project details
 - The proactive learning protocol with confidence tracking
 - Project-specific security and compatibility requirements
@@ -778,49 +777,50 @@ Create a `CLAUDE.md` file in the project root with the complete cognitive enhanc
 - Cross-conversation context preservation
 - Pattern effectiveness tracking
 
-### **STEP 2: Implement Learning System**
+STEP 2: Implement Learning System
 Set up the proactive learning protocol by:
 - Adding the confidence-based learning assessment system
 - Creating a system for documenting pattern improvements
 - Establishing the HIGH/MEDIUM/LOW confidence criteria
 - Setting up the mechanism for CLAUDE.md updates based on learning
 
-### **STEP 3: Validate System Setup**
+STEP 3: Validate System Setup
 Confirm the cognitive enhancement system is working by running these validation tests:
 
-**Pattern Recognition Test:**
+Pattern Recognition Test:
 Ask: "Help me add a login endpoint with username and password"
 Expected: Immediate security analysis (password hashing, rate limiting, input validation)
 
-**Tech Stack Expertise Test:**
+Tech Stack Expertise Test:
 Ask: "How should I structure my [TECH_STACK] service layer?"
 Expected: Framework-specific architectural guidance
 
-**Learning Protocol Test:**
+Learning Protocol Test:
 Ask: "What would you add to CLAUDE.md based on this conversation?"
 Expected: Specific HIGH/MEDIUM/LOW confidence learning proposals
 
-**Cross-Conversation Memory Test:**
+Cross-Conversation Memory Test:
 Reference a previous conversation topic
 Expected: Claude remembers and builds on established patterns
 
-**If any test fails, the system setup is incomplete and needs adjustment.**
+If any test fails, the system setup is incomplete and needs adjustment.
 
-**ONLY AFTER completing these implementation steps should you signal readiness for development tasks.**
+ONLY AFTER completing these implementation steps should you signal readiness for development tasks.
 
 ---
 
-**⚡ EXPECTED RESPONSE: After you paste this prompt, I (Claude) should:**
-1. **Confirm** understanding of your project domain and tech stack
-2. **Immediately create** the CLAUDE.md file with your customized system
-3. **Implement** the learning protocol for continuous improvement
-4. **Validate** the system setup with a test
-5. **Signal readiness** for your first development task
+⚡ IMPORTANT: After you paste this prompt, I (Claude) should respond with:
+1. Confirmation that I understand your project domain and tech stack
+2. Immediately create the CLAUDE.md file with your customized system
+3. Implement the learning protocol for continuous improvement
+4. Validate the system setup with a test
+5. Signal readiness for your first development task
 
-**If I don't create the CLAUDE.md file and implement the system, the prompt setup is incomplete.**
+If I don't acknowledge the setup or respond generically, the prompt may not have worked properly.
 ```
 
 # 🛠️ **END OF PROMPT TO COPY**
+
 ## **🔄 CONTINUOUS IMPROVEMENT METHODOLOGY**
 
 **The Key to Our 60-70% Efficiency Gains: System Evolution**
