@@ -96,7 +96,66 @@ detect_bash_cli() {
     return 0
 }
 
-# Export the detection function
+# Get patterns for bash CLI projects
+get_bash_cli_patterns() {
+    cat << 'EOF'
+# Claude Programming Assistant Patterns for Bash CLI Tools
+
+## Code Structure Patterns
+- **Modular Design**: Break functionality into separate shell scripts
+- **Error Handling**: Implement comprehensive error trapping and validation
+- **Configuration Management**: Use config files for user preferences
+- **Help System**: Provide detailed usage and help information
+
+## Security Patterns
+- **Input Validation**: Sanitize all user inputs and file paths
+- **Permission Checks**: Verify file permissions before operations
+- **Secure Temp Files**: Use proper temporary file creation
+- **No Secret Exposure**: Never log or display sensitive information
+
+## Testing Patterns
+- **Unit Testing**: Test individual functions with bash test frameworks
+- **Integration Testing**: Test CLI commands and workflows
+- **Cross-Platform Testing**: Ensure compatibility across OS platforms
+- **Continuous Integration**: Automated testing with GitHub Actions
+EOF
+}
+
+# Get critical assets for bash CLI projects
+get_bash_cli_assets() {
+    echo "shell scripts, configuration files, test suites, user data, CLI binaries"
+}
+
+# Get mandatory requirements for bash CLI projects
+get_bash_cli_requirements() {
+    cat << 'EOF'
+- Bash 4.0+ compatibility for cross-platform support
+- Proper error handling and exit codes
+- Input validation and sanitization
+- Help/usage documentation for all commands
+- Executable permissions on all shell scripts
+- Cross-platform compatibility (Linux/macOS/Windows Git Bash)
+EOF
+}
+
+# Get common issues for bash CLI projects
+get_bash_cli_issues() {
+    cat << 'EOF'
+- Shell compatibility issues between bash versions
+- File permission problems on different platforms
+- Path handling issues (spaces, special characters)
+- Error handling and proper exit codes
+- Performance issues with large datasets
+- Security vulnerabilities in input handling
+- Cross-platform compatibility challenges
+EOF
+}
+
+# Export all functions
 if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
     export -f detect_bash_cli
+    export -f get_bash_cli_patterns
+    export -f get_bash_cli_assets
+    export -f get_bash_cli_requirements
+    export -f get_bash_cli_issues
 fi

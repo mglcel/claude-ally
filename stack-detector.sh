@@ -29,11 +29,12 @@ detect_project_stack() {
     # Load all detection modules
     load_stack_modules
 
-    # Try all available detection functions
+    # Try all known detection functions (expandable list)
     local detection_functions=(
         "detect_nextjs_ai"
         "detect_python_ai"
         "detect_cordova"
+        "detect_bash_cli"
     )
 
     for func in "${detection_functions[@]}"; do
@@ -79,6 +80,9 @@ get_stack_patterns() {
         "cordova")
             get_cordova_patterns
             ;;
+        "bash-cli")
+            get_bash_cli_patterns
+            ;;
         *)
             echo "# No specific patterns available for $stack_id"
             ;;
@@ -99,6 +103,9 @@ get_stack_assets() {
             ;;
         "cordova")
             get_cordova_assets
+            ;;
+        "bash-cli")
+            get_bash_cli_assets
             ;;
         *)
             echo "user data, application configurations"
@@ -121,6 +128,9 @@ get_stack_requirements() {
         "cordova")
             get_cordova_requirements
             ;;
+        "bash-cli")
+            get_bash_cli_requirements
+            ;;
         *)
             echo "None"
             ;;
@@ -141,6 +151,9 @@ get_stack_issues() {
             ;;
         "cordova")
             get_cordova_issues
+            ;;
+        "bash-cli")
+            get_bash_cli_issues
             ;;
         *)
             echo "dependency conflicts, performance issues"
