@@ -707,6 +707,127 @@ show_database_options() {
     done
 }
 
+# Helper function to show compliance options with optional suggestion highlighting
+show_compliance_options() {
+    local var_name="${1:-COMPLIANCE_CHOICE}"
+    local suggested_choice="${2:-}"
+
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo -e "${BOLD}Compliance Requirements:${NC}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    # Display options with suggestion highlighting
+    for i in {1..7}; do
+        local option_text=""
+        case $i in
+            1) option_text="GDPR" ;;
+            2) option_text="HIPAA" ;;
+            3) option_text="SOC 2" ;;
+            4) option_text="PCI DSS" ;;
+            5) option_text="Multiple" ;;
+            6) option_text="None" ;;
+            7) option_text="Other" ;;
+        esac
+
+        if [[ "$i" == "$suggested_choice" ]]; then
+            echo -e "${GREEN}${BOLD}$i.${NC} ${BOLD}$option_text${NC} ${CYAN}🤖 (Claude's suggestion)${NC}"
+        else
+            echo -e "${CYAN}$i.${NC} $option_text"
+        fi
+    done
+
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+
+    local choice
+    local default_prompt="Select compliance requirements (1-7)"
+    if [[ -n "$suggested_choice" ]]; then
+        default_prompt="Select compliance requirements (1-7) [default: $suggested_choice]"
+    fi
+
+    while true; do
+        read -p "$default_prompt: " choice
+
+        # Use suggested choice as default if no input and suggestion exists
+        if [[ -z "$choice" && -n "$suggested_choice" ]]; then
+            choice="$suggested_choice"
+        fi
+
+        if [[ "$choice" =~ ^[1-7]$ ]]; then
+            eval "$var_name=\"$choice\""
+            if [[ "$choice" == "$suggested_choice" ]]; then
+                echo -e "${GREEN}✅ Selected: $choice (Claude's suggestion)${NC}"
+            else
+                echo -e "${GREEN}✅ Selected: $choice${NC}"
+            fi
+            break
+        else
+            echo -e "${RED}Invalid choice. Please enter a number between 1-7.${NC}"
+        fi
+    done
+}
+
+# Helper function to show deployment options with optional suggestion highlighting
+show_deployment_options() {
+    local var_name="${1:-DEPLOYMENT_CHOICE}"
+    local suggested_choice="${2:-}"
+
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo -e "${BOLD}Deployment Targets:${NC}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    # Display options with suggestion highlighting
+    for i in {1..6}; do
+        local option_text=""
+        case $i in
+            1) option_text="Cloud containers (Docker/Kubernetes)" ;;
+            2) option_text="Mobile devices" ;;
+            3) option_text="Desktop OS" ;;
+            4) option_text="Embedded hardware" ;;
+            5) option_text="Multiple platforms" ;;
+            6) option_text="Other" ;;
+        esac
+
+        if [[ "$i" == "$suggested_choice" ]]; then
+            echo -e "${GREEN}${BOLD}$i.${NC} ${BOLD}$option_text${NC} ${CYAN}🤖 (Claude's suggestion)${NC}"
+        else
+            echo -e "${CYAN}$i.${NC} $option_text"
+        fi
+    done
+
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+
+    local choice
+    local default_prompt="Select deployment target (1-6)"
+    if [[ -n "$suggested_choice" ]]; then
+        default_prompt="Select deployment target (1-6) [default: $suggested_choice]"
+    fi
+
+    while true; do
+        read -p "$default_prompt: " choice
+
+        # Use suggested choice as default if no input and suggestion exists
+        if [[ -z "$choice" && -n "$suggested_choice" ]]; then
+            choice="$suggested_choice"
+        fi
+
+        if [[ "$choice" =~ ^[1-6]$ ]]; then
+            eval "$var_name=\"$choice\""
+            if [[ "$choice" == "$suggested_choice" ]]; then
+                echo -e "${GREEN}✅ Selected: $choice (Claude's suggestion)${NC}"
+            else
+                echo -e "${GREEN}✅ Selected: $choice${NC}"
+            fi
+            break
+        else
+            echo -e "${RED}Invalid choice. Please enter a number between 1-6.${NC}"
+        fi
+    done
+}
+
 # Helper function to show project type options with optional suggestion highlighting
 show_project_type_options() {
     local var_name="${1:-PROJECT_TYPE_CHOICE}"
@@ -855,15 +976,7 @@ get_security_info() {
 
     read_with_suggestion "Most critical assets (e.g., 'user data, payment info, API keys')" "$CRITICAL_ASSETS_SUGGESTION" "CRITICAL_ASSETS"
 
-    echo ""
-    echo "Compliance requirements:"
-    echo "1. GDPR"
-    echo "2. HIPAA"
-    echo "3. SOC 2"
-    echo "4. PCI DSS"
-    echo "5. Multiple"
-    echo "6. None"
-    echo "7. Other"
+    # Compliance requirements selection - show options with Claude's suggestion highlighted
 
     # Map Claude suggestion to choice number
     local suggested_compliance_choice=""
@@ -878,15 +991,8 @@ get_security_info() {
         esac
     fi
 
-    if [[ -n "$suggested_compliance_choice" ]]; then
-        echo -e "${CYAN}🤖 Claude suggests: ${BOLD}$suggested_compliance_choice ($MANDATORY_REQUIREMENTS_SUGGESTION)${NC}"
-        read -p "Select compliance (1-7) [Press Enter for suggestion]: " COMPLIANCE_CHOICE
-        if [[ -z "$COMPLIANCE_CHOICE" ]]; then
-            COMPLIANCE_CHOICE="$suggested_compliance_choice"
-        fi
-    else
-        read -p "Select compliance (1-7): " COMPLIANCE_CHOICE
-    fi
+    # Show options directly with suggestion highlighted
+    show_compliance_options "COMPLIANCE_CHOICE" "$suggested_compliance_choice"
 
     case $COMPLIANCE_CHOICE in
         1) MANDATORY_REQUIREMENTS="GDPR compliance" ;;
@@ -909,14 +1015,7 @@ get_technical_info() {
 
     read_with_suggestion "File structure overview (e.g., 'src/main/java, gradle build')" "$FILE_STRUCTURE_SUGGESTION" "FILE_STRUCTURE"
 
-    echo ""
-    echo "Deployment target:"
-    echo "1. Cloud containers (Docker/Kubernetes)"
-    echo "2. Mobile devices"
-    echo "3. Desktop OS"
-    echo "4. Embedded hardware"
-    echo "5. Multiple platforms"
-    echo "6. Other"
+    # Deployment target selection - show options with Claude's suggestion highlighted
 
     # Map Claude suggestion to choice number
     local suggested_deploy_choice=""
@@ -931,15 +1030,8 @@ get_technical_info() {
         esac
     fi
 
-    if [[ -n "$suggested_deploy_choice" ]]; then
-        echo -e "${CYAN}🤖 Claude suggests: ${BOLD}$suggested_deploy_choice ($DEPLOYMENT_TARGET_SUGGESTION)${NC}"
-        read -p "Select deployment (1-6) [Press Enter for suggestion]: " DEPLOY_CHOICE
-        if [[ -z "$DEPLOY_CHOICE" ]]; then
-            DEPLOY_CHOICE="$suggested_deploy_choice"
-        fi
-    else
-        read -p "Select deployment (1-6): " DEPLOY_CHOICE
-    fi
+    # Show options directly with suggestion highlighted
+    show_deployment_options "DEPLOY_CHOICE" "$suggested_deploy_choice"
 
     case $DEPLOY_CHOICE in
         1) DEPLOYMENT_TARGET="cloud containers" ;;
