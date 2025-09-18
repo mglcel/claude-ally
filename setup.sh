@@ -574,7 +574,7 @@ handle_suggestion() {
 
     local choice
     while true; do
-        read -p "Choose (1-2): " choice
+        read -p "Choose (1-2) [default: 1]: " choice
         case "$choice" in
             1|"")
                 eval "$variable_name=\"$suggestion\""
@@ -585,7 +585,7 @@ handle_suggestion() {
                 echo ""
                 if [[ "$suggestion_type" == "choice" && -n "$options_callback" ]]; then
                     # Show all options and get user choice
-                    $options_callback
+                    $options_callback "$variable_name"
                     break
                 else
                     # Get custom text input
@@ -626,6 +626,8 @@ get_project_info() {
 
     # Helper function to show project type options
     show_project_type_options() {
+        local var_name="${1:-PROJECT_TYPE_CHOICE}"
+
         echo "Select project type:"
         echo "1. Web application"
         echo "2. Mobile app"
@@ -640,9 +642,12 @@ get_project_info() {
         echo "11. Other"
         echo ""
 
+        local choice
         while true; do
-            read -p "Select project type (1-11): " PROJECT_TYPE_CHOICE
-            if [[ "$PROJECT_TYPE_CHOICE" =~ ^[1-9]$|^1[01]$ ]]; then
+            read -p "Select project type (1-11): " choice
+            if [[ "$choice" =~ ^[1-9]$|^1[01]$ ]]; then
+                eval "$var_name=\"$choice\""
+                echo -e "${GREEN}✅ Selected: $choice${NC}"
                 break
             else
                 echo -e "${RED}Invalid choice. Please enter a number between 1-11.${NC}"
