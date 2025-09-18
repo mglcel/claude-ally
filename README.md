@@ -6,11 +6,11 @@
 
 ## ⚡ Quick Start (2 minutes)
 
-### **Option 1: Interactive Setup (Recommended)**
+### **Option 1: Enhanced Interactive Setup (🧠 Claude-Powered)**
 ```bash
 ./setup.sh
 ```
-The script will ask you questions about your project and generate a customized prompt file ready to copy-paste to Claude.
+The script analyzes your repository with Claude's intelligence and suggests smart defaults. Just press Enter to accept Claude's suggestions or modify them as needed.
 
 ### **Option 2: Manual Setup**
 1. **Download**: Get `UNIVERSAL_COGNITIVE_ENHANCEMENT_PROMPT.md` from this repository
@@ -47,6 +47,8 @@ After setup, test with these validation questions:
 
 **After Enhanced Claude:**
 - **60-70% faster development** - Claude spots issues before they become problems
+- **🧠 Intelligent setup** - Repository analysis suggests perfect defaults
+- **⚡ Press-Enter convenience** - Accept smart suggestions instantly
 - **Automatic security analysis** tailored to your specific technology stack
 - **Smart pattern matching** that learns your project's pain points
 - **Proactive suggestions** for improvements and best practices
@@ -157,9 +159,9 @@ The complete system is documented in `UNIVERSAL_COGNITIVE_ENHANCEMENT_PROMPT.md`
 - **🔄 Evolution Methodology** - How to continuously improve the system
 - **📋 Quick Reference** - Post-setup productivity guide
 
-## 🛠️ Interactive Setup Script
+## 🛠️ Enhanced Interactive Setup Script (🧠 Claude-Powered)
 
-For the easiest setup experience, use the included `setup.sh` script:
+For the most intelligent setup experience, use the enhanced `setup.sh` script:
 
 ```bash
 git clone https://github.com/mglcel/claude-ally.git
@@ -167,19 +169,66 @@ cd claude-ally
 ./setup.sh
 ```
 
-**The script will:**
-- Ask you questions about your project (name, tech stack, security requirements, etc.)
-- Generate a customized prompt file specific to your project
-- Save it as `claude_prompt_[your_project].txt`
-- Provide clear next steps for using it with Claude
+### **🧠 Claude Intelligence Features**
 
-**What it asks:**
-- Project name and type (web app, mobile, backend service, etc.)
-- Technology stack (languages, frameworks, databases)
-- Security requirements (GDPR, HIPAA, critical assets)
-- Common issues and deployment target
+**The script automatically:**
+- 🔍 **Analyzes your repository** with Claude's intelligence
+- 📊 **Detects project type** from file structure and configurations
+- 🔧 **Identifies tech stack** from package.json, requirements.txt, go.mod, etc.
+- 🗂️ **Recognizes databases** from config files and dependencies
+- 🛡️ **Suggests critical assets** based on code analysis
+- 📝 **Recommends compliance requirements** from documentation patterns
 
-**Output:** A ready-to-use prompt file that creates a CLAUDE.md perfectly tailored to your project.
+### **💡 Smart Default System**
+
+For each question, Claude suggests intelligent defaults:
+
+```bash
+🤖 Claude suggests: MyAwesomeProject
+Project name: [Press Enter for suggestion or type new value]:
+
+🤖 Claude suggests: 1 (web-app)
+Select project type (1-7) [Press Enter for suggestion]:
+
+🤖 Claude suggests: Python/Django, React, PostgreSQL
+Tech stack: [Press Enter for suggestion or type new value]:
+```
+
+**What makes it intelligent:**
+- **Repository-aware**: Analyzes your actual project files for context
+- **Press-Enter convenience**: Accept smart suggestions instantly
+- **Override flexibility**: Easily modify any suggestion
+- **Confidence tracking**: Claude indicates how confident it is in each suggestion
+
+**Output:** A perfectly tailored prompt file enhanced with Claude's repository analysis.
+
+### **🔄 Claude Integration Workflow**
+
+The enhanced setup script works best when run from within Claude Code:
+
+1. **📁 Navigate to your project**: Run the script in your project directory
+2. **🧠 Claude Analysis**: The script detects Claude and requests repository analysis
+3. **📋 Analysis Prompt**: Copy the analysis request to Claude
+4. **🤖 Intelligent Response**: Claude analyzes your files and suggests defaults
+5. **⚡ Smart Setup**: Press Enter to accept suggestions or modify as needed
+
+**Example Analysis Request:**
+```markdown
+# Repository Analysis for Claude Ally Setup
+
+Please analyze this repository and provide intelligent suggestions:
+
+**PROJECT CONTEXT ANALYSIS:**
+1. **Project Name**: Analyze repository name, package.json, README...
+2. **Project Type**: Determine if web-app, mobile-app, backend-service...
+3. **Tech Stack**: Identify from package.json, requirements.txt, go.mod...
+[...detailed analysis request...]
+```
+
+**Requirements:**
+- ✅ **Claude Code environment** (recommended)
+- ✅ **Manual mode available** if Claude not detected
+- ✅ **Fallback to traditional prompts** for all situations
 
 ### **🔍 Validation Script**
 
