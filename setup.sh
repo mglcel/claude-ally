@@ -390,6 +390,29 @@ EOF
     echo "$filename"
 }
 
+validate_inputs() {
+    # Validate required fields are not empty
+    if [[ -z "$PROJECT_NAME" ]]; then
+        echo -e "${RED}❌ Error: Project name is required${NC}"
+        exit 1
+    fi
+
+    if [[ -z "$TECH_STACK" ]]; then
+        echo -e "${RED}❌ Error: Tech stack is required${NC}"
+        exit 1
+    fi
+
+    if [[ -z "$CRITICAL_ASSETS" ]]; then
+        echo -e "${YELLOW}⚠️  Warning: No critical assets specified. Using 'user data' as default.${NC}"
+        CRITICAL_ASSETS="user data"
+    fi
+
+    # Validate project name doesn't contain invalid characters
+    if [[ "$PROJECT_NAME" =~ [^a-zA-Z0-9\ \-\_] ]]; then
+        echo -e "${YELLOW}⚠️  Warning: Project name contains special characters. This may affect file naming.${NC}"
+    fi
+}
+
 main() {
     print_header
 
@@ -397,6 +420,9 @@ main() {
     get_project_info
     get_security_info
     get_technical_info
+
+    # Validate inputs
+    validate_inputs
 
     echo ""
     echo -e "${BLUE}🔧 GENERATING YOUR CUSTOMIZED PROMPT...${NC}"
@@ -409,17 +435,32 @@ main() {
         echo ""
         echo -e "${GREEN}✅ SUCCESS!${NC}"
         echo -e "${BOLD}📄 Your customized prompt has been saved to: $filename${NC}"
+
+        # Validate the generated file
+        if command -v ./validate.sh &> /dev/null; then
+            echo ""
+            echo -e "${BLUE}🔍 Running validation check...${NC}"
+            if ./validate.sh "$filename" | tail -1 | grep -q "EXCELLENT"; then
+                echo -e "${GREEN}✅ Validation passed!${NC}"
+            else
+                echo -e "${YELLOW}⚠️  Validation found minor issues (check above)${NC}"
+            fi
+        fi
+
         echo ""
         echo -e "${YELLOW}📋 NEXT STEPS:${NC}"
-        echo "1. Open the generated file"
+        echo "1. Open the generated file: $filename"
         echo "2. Copy the entire content"
         echo "3. Paste it to a new Claude conversation"
         echo "4. Claude will create your CLAUDE.md file and set up the system"
+        echo ""
+        echo -e "${BOLD}💡 TIP: Use './validate.sh $filename' to check prompt quality${NC}"
         echo ""
         echo -e "${GREEN}🚀 Your project will then have the same sophisticated Claude${NC}"
         echo -e "${GREEN}   cognitive enhancement system we built together!${NC}"
     else
         echo -e "${RED}❌ Error generating the prompt file.${NC}"
+        echo "Please check file permissions and try again."
         exit 1
     fi
 }

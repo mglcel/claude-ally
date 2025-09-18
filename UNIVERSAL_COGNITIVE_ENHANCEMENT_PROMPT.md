@@ -749,10 +749,34 @@ LOW_CONFIDENCE_Learning:
 
 ### **STEP 1: Create CLAUDE.md File**
 Create a `CLAUDE.md` file in the project root with the complete cognitive enhancement system configured for this specific project. Include:
-- All the patterns above, customized with the actual [PROJECT_NAME], [TECH_STACK], etc.
-- The learning protocol for continuous improvement
+
+**Required CLAUDE.md Structure:**
+```
+# CLAUDE.md
+
+## Project Overview
+[PROJECT_NAME] - [PROJECT_TYPE] using [TECH_STACK]
+
+## 🚨 MANDATORY DEVELOPMENT REQUIREMENTS - NEVER SKIP THESE
+[Include project-specific requirements checklist]
+
+## Cognitive Enhancement System Configuration
+[All the customized patterns from above]
+
+## Learning Protocol Status
+[Track system improvements and confidence levels]
+
+## Cross-Conversation Memory
+[Key architecture decisions and established patterns]
+```
+
+**Essential Components:**
+- All the patterns above, customized with actual project details
+- The proactive learning protocol with confidence tracking
 - Project-specific security and compatibility requirements
-- Clear documentation for future Claude conversations
+- Clear formatting for easy Claude parsing
+- Cross-conversation context preservation
+- Pattern effectiveness tracking
 
 ### **STEP 2: Implement Learning System**
 Set up the proactive learning protocol by:
@@ -762,11 +786,25 @@ Set up the proactive learning protocol by:
 - Setting up the mechanism for CLAUDE.md updates based on learning
 
 ### **STEP 3: Validate System Setup**
-Confirm the cognitive enhancement system is working by:
-- Testing pattern recognition with a sample task
-- Verifying security analysis triggers correctly
-- Checking that tech stack expertise is active
-- Ensuring the learning protocol responds to task outcomes
+Confirm the cognitive enhancement system is working by running these validation tests:
+
+**Pattern Recognition Test:**
+Ask: "Help me add a login endpoint with username and password"
+Expected: Immediate security analysis (password hashing, rate limiting, input validation)
+
+**Tech Stack Expertise Test:**
+Ask: "How should I structure my [TECH_STACK] service layer?"
+Expected: Framework-specific architectural guidance
+
+**Learning Protocol Test:**
+Ask: "What would you add to CLAUDE.md based on this conversation?"
+Expected: Specific HIGH/MEDIUM/LOW confidence learning proposals
+
+**Cross-Conversation Memory Test:**
+Reference a previous conversation topic
+Expected: Claude remembers and builds on established patterns
+
+**If any test fails, the system setup is incomplete and needs adjustment.**
 
 **ONLY AFTER completing these implementation steps should you signal readiness for development tasks.**
 
