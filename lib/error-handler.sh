@@ -226,9 +226,12 @@ recovery_mode() {
     echo "2. Checking key files..."
     local key_files=("setup.sh" "stack-detector.sh" "contribute-stack.sh")
 
+    # Get script directory dynamically
+    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
     for file in "${key_files[@]}"; do
-        if [[ -f "/private/tmp/claude-ally/$file" ]]; then
-            validate_permissions "/private/tmp/claude-ally/$file"
+        if [[ -f "$script_dir/$file" ]]; then
+            validate_permissions "$script_dir/$file"
         else
             echo -e "${RED}❌ Missing file: $file${NC}"
         fi
@@ -236,8 +239,8 @@ recovery_mode() {
 
     # Check cache
     echo "3. Checking cache..."
-    if [[ -f "/private/tmp/claude-ally/cache-manager.sh" ]]; then
-        source "/private/tmp/claude-ally/cache-manager.sh"
+    if [[ -f "$script_dir/lib/cache-manager.sh" ]]; then
+        source "$script_dir/lib/cache-manager.sh"
         cache_stats
     fi
 

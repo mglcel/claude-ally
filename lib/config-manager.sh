@@ -4,7 +4,7 @@
 
 CONFIG_DIR="$HOME/.claude-ally"
 CONFIG_FILE="$CONFIG_DIR/config.json"
-DEFAULT_CONFIG_FILE="/private/tmp/claude-ally/config.default.json"
+DEFAULT_CONFIG_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/config.default.json"
 
 # Initialize configuration
 init_config() {
