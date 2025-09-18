@@ -6,6 +6,13 @@
 
 ## ⚡ Quick Start (2 minutes)
 
+### **Option 1: Interactive Setup (Recommended)**
+```bash
+./setup.sh
+```
+The script will ask you questions about your project and generate a customized prompt file ready to copy-paste to Claude.
+
+### **Option 2: Manual Setup**
 1. **Download**: Get `UNIVERSAL_COGNITIVE_ENHANCEMENT_PROMPT.md` from this repository
 2. **Choose Template**: Find your tech stack in the copy-paste templates section
 3. **Customize**: Fill in `[bracketed]` sections with your project details
@@ -98,6 +105,30 @@ The complete system is documented in `UNIVERSAL_COGNITIVE_ENHANCEMENT_PROMPT.md`
 - **🚨 Troubleshooting** - Common problems and solutions
 - **🔄 Evolution Methodology** - How to continuously improve the system
 - **📋 Quick Reference** - Post-setup productivity guide
+
+## 🛠️ Interactive Setup Script
+
+For the easiest setup experience, use the included `setup.sh` script:
+
+```bash
+git clone https://github.com/mglcel/claude-ally.git
+cd claude-ally
+./setup.sh
+```
+
+**The script will:**
+- Ask you questions about your project (name, tech stack, security requirements, etc.)
+- Generate a customized prompt file specific to your project
+- Save it as `claude_prompt_[your_project].txt`
+- Provide clear next steps for using it with Claude
+
+**What it asks:**
+- Project name and type (web app, mobile, backend service, etc.)
+- Technology stack (languages, frameworks, databases)
+- Security requirements (GDPR, HIPAA, critical assets)
+- Common issues and deployment target
+
+**Output:** A ready-to-use prompt file that creates a CLAUDE.md perfectly tailored to your project.
 
 ## 🤝 Contributing
 
