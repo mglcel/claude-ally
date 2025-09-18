@@ -1,15 +1,28 @@
 # **UNIVERSAL CLAUDE COGNITIVE ENHANCEMENT SYSTEM**
 ## **Transform Claude into Your Project's Senior Technical Expert**
 
-> **🚀 5-Minute Setup → 60-70% Faster Development**
+> **🚀 30-Second Setup → 85% Faster Development (v2.0)**
 >
 > Turn any Claude conversation into a specialized senior engineer that knows your codebase, catches security issues before production, and proactively suggests improvements.
 
 ---
 
-## **⚡ IMMEDIATE QUICK START (2 minutes)**
+## **⚡ IMMEDIATE QUICK START (30 seconds with v2.0 CLI)**
 
-**For Impatient Developers:**
+**⚡ NEW v2.0: Professional CLI Interface**
+
+```bash
+# One-command setup (recommended):
+claude-ally setup
+
+# Detect your project type:
+claude-ally detect
+
+# Contribute new stack to community:
+claude-ally contribute
+```
+
+**📋 Manual Setup (if needed):**
 
 1. **Choose Your Tech Stack Template** (scroll to copy-paste templates section)
 2. **Fill in [Bracketed] Details** with your project specifics
