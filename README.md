@@ -8,9 +8,13 @@
 
 ### **Option 1: Enhanced Interactive Setup (🧠 Claude-Powered)**
 ```bash
+# From your project directory:
+/path/to/claude-ally/setup.sh
+
+# Or if claude-ally is in your PATH:
 ./setup.sh
 ```
-The script analyzes your repository with Claude's intelligence and suggests smart defaults. Just press Enter to accept Claude's suggestions or modify them as needed.
+The script analyzes your repository with Claude's intelligence and suggests smart defaults. Just press Enter to accept Claude's suggestions or modify them as needed. **Works from any project directory!**
 
 ### **Option 2: Manual Setup**
 1. **Download**: Get `UNIVERSAL_COGNITIVE_ENHANCEMENT_PROMPT.md` from this repository
@@ -164,10 +168,15 @@ The complete system is documented in `UNIVERSAL_COGNITIVE_ENHANCEMENT_PROMPT.md`
 For the most intelligent setup experience, use the enhanced `setup.sh` script:
 
 ```bash
+# Clone claude-ally anywhere on your system
 git clone https://github.com/mglcel/claude-ally.git
-cd claude-ally
-./setup.sh
+
+# Go to your project directory and run the script
+cd /path/to/your/project
+/path/to/claude-ally/setup.sh
 ```
+
+**✨ NEW: Cross-Directory Support** - Run the script from any project directory! The script automatically detects your project location and the claude-ally script location.
 
 ### **🧠 Claude Intelligence Features**
 
@@ -202,6 +211,32 @@ Tech stack: [Press Enter for suggestion or type new value]:
 
 **Output:** A perfectly tailored prompt file enhanced with Claude's repository analysis.
 
+### **🚀 Automatic Claude Setup (NEW!)**
+
+The script now offers to automatically set up Claude for you:
+
+```bash
+🚀 AUTOMATIC CLAUDE SETUP
+------------------------------
+✅ Claude is available for automatic setup!
+
+I can automatically set up your CLAUDE.md file by:
+1. 📋 Reading the generated prompt
+2. 🤖 Invoking Claude with the prompt
+3. 📝 Creating your project's CLAUDE.md file
+4. ✅ Validating the setup is working
+
+Would you like me to automatically set up Claude for your project? (Y/n):
+```
+
+**When you choose "Yes":**
+- ✅ Script generates the perfect prompt for your project
+- 🤖 Automatically invokes Claude with the prompt
+- 📝 Claude creates your CLAUDE.md file
+- 🎉 **Done!** Your project is now enhanced
+
+**No more manual copy-paste!** The entire setup is automated from analysis to implementation.
+
 ### **🔄 Claude Integration Workflow**
 
 The enhanced setup script works best when run from within Claude Code:
@@ -229,6 +264,31 @@ Please analyze this repository and provide intelligent suggestions:
 - ✅ **Claude Code environment** (recommended)
 - ✅ **Manual mode available** if Claude not detected
 - ✅ **Fallback to traditional prompts** for all situations
+- ✅ **Cross-directory support** - Works from any project directory
+
+### **📁 Smart Directory Detection**
+
+The script intelligently handles different scenarios:
+
+**✅ From your project directory:**
+```bash
+cd /home/user/myproject
+/path/to/claude-ally/setup.sh
+# ✅ Analyzes myproject, saves files to myproject/
+```
+
+**⚠️ From claude-ally directory:**
+```bash
+cd /path/to/claude-ally
+./setup.sh
+# ⚠️ Warns: "You're running from claude-ally directory"
+# 💡 Suggests: "Run from your project directory instead"
+```
+
+**🎯 Smart file placement:**
+- Generated prompts: Saved in your **project directory**
+- CLAUDE.md: Created in your **project directory**
+- Validation scripts: Referenced from **claude-ally directory**
 
 ### **🔍 Validation Script**
 

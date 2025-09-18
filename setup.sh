@@ -19,6 +19,38 @@ NC='\033[0m' # No Color
 CLAUDE_AVAILABLE=false
 CLAUDE_SUGGESTIONS_FILE=""
 REPOSITORY_ANALYSIS=""
+SCRIPT_DIR=""
+PROJECT_DIR=""
+WORKING_DIR=""
+
+detect_directories() {
+    # Get the directory where this script is located
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+    # Get the current working directory (project directory)
+    WORKING_DIR="$(pwd)"
+    PROJECT_DIR="$WORKING_DIR"
+
+    echo -e "${BLUE}📁 Directory Detection${NC}"
+    echo "------------------------------"
+    echo "Claude Ally script: $SCRIPT_DIR"
+    echo "Project directory: $PROJECT_DIR"
+    echo ""
+
+    # Check if we're in the claude-ally directory itself
+    if [[ "$SCRIPT_DIR" == "$PROJECT_DIR" ]]; then
+        echo -e "${YELLOW}⚠️  You're running this script from the claude-ally directory itself.${NC}"
+        echo "This will analyze the claude-ally project instead of your project."
+        echo ""
+        read -p "Do you want to continue analyzing claude-ally? (y/N): " ANALYZE_SELF
+        if [[ ! "$ANALYZE_SELF" =~ ^[Yy]$ ]]; then
+            echo -e "${CYAN}💡 TIP: Run this script from your project directory:${NC}"
+            echo "   cd /path/to/your/project"
+            echo "   $SCRIPT_DIR/setup.sh"
+            exit 0
+        fi
+    fi
+}
 
 print_header() {
     echo "============================================================"
@@ -78,6 +110,8 @@ analyze_repository() {
     echo ""
     echo -e "${BLUE}🔬 Analyzing repository with Claude...${NC}"
     echo "---------------------------------------------"
+    echo "Analyzing project: $PROJECT_DIR"
+    echo ""
 
     # Create a temporary file for analysis
     CLAUDE_SUGGESTIONS_FILE=$(mktemp /tmp/claude_analysis_XXXXXX.md)
@@ -404,8 +438,114 @@ get_technical_info() {
     esac
 }
 
+offer_automatic_claude_setup() {
+    local filename="$1"
+
+    echo ""
+    echo -e "${BLUE}🚀 AUTOMATIC CLAUDE SETUP${NC}"
+    echo "------------------------------"
+
+    if [[ "$CLAUDE_AVAILABLE" == true ]]; then
+        echo -e "${GREEN}✅ Claude is available for automatic setup!${NC}"
+        echo ""
+        echo "I can automatically set up your CLAUDE.md file by:"
+        echo "1. 📋 Reading the generated prompt"
+        echo "2. 🤖 Invoking Claude with the prompt"
+        echo "3. 📝 Creating your project's CLAUDE.md file"
+        echo "4. ✅ Validating the setup is working"
+        echo ""
+        read -p "Would you like me to automatically set up Claude for your project? (Y/n): " AUTO_SETUP
+
+        if [[ -z "$AUTO_SETUP" ]] || [[ "$AUTO_SETUP" =~ ^[Yy]$ ]]; then
+            echo ""
+            echo -e "${CYAN}🚀 Setting up Claude cognitive enhancement automatically...${NC}"
+            echo ""
+
+            # Attempt automatic setup
+            if setup_claude_automatically "$filename"; then
+                echo ""
+                echo -e "${GREEN}🎉 SUCCESS! Claude cognitive enhancement system is now active!${NC}"
+                echo -e "${BOLD}📄 Your CLAUDE.md file has been created in: $PROJECT_DIR/CLAUDE.md${NC}"
+                echo ""
+                echo -e "${CYAN}💡 Your next Claude conversations in this project will be enhanced with:${NC}"
+                echo "   • Security analysis tailored to your tech stack"
+                echo "   • Pattern matching for your specific architecture"
+                echo "   • Proactive learning and improvement suggestions"
+                echo ""
+                echo -e "${GREEN}✨ Try asking Claude: 'Help me add user authentication'${NC}"
+                echo -e "${GREEN}   Notice the enhanced security analysis and specific recommendations!${NC}"
+                return 0
+            else
+                echo ""
+                echo -e "${YELLOW}⚠️  Automatic setup failed. Please use manual setup steps below.${NC}"
+                return 1
+            fi
+        else
+            echo -e "${CYAN}👍 No problem! You can use the manual setup steps below.${NC}"
+            return 1
+        fi
+    else
+        echo -e "${YELLOW}⚠️  Claude not available for automatic setup.${NC}"
+        echo "Please use the manual setup steps below."
+        return 1
+    fi
+}
+
+setup_claude_automatically() {
+    local filename="$1"
+
+    echo -e "${BLUE}📋 Reading generated prompt...${NC}"
+
+    if [[ ! -f "$filename" ]]; then
+        echo -e "${RED}❌ Generated prompt file not found: $filename${NC}"
+        return 1
+    fi
+
+    echo -e "${CYAN}🤖 Invoking Claude with your customized prompt...${NC}"
+    echo "This will create your CLAUDE.md file automatically."
+    echo ""
+
+    # Read the prompt content
+    local prompt_content
+    prompt_content=$(cat "$filename")
+
+    # Create a message for Claude
+    echo "📝 Sending the following request to Claude:"
+    echo "----------------------------------------"
+    echo "Please set up the cognitive enhancement system for this project using the following configuration:"
+    echo ""
+    echo "$prompt_content"
+    echo ""
+    echo "----------------------------------------"
+    echo ""
+    echo -e "${YELLOW}📋 CLAUDE INVOCATION NEEDED${NC}"
+    echo "Please copy the prompt above and paste it to Claude."
+    echo "Claude will create your CLAUDE.md file and set up the system."
+    echo ""
+    read -p "Press Enter when Claude has finished setting up the system..."
+
+    # Check if CLAUDE.md was created
+    if [[ -f "$PROJECT_DIR/CLAUDE.md" ]]; then
+        echo -e "${GREEN}✅ CLAUDE.md file detected!${NC}"
+
+        # Validate the setup
+        echo -e "${BLUE}🔍 Validating Claude setup...${NC}"
+        if grep -q "CLAUDE.md" "$PROJECT_DIR/CLAUDE.md" && grep -q "$PROJECT_NAME" "$PROJECT_DIR/CLAUDE.md"; then
+            echo -e "${GREEN}✅ Setup validation passed!${NC}"
+            return 0
+        else
+            echo -e "${YELLOW}⚠️  Setup validation found minor issues, but CLAUDE.md was created.${NC}"
+            return 0
+        fi
+    else
+        echo -e "${RED}❌ CLAUDE.md file not found. Setup may have failed.${NC}"
+        echo "Please check that Claude successfully created the file."
+        return 1
+    fi
+}
+
 generate_prompt() {
-    local filename="claude_prompt_$(echo "$PROJECT_NAME" | tr '[:upper:]' '[:lower:]' | tr ' ' '_').txt"
+    local filename="$PROJECT_DIR/claude_prompt_$(echo "$PROJECT_NAME" | tr '[:upper:]' '[:lower:]' | tr ' ' '_').txt"
 
     cat > "$filename" << EOF
 (Fill in the [bracketed] sections with your project details first)
@@ -689,6 +829,9 @@ main() {
 
     print_header
 
+    # Detect and validate directories
+    detect_directories
+
     # Check for Claude availability and analyze repository
     if check_claude_availability; then
         analyze_repository
@@ -723,24 +866,27 @@ main() {
         fi
 
         # Validate the generated file
-        if command -v ./validate.sh &> /dev/null; then
+        if [ -f "$SCRIPT_DIR/validate.sh" ]; then
             echo ""
             echo -e "${BLUE}🔍 Running validation check...${NC}"
-            if ./validate.sh "$filename" | tail -1 | grep -q "EXCELLENT"; then
+            if "$SCRIPT_DIR/validate.sh" "$filename" | tail -1 | grep -q "EXCELLENT"; then
                 echo -e "${GREEN}✅ Validation passed!${NC}"
             else
                 echo -e "${YELLOW}⚠️  Validation found minor issues (check above)${NC}"
             fi
         fi
 
+        # Offer automatic Claude setup
+        offer_automatic_claude_setup "$filename"
+
         echo ""
-        echo -e "${YELLOW}📋 NEXT STEPS:${NC}"
+        echo -e "${YELLOW}📋 MANUAL SETUP STEPS (if not using automatic setup):${NC}"
         echo "1. Open the generated file: $filename"
         echo "2. Copy the entire content"
         echo "3. Paste it to a new Claude conversation"
         echo "4. Claude will create your CLAUDE.md file and set up the system"
         echo ""
-        echo -e "${BOLD}💡 TIP: Use './validate.sh $filename' to check prompt quality${NC}"
+        echo -e "${BOLD}💡 TIP: Use '$SCRIPT_DIR/validate.sh $filename' to check prompt quality${NC}"
         echo ""
         echo -e "${GREEN}🚀 Your project will then have the same sophisticated Claude${NC}"
         echo -e "${GREEN}   cognitive enhancement system we built together!${NC}"
