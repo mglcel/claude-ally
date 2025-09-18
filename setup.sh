@@ -707,6 +707,82 @@ show_database_options() {
     done
 }
 
+# Helper function to show tech stack options with optional suggestion highlighting
+show_tech_stack_options() {
+    local var_name="${1:-TECH_STACK_CHOICE}"
+    local suggested_choice="${2:-}"
+
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo -e "${BOLD}Common Technology Stacks:${NC}"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    # Display options with suggestion highlighting
+    for i in {1..15}; do
+        local option_text=""
+        case $i in
+            1) option_text="JavaScript/Node.js, React, MongoDB" ;;
+            2) option_text="Python, Django/Flask, PostgreSQL" ;;
+            3) option_text="Java, Spring Boot, MySQL" ;;
+            4) option_text="PHP, Laravel, MySQL" ;;
+            5) option_text="C#, .NET Core, SQL Server" ;;
+            6) option_text="Go, Gin/Echo, PostgreSQL" ;;
+            7) option_text="Ruby, Rails, PostgreSQL" ;;
+            8) option_text="TypeScript, Next.js, Supabase" ;;
+            9) option_text="Python, FastAPI, SQLite" ;;
+            10) option_text="Rust, Actix/Axum, PostgreSQL" ;;
+            11) option_text="Shell scripting, Markdown, Git" ;;
+            12) option_text="Flutter, Dart, Firebase" ;;
+            13) option_text="React Native, JavaScript, MongoDB" ;;
+            14) option_text="Swift, iOS SDK, Core Data" ;;
+            15) option_text="Custom (enter your own)" ;;
+        esac
+
+        if [[ "$i" == "$suggested_choice" ]]; then
+            echo -e "${GREEN}${BOLD}$i.${NC} ${BOLD}$option_text${NC} ${CYAN}🤖 (Claude's suggestion)${NC}"
+        else
+            echo -e "${CYAN}$i.${NC} $option_text"
+        fi
+    done
+
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+
+    local choice
+    local default_prompt="Select tech stack (1-15)"
+    if [[ -n "$suggested_choice" ]]; then
+        default_prompt="Select tech stack (1-15) [default: $suggested_choice]"
+    fi
+
+    while true; do
+        read -p "$default_prompt: " choice
+
+        # Use suggested choice as default if no input and suggestion exists
+        if [[ -z "$choice" && -n "$suggested_choice" ]]; then
+            choice="$suggested_choice"
+        fi
+
+        if [[ "$choice" =~ ^[1-9]$|^1[0-5]$ ]]; then
+            if [[ "$choice" == "15" ]]; then
+                # Custom option - ask for input
+                read -p "Enter your custom tech stack: " custom_stack
+                eval "$var_name=\"custom:$custom_stack\""
+                echo -e "${GREEN}✅ Selected: Custom - $custom_stack${NC}"
+            else
+                eval "$var_name=\"$choice\""
+                if [[ "$choice" == "$suggested_choice" ]]; then
+                    echo -e "${GREEN}✅ Selected: $choice (Claude's suggestion)${NC}"
+                else
+                    echo -e "${GREEN}✅ Selected: $choice${NC}"
+                fi
+            fi
+            break
+        else
+            echo -e "${RED}Invalid choice. Please enter a number between 1-15.${NC}"
+        fi
+    done
+}
+
 # Helper function to show compliance options with optional suggestion highlighting
 show_compliance_options() {
     local var_name="${1:-COMPLIANCE_CHOICE}"
@@ -936,7 +1012,50 @@ get_project_info() {
         *) PROJECT_TYPE="web-app" ;;
     esac
 
-    read_with_suggestion "Tech stack (e.g., 'Java/Spring Boot, React, PostgreSQL')" "$TECH_STACK_SUGGESTION" "TECH_STACK"
+    # Tech stack selection - show options with Claude's suggestion highlighted
+
+    # Map Claude suggestion to choice number
+    local suggested_tech_choice=""
+    case "$TECH_STACK_SUGGESTION" in
+        *"JavaScript"*|*"Node.js"*|*"React"*|*"MongoDB"*) suggested_tech_choice="1" ;;
+        *"Python"*|*"Django"*|*"Flask"*|*"PostgreSQL"*) suggested_tech_choice="2" ;;
+        *"Java"*|*"Spring"*|*"MySQL"*) suggested_tech_choice="3" ;;
+        *"PHP"*|*"Laravel"*) suggested_tech_choice="4" ;;
+        *"C#"*|*".NET"*|*"SQL Server"*) suggested_tech_choice="5" ;;
+        *"Go"*|*"Gin"*|*"Echo"*) suggested_tech_choice="6" ;;
+        *"Ruby"*|*"Rails"*) suggested_tech_choice="7" ;;
+        *"TypeScript"*|*"Next.js"*|*"Supabase"*) suggested_tech_choice="8" ;;
+        *"FastAPI"*|*"SQLite"*) suggested_tech_choice="9" ;;
+        *"Rust"*|*"Actix"*|*"Axum"*) suggested_tech_choice="10" ;;
+        *"Shell"*|*"Markdown"*|*"Git"*) suggested_tech_choice="11" ;;
+        *"Flutter"*|*"Dart"*|*"Firebase"*) suggested_tech_choice="12" ;;
+        *"React Native"*) suggested_tech_choice="13" ;;
+        *"Swift"*|*"iOS"*|*"Core Data"*) suggested_tech_choice="14" ;;
+        *) suggested_tech_choice="15" ;; # Custom for anything else
+    esac
+
+    # Show options directly with suggestion highlighted
+    show_tech_stack_options "TECH_STACK_CHOICE" "$suggested_tech_choice"
+
+    # Map choice back to tech stack string
+    case $TECH_STACK_CHOICE in
+        1) TECH_STACK="JavaScript/Node.js, React, MongoDB" ;;
+        2) TECH_STACK="Python, Django/Flask, PostgreSQL" ;;
+        3) TECH_STACK="Java, Spring Boot, MySQL" ;;
+        4) TECH_STACK="PHP, Laravel, MySQL" ;;
+        5) TECH_STACK="C#, .NET Core, SQL Server" ;;
+        6) TECH_STACK="Go, Gin/Echo, PostgreSQL" ;;
+        7) TECH_STACK="Ruby, Rails, PostgreSQL" ;;
+        8) TECH_STACK="TypeScript, Next.js, Supabase" ;;
+        9) TECH_STACK="Python, FastAPI, SQLite" ;;
+        10) TECH_STACK="Rust, Actix/Axum, PostgreSQL" ;;
+        11) TECH_STACK="Shell scripting, Markdown, Git" ;;
+        12) TECH_STACK="Flutter, Dart, Firebase" ;;
+        13) TECH_STACK="React Native, JavaScript, MongoDB" ;;
+        14) TECH_STACK="Swift, iOS SDK, Core Data" ;;
+        custom:*) TECH_STACK="${TECH_STACK_CHOICE#custom:}" ;;
+        *) TECH_STACK="$TECH_STACK_SUGGESTION" ;;
+    esac
 
     # Database technology selection - show options with Claude's suggestion highlighted
 
