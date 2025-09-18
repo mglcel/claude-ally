@@ -33,6 +33,13 @@ SCRIPT_DIR=""
 PROJECT_DIR=""
 WORKING_DIR=""
 
+# Detect if we're in non-interactive mode
+NON_INTERACTIVE=false
+if [[ ! -t 0 ]]; then
+    NON_INTERACTIVE=true
+    echo "🤖 Non-interactive mode detected - using automatic defaults"
+fi
+
 detect_directories() {
     # Get the directory where this script is located
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -52,7 +59,15 @@ detect_directories() {
         echo -e "${YELLOW}⚠️  You're running this script from the claude-ally directory itself.${NC}"
         echo "This will analyze the claude-ally project instead of your project."
         echo ""
-        read -p "Do you want to continue analyzing claude-ally? (Y/n): " ANALYZE_SELF
+        # Check if we're in interactive mode
+        if [[ "$NON_INTERACTIVE" == "true" ]]; then
+            # Non-interactive mode - default to yes
+            ANALYZE_SELF="Y"
+            echo "Non-interactive mode: continuing with claude-ally analysis..."
+        else
+            read -p "Do you want to continue analyzing claude-ally? (Y/n): " ANALYZE_SELF
+        fi
+
         if [[ "$ANALYZE_SELF" =~ ^[Nn]$ ]]; then
             echo -e "${CYAN}💡 TIP: Run this script from your project directory:${NC}"
             echo "   cd /path/to/your/project"
@@ -99,10 +114,17 @@ check_claude_availability() {
     # If we can't detect Claude but user might be running this from Claude
     echo -e "${YELLOW}⚠️  Cannot automatically detect Claude availability.${NC}"
     echo ""
-    read -p "Are you running this script from within Claude Code? (y/N): " CLAUDE_RESPONSE
+
+    if [[ "$NON_INTERACTIVE" == "true" ]]; then
+        # In non-interactive mode, assume Claude is available
+        echo "Non-interactive mode: assuming Claude is available..."
+        CLAUDE_RESPONSE="y"
+    else
+        read -p "Are you running this script from within Claude Code? (y/N): " CLAUDE_RESPONSE
+    fi
 
     if [[ "$CLAUDE_RESPONSE" =~ ^[Yy]$ ]]; then
-        echo -e "${GREEN}✅ Claude integration enabled by user${NC}"
+        echo -e "${GREEN}✅ Claude integration enabled${NC}"
         CLAUDE_AVAILABLE=true
         return 0
     else
@@ -485,6 +507,11 @@ EOF
         cat "$CLAUDE_SUGGESTIONS_FILE"
         echo "----------------------------------------"
         echo ""
+        if [[ "$NON_INTERACTIVE" == "true" ]]; then
+            echo "Non-interactive mode: skipping manual Claude analysis..."
+            return 1
+        fi
+
         read -p "Press Enter when you have Claude's analysis ready to paste..."
 
         echo ""
@@ -542,7 +569,26 @@ handle_suggestion() {
     local validation_pattern="${6:-}" # Optional regex pattern for validation
 
     if [[ -z "$suggestion" ]]; then
-        # No suggestion available, fall back to direct input
+        # No suggestion available, fall back to direct input or defaults
+        if [[ "$NON_INTERACTIVE" == "true" ]]; then
+            # In non-interactive mode, use reasonable defaults
+            if [[ "$suggestion_type" == "choice" ]]; then
+                eval "$variable_name=\"1\""  # Default to first option
+                echo -e "${GREEN}✅ Auto-selecting default option (1)${NC}"
+            else
+                # For text input, use a generic default based on variable name
+                case "$variable_name" in
+                    *PROJECT_NAME*) eval "$variable_name=\"$(basename "$PROJECT_DIR")\"";;
+                    *PROJECT_TYPE*) eval "$variable_name=\"General Project\"";;
+                    *TECH_STACK*) eval "$variable_name=\"Generic Technology Stack\"";;
+                    *) eval "$variable_name=\"Default Value\"";;
+                esac
+                echo -e "${GREEN}✅ Auto-using default value: $(eval echo \$$variable_name)${NC}"
+            fi
+            return
+        fi
+
+        # Interactive mode - ask user for input
         if [[ "$suggestion_type" == "choice" && -n "$options_callback" ]]; then
             $options_callback
         else
@@ -562,6 +608,14 @@ handle_suggestion() {
     # Show Claude's suggestion
     echo ""
     echo -e "${CYAN}🤖 Claude suggests: ${BOLD}$suggestion${NC}"
+
+    # In non-interactive mode, automatically accept Claude's suggestion
+    if [[ "$NON_INTERACTIVE" == "true" ]]; then
+        eval "$variable_name=\"$suggestion\""
+        echo -e "${GREEN}✅ Auto-accepting Claude's suggestion: $suggestion${NC}"
+        return
+    fi
+
     echo ""
     echo "What would you like to do?"
     echo "  1) Accept Claude's suggestion"
@@ -679,6 +733,14 @@ show_database_options() {
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
 
+    # In non-interactive mode, automatically use the suggested choice or default
+    if [[ "$NON_INTERACTIVE" == "true" ]]; then
+        local choice="${suggested_choice:-7}"  # Use suggestion or default to 7 (No database)
+        eval "$var_name=\"$choice\""
+        echo -e "${GREEN}✅ Auto-selected: $choice${NC}"
+        return
+    fi
+
     local choice
     local default_prompt="Select database (1-8)"
     if [[ -n "$suggested_choice" ]]; then
@@ -748,6 +810,20 @@ show_tech_stack_options() {
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
 
+    # In non-interactive mode, automatically use the suggested choice or default
+    if [[ "$NON_INTERACTIVE" == "true" ]]; then
+        local choice="${suggested_choice:-15}"  # Use suggestion or default to 15 (Custom)
+        if [[ "$choice" == "15" ]]; then
+            # For custom tech stack, set with custom prefix
+            eval "$var_name=\"custom:Custom Technology Stack\""
+            echo -e "${GREEN}✅ Auto-selected: $choice (Custom)${NC}"
+        else
+            eval "$var_name=\"$choice\""
+            echo -e "${GREEN}✅ Auto-selected: $choice${NC}"
+        fi
+        return
+    fi
+
     local choice
     local default_prompt="Select tech stack (1-15)"
     if [[ -n "$suggested_choice" ]]; then
@@ -765,9 +841,17 @@ show_tech_stack_options() {
         if [[ "$choice" =~ ^[1-9]$|^1[0-5]$ ]]; then
             if [[ "$choice" == "15" ]]; then
                 # Custom option - ask for input
-                read -p "Enter your custom tech stack: " custom_stack
+                if [[ "$NON_INTERACTIVE" == "true" ]]; then
+                    # Use a generic default in non-interactive mode
+                    custom_stack="Custom Technology Stack"
+                    echo -e "${GREEN}✅ Auto-using default: $custom_stack${NC}"
+                else
+                    read -p "Enter your custom tech stack: " custom_stack
+                fi
                 eval "$var_name=\"custom:$custom_stack\""
-                echo -e "${GREEN}✅ Selected: Custom - $custom_stack${NC}"
+                if [[ "$NON_INTERACTIVE" != "true" ]]; then
+                    echo -e "${GREEN}✅ Selected: Custom - $custom_stack${NC}"
+                fi
             else
                 eval "$var_name=\"$choice\""
                 if [[ "$choice" == "$suggested_choice" ]]; then
@@ -820,6 +904,14 @@ show_critical_assets_options() {
 
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
+
+    # In non-interactive mode, automatically use the suggested choice or default
+    if [[ "$NON_INTERACTIVE" == "true" ]]; then
+        local choice="${suggested_choice:-7}"  # Use suggestion or default to 7 (Config files)
+        eval "$var_name=\"$choice\""
+        echo -e "${GREEN}✅ Auto-selected: $choice${NC}"
+        return
+    fi
 
     local choice
     local default_prompt="Select critical assets (1-12)"
@@ -892,6 +984,14 @@ show_common_issues_options() {
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
 
+    # In non-interactive mode, automatically use the suggested choice or default
+    if [[ "$NON_INTERACTIVE" == "true" ]]; then
+        local choice="${suggested_choice:-10}"  # Use suggestion or default to 10 (Custom)
+        eval "$var_name=\"$choice\""
+        echo -e "${GREEN}✅ Auto-selected: $choice${NC}"
+        return
+    fi
+
     local choice
     local default_prompt="Select common issues (1-10)"
     if [[ -n "$suggested_choice" ]]; then
@@ -960,6 +1060,14 @@ show_compliance_options() {
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
 
+    # In non-interactive mode, automatically use the suggested choice or default
+    if [[ "$NON_INTERACTIVE" == "true" ]]; then
+        local choice="${suggested_choice:-6}"  # Use suggestion or default to 6 (None)
+        eval "$var_name=\"$choice\""
+        echo -e "${GREEN}✅ Auto-selected: $choice${NC}"
+        return
+    fi
+
     local choice
     local default_prompt="Select compliance requirements (1-7)"
     if [[ -n "$suggested_choice" ]]; then
@@ -1025,6 +1133,14 @@ show_file_structure_options() {
 
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
+
+    # In non-interactive mode, automatically use the suggested choice or default
+    if [[ "$NON_INTERACTIVE" == "true" ]]; then
+        local choice="${suggested_choice:-12}"  # Use suggestion or default to 12 (Custom)
+        eval "$var_name=\"$choice\""
+        echo -e "${GREEN}✅ Auto-selected: $choice${NC}"
+        return
+    fi
 
     local choice
     local default_prompt="Select file structure (1-12)"
@@ -1092,6 +1208,14 @@ show_deployment_options() {
 
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
+
+    # In non-interactive mode, automatically use the suggested choice or default
+    if [[ "$NON_INTERACTIVE" == "true" ]]; then
+        local choice="${suggested_choice:-1}"  # Use suggestion or default to 1 (Cloud containers)
+        eval "$var_name=\"$choice\""
+        echo -e "${GREEN}✅ Auto-selected: $choice${NC}"
+        return
+    fi
 
     local choice
     local default_prompt="Select deployment target (1-6)"
@@ -1162,6 +1286,14 @@ show_project_type_options() {
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
 
+    # In non-interactive mode, automatically use the suggested choice or default
+    if [[ "$NON_INTERACTIVE" == "true" ]]; then
+        local choice="${suggested_choice:-1}"  # Use suggestion or default to 1
+        eval "$var_name=\"$choice\""
+        echo -e "${GREEN}✅ Auto-selected: $choice${NC}"
+        return
+    fi
+
     local choice
     local default_prompt="Select project type (1-11)"
     if [[ -n "$suggested_choice" ]]; then
@@ -1195,10 +1327,16 @@ get_project_info() {
     echo "------------------------------"
 
     echo -e "${BOLD}Project Name:${NC}"
-    echo -e "${CYAN}🤖 Claude's suggestion: ${BOLD}$PROJECT_NAME_SUGGESTION${NC}"
-    echo -e "Press ${YELLOW}Enter${NC} to accept suggestion or type a custom name:"
-    read -p "▶ " input
-    PROJECT_NAME="${input:-$PROJECT_NAME_SUGGESTION}"
+    if [[ "$NON_INTERACTIVE" == "true" ]]; then
+        # In non-interactive mode, automatically use Claude's suggestion
+        PROJECT_NAME="$PROJECT_NAME_SUGGESTION"
+        echo -e "${GREEN}✅ Auto-accepting suggestion: $PROJECT_NAME${NC}"
+    else
+        echo -e "${CYAN}🤖 Claude's suggestion: ${BOLD}$PROJECT_NAME_SUGGESTION${NC}"
+        echo -e "Press ${YELLOW}Enter${NC} to accept suggestion or type a custom name:"
+        read -p "▶ " input
+        PROJECT_NAME="${input:-$PROJECT_NAME_SUGGESTION}"
+    fi
 
     # Project type selection - show options with Claude's suggestion highlighted
 
@@ -1518,14 +1656,24 @@ get_technical_info() {
         5)
             echo -e "${YELLOW}Please specify the platforms:${NC}"
             echo -e "${CYAN}Suggestion: $DEPLOYMENT_TARGET_SUGGESTION${NC}"
-            read -p "▶ " input
-            DEPLOYMENT_TARGET="${input:-$DEPLOYMENT_TARGET_SUGGESTION}"
+            if [[ "$NON_INTERACTIVE" == "true" ]]; then
+                DEPLOYMENT_TARGET="$DEPLOYMENT_TARGET_SUGGESTION"
+                echo -e "${GREEN}✅ Auto-using suggestion: $DEPLOYMENT_TARGET${NC}"
+            else
+                read -p "▶ " input
+                DEPLOYMENT_TARGET="${input:-$DEPLOYMENT_TARGET_SUGGESTION}"
+            fi
             ;;
         6)
             echo -e "${YELLOW}Please specify the target:${NC}"
             echo -e "${CYAN}Suggestion: $DEPLOYMENT_TARGET_SUGGESTION${NC}"
-            read -p "▶ " input
-            DEPLOYMENT_TARGET="${input:-$DEPLOYMENT_TARGET_SUGGESTION}"
+            if [[ "$NON_INTERACTIVE" == "true" ]]; then
+                DEPLOYMENT_TARGET="$DEPLOYMENT_TARGET_SUGGESTION"
+                echo -e "${GREEN}✅ Auto-using suggestion: $DEPLOYMENT_TARGET${NC}"
+            else
+                read -p "▶ " input
+                DEPLOYMENT_TARGET="${input:-$DEPLOYMENT_TARGET_SUGGESTION}"
+            fi
             ;;
         *) DEPLOYMENT_TARGET="cloud containers" ;;
     esac
@@ -1547,7 +1695,13 @@ offer_automatic_claude_setup() {
         echo "3. 📝 Creating your project's CLAUDE.md file"
         echo "4. ✅ Validating the setup is working"
         echo ""
-        read -p "Would you like me to automatically set up Claude for your project? (Y/n): " AUTO_SETUP
+        if [[ "$NON_INTERACTIVE" == "true" ]]; then
+            # In non-interactive mode, automatically proceed with setup
+            AUTO_SETUP="Y"
+            echo "Non-interactive mode: automatically proceeding with Claude setup..."
+        else
+            read -p "Would you like me to automatically set up Claude for your project? (Y/n): " AUTO_SETUP
+        fi
 
         if [[ -z "$AUTO_SETUP" ]] || [[ "$AUTO_SETUP" =~ ^[Yy]$ ]]; then
             echo ""
@@ -1633,7 +1787,9 @@ Please create a CLAUDE.md file with the appropriate cognitive enhancement config
             echo ""
             echo "----------------------------------------"
             echo ""
-            read -p "Press Enter when Claude has finished setting up the system..."
+            if [[ "$NON_INTERACTIVE" != "true" ]]; then
+                read -p "Press Enter when Claude has finished setting up the system..."
+            fi
         fi
     else
         echo -e "${YELLOW}📋 CLAUDE INVOCATION NEEDED${NC}"
@@ -1648,7 +1804,9 @@ Please create a CLAUDE.md file with the appropriate cognitive enhancement config
         echo ""
         echo "----------------------------------------"
         echo ""
-        read -p "Press Enter when Claude has finished setting up the system..."
+        if [[ "$NON_INTERACTIVE" != "true" ]]; then
+            read -p "Press Enter when Claude has finished setting up the system..."
+        fi
     fi
 
     # Check if CLAUDE.md was created
