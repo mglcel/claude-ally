@@ -241,10 +241,8 @@ main() {
     case "$command" in
         "setup")
             if [[ -f "$SCRIPT_DIR/setup.sh" ]]; then
-                # Use progress wrapper for setup if available
-                if declare -f with_progress_output > /dev/null; then
-                    with_progress_output "Setting up cognitive enhancement system" "dots" bash "$SCRIPT_DIR/setup.sh" "$@"
-                elif declare -f time_operation > /dev/null; then
+                # Don't use progress wrapper for setup since it's interactive
+                if declare -f time_operation > /dev/null; then
                     time_operation "setup" bash "$SCRIPT_DIR/setup.sh" "$@"
                 else
                     bash "$SCRIPT_DIR/setup.sh" "$@"
