@@ -1,6 +1,6 @@
 # Universal Claude Cognitive Enhancement System
 
-[![Tests](https://github.com/mglcel/claude-ally/actions/workflows/test.yml/badge.svg)](https://github.com/mglcel/claude-ally/actions/workflows/test.yml)
+[![Tests](https://github.com/mglcel/claude-ally/actions/workflows/test-fixed.yml/badge.svg)](https://github.com/mglcel/claude-ally/actions/workflows/test-fixed.yml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Version](https://img.shields.io/badge/Version-2.0.0-green.svg)](https://github.com/mglcel/claude-ally/releases)
 
