@@ -46,7 +46,7 @@ jobs:
 
       - name: Validate project structure
         run: |
-          echo "🔍 Validating claude-ally project structure..."
+          echo "🔍 Validating claude-ally project structure (v2)..."
 
           # Check core files
           required_files=(
