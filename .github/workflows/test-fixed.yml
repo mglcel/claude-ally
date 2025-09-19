@@ -125,6 +125,8 @@ jobs:
           chmod +x tests/unit/test_stack_detector.sh
           chmod +x tests/unit/test_contribute_functionality.sh
           chmod +x tests/unit/test_github_integration.sh
+          chmod +x tests/unit/test_edge_cases.sh
+          chmod +x tests/unit/test_claude_md_handling.sh
           ./tests/run_all_tests.sh unit
 
       - name: Upload unit test results
@@ -135,6 +137,7 @@ jobs:
           path: |
             /tmp/claude-ally-test-*
             /tmp/claude_analysis_cache_*
+          if-no-files-found: ignore
           retention-days: 7
 
   # Integration Tests
@@ -164,6 +167,7 @@ jobs:
         with:
           name: integration-test-results
           path: /tmp/claude-ally-integration-test*
+          if-no-files-found: ignore
           retention-days: 7
 
   # Cross-Platform Tests

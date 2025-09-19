@@ -309,7 +309,7 @@ test_github_auth_check() {
     # Test successful authentication
     export GITHUB_TEST_SCENARIO="success"
     local auth_result
-    auth_result=$(gh auth status 2>/dev/null && echo "authenticated" || echo "not_authenticated")
+    auth_result=$(gh auth status 2>&1 | grep -q "testuser" && echo "authenticated" || echo "not_authenticated")
     assert_equals "authenticated" "$auth_result" "GitHub authentication check succeeds"
 
     # Test failed authentication
@@ -401,7 +401,7 @@ test_github_fork_creation() {
     # Test successful fork
     export GITHUB_TEST_SCENARIO="success"
     local fork_result
-    fork_result=$(gh repo fork mglcel/claude-ally 2>/dev/null && echo "success" || echo "failed")
+    fork_result=$(gh repo fork mglcel/claude-ally 2>&1 | grep -q "Created fork" && echo "success" || echo "failed")
     assert_equals "success" "$fork_result" "GitHub fork creation succeeds"
 
     # Test fork failure
@@ -441,7 +441,7 @@ test_git_conflict_resolution() {
     # Test successful push
     export GIT_TEST_SCENARIO="success"
     local push_result
-    push_result=$(git push origin test-branch 2>/dev/null && echo "success" || echo "failed")
+    push_result=$(git push origin test-branch 2>&1 | grep -q "pushed successfully" && echo "success" || echo "failed")
     assert_equals "success" "$push_result" "Git push succeeds without conflicts"
 
     # Test push with conflicts (should trigger pull and retry)
@@ -467,12 +467,12 @@ test_complete_pr_workflow() {
 
     # Step 1: Check GitHub authentication
     local auth_check
-    auth_check=$(gh auth status 2>/dev/null && echo "✓" || echo "✗")
+    auth_check=$(gh auth status 2>&1 | grep -q "testuser" && echo "✓" || echo "✗")
     assert_equals "✓" "$auth_check" "Workflow step 1: GitHub authentication"
 
     # Step 2: Fork repository
     local fork_check
-    fork_check=$(gh repo fork mglcel/claude-ally 2>/dev/null && echo "✓" || echo "✗")
+    fork_check=$(gh repo fork mglcel/claude-ally 2>&1 | grep -q "Created fork" && echo "✓" || echo "✗")
     assert_equals "✓" "$fork_check" "Workflow step 2: Repository fork"
 
     # Step 3: Clone and setup

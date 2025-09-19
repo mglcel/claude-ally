@@ -1710,7 +1710,34 @@ offer_automatic_claude_setup() {
             echo -e "${CYAN}🚀 Setting up Claude cognitive enhancement automatically...${NC}"
             echo ""
 
-            # Attempt automatic setup
+            # Handle existing CLAUDE.md file first
+            local existing_file_action=0
+            handle_existing_claude_md
+            existing_file_action=$?
+
+            case $existing_file_action in
+                0)
+                    # Replace mode - proceed with normal setup
+                    echo -e "${BLUE}📝 Proceeding with fresh CLAUDE.md setup...${NC}"
+                    ;;
+                1)
+                    # Skip mode - user wants to keep existing file
+                    echo -e "${GREEN}✅ Setup skipped - keeping existing CLAUDE.md${NC}"
+                    return 0
+                    ;;
+                2)
+                    # Merge mode - use merge function
+                    echo -e "${BLUE}🔄 Proceeding with intelligent merge...${NC}"
+                    if merge_claude_md_content "$filename"; then
+                        echo -e "${GREEN}🎉 SUCCESS! Existing CLAUDE.md enhanced with stack-specific improvements!${NC}"
+                        return 0
+                    else
+                        echo -e "${YELLOW}⚠️ Merge failed, falling back to replace mode${NC}"
+                    fi
+                    ;;
+            esac
+
+            # Attempt automatic setup (replace mode or merge fallback)
             if setup_claude_automatically "$filename"; then
                 echo ""
                 echo -e "${GREEN}🎉 SUCCESS! Claude cognitive enhancement system is now active!${NC}"
@@ -1740,8 +1767,342 @@ offer_automatic_claude_setup() {
     fi
 }
 
+# Handle existing CLAUDE.md file with user choice
+handle_existing_claude_md() {
+    local claude_md_path="$PROJECT_DIR/CLAUDE.md"
+
+    if [[ ! -f "$claude_md_path" ]]; then
+        return 0  # No existing file, proceed normally
+    fi
+
+    echo ""
+    echo -e "${YELLOW}📄 Existing CLAUDE.md file detected!${NC}"
+    echo -e "${BOLD}Location: $claude_md_path${NC}"
+    echo ""
+
+    # Show a preview of the existing file
+    echo -e "${CYAN}📋 Current CLAUDE.md preview (first 5 lines):${NC}"
+    head -5 "$claude_md_path" | sed 's/^/   /'
+    if [[ $(wc -l < "$claude_md_path") -gt 5 ]]; then
+        echo "   ..."
+    fi
+    echo ""
+
+    if [[ "$NON_INTERACTIVE" == "true" ]]; then
+        echo -e "${BLUE}🤖 Non-interactive mode: Creating backup and replacing with new CLAUDE.md${NC}"
+        cp "$claude_md_path" "${claude_md_path}.backup-$(date +%Y%m%d-%H%M%S)"
+        echo -e "${GREEN}✅ Backup created: ${claude_md_path}.backup-$(date +%Y%m%d-%H%M%S)${NC}"
+        return 0
+    fi
+
+    echo -e "${CYAN}What would you like to do with your existing CLAUDE.md?${NC}"
+    echo ""
+    echo -e "${BOLD}Options:${NC}"
+    echo "  1. ${GREEN}[M]erge${NC} - Intelligently merge existing content with new stack-specific enhancements"
+    echo "  2. ${YELLOW}[R]eplace${NC} - Create backup and replace with fresh, optimized CLAUDE.md"
+    echo "  3. ${BLUE}[S]kip${NC} - Keep existing file as-is, skip claude-ally setup"
+    echo "  4. ${CYAN}[V]iew${NC} - Show full existing file content first"
+    echo ""
+
+    local choice
+    while true; do
+        read -p "Choose option [M/R/S/V]: " choice
+        choice=$(echo "$choice" | tr '[:lower:]' '[:upper:]')
+
+        case "$choice" in
+            "M"|"MERGE")
+                echo -e "${GREEN}✅ Will merge existing CLAUDE.md with new enhancements${NC}"
+                return 2  # Signal merge mode
+                ;;
+            "R"|"REPLACE")
+                echo -e "${YELLOW}✅ Will create backup and replace with new CLAUDE.md${NC}"
+                # Create timestamped backup
+                local backup_path="${claude_md_path}.backup-$(date +%Y%m%d-%H%M%S)"
+                cp "$claude_md_path" "$backup_path"
+                echo -e "${GREEN}✅ Backup created: $backup_path${NC}"
+                return 0  # Signal replace mode
+                ;;
+            "S"|"SKIP")
+                echo -e "${BLUE}✅ Keeping existing CLAUDE.md as-is${NC}"
+                echo -e "${CYAN}💡 You can run claude-ally setup again later if you change your mind${NC}"
+                return 1  # Signal skip setup
+                ;;
+            "V"|"VIEW")
+                echo ""
+                echo -e "${CYAN}📄 Full CLAUDE.md content:${NC}"
+                echo "----------------------------------------"
+                cat "$claude_md_path"
+                echo "----------------------------------------"
+                echo ""
+                echo -e "${CYAN}Now choose what to do:${NC}"
+                ;;
+            *)
+                echo -e "${RED}❌ Invalid choice. Please enter M, R, S, or V${NC}"
+                ;;
+        esac
+    done
+}
+
+# Merge existing CLAUDE.md with new stack-specific content
+merge_claude_md_content() {
+    local existing_file="$PROJECT_DIR/CLAUDE.md"
+    local prompt_file="$1"
+
+    echo -e "${BLUE}🔄 Merging existing CLAUDE.md with new stack enhancements...${NC}"
+
+    # Create backup first
+    local backup_path="${existing_file}.backup-$(date +%Y%m%d-%H%M%S)"
+    cp "$existing_file" "$backup_path"
+    echo -e "${GREEN}✅ Backup created: $backup_path${NC}"
+
+    # Read existing content
+    local existing_content
+    existing_content=$(cat "$existing_file")
+
+    # Read the prompt content for the new setup
+    local prompt_content
+    prompt_content=$(cat "$prompt_file")
+
+    echo -e "${CYAN}🤖 Instructing Claude to merge content intelligently...${NC}"
+
+    # Create enhanced merge prompt for Claude
+    local merge_request="I need you to intelligently merge an existing CLAUDE.md file with new stack-specific enhancements.
+
+TASK: Create a merged CLAUDE.md that:
+1. Preserves valuable user customizations from the existing file
+2. Integrates new stack-specific patterns and requirements
+3. Removes outdated or redundant sections
+4. Maintains logical organization and readability
+
+EXISTING CLAUDE.md CONTENT:
+----------------------------------------
+$existing_content
+----------------------------------------
+
+NEW STACK CONFIGURATION TO INTEGRATE:
+----------------------------------------
+$prompt_content
+----------------------------------------
+
+MERGE REQUIREMENTS:
+- Keep existing custom patterns, agents, or workflows that are still relevant
+- Add new stack-specific patterns for enhanced detection and analysis
+- Update technology references to match current stack
+- Preserve any custom security requirements or project-specific rules
+- Ensure the merged file follows the latest CLAUDE.md format standards
+- Remove any conflicting or outdated patterns
+
+CRITICAL: Your response must be ONLY the complete merged CLAUDE.md file contents in markdown format. Start with:
+# CLAUDE.md
+## Project Overview
+[Merged project information]
+
+Do not include explanatory text or ask for confirmation. Provide the final merged content ready to save."
+
+    # Try to invoke Claude for merging
+    local merged_response
+    if merged_response=$(echo "$merge_request" | timeout 300 claude --print --dangerously-skip-permissions 2>/dev/null); then
+        echo -e "${GREEN}✅ Claude merge completed successfully!${NC}"
+
+        # Validate that the response looks like proper CLAUDE.md content
+        if echo "$merged_response" | grep -q "# CLAUDE.md" && echo "$merged_response" | grep -q "Project Overview"; then
+            # Save the merged content
+            echo "$merged_response" > "$existing_file"
+            echo -e "${GREEN}✅ Merged CLAUDE.md file updated!${NC}"
+            echo -e "${CYAN}💡 Your existing customizations have been preserved and enhanced${NC}"
+            return 0
+        else
+            echo -e "${YELLOW}⚠️ Claude merge response doesn't appear to be valid CLAUDE.md content${NC}"
+            echo -e "${RED}❌ Merge failed, keeping original file${NC}"
+            return 1
+        fi
+    else
+        echo -e "${RED}❌ Failed to call Claude for merging${NC}"
+        echo -e "${YELLOW}💡 Falling back to manual merge - please review both files:${NC}"
+        echo "   Original: $existing_file"
+        echo "   Backup:   $backup_path"
+        echo "   New patterns available in: $prompt_file"
+        return 1
+    fi
+}
+
+# Handle existing CLAUDE.md files with user choice and Claude-powered merging
+handle_existing_claude_md() {
+    local existing_file="$PROJECT_DIR/CLAUDE.md"
+
+    # Check if CLAUDE.md already exists
+    if [[ ! -f "$existing_file" ]]; then
+        return 0  # No existing file, proceed normally
+    fi
+
+    echo ""
+    echo -e "${YELLOW}📄 Existing CLAUDE.md detected!${NC}"
+    echo -e "${BOLD}File: $existing_file${NC}"
+    echo ""
+
+    # Show preview of existing content
+    local existing_size
+    existing_size=$(wc -l < "$existing_file" 2>/dev/null || echo "unknown")
+    echo -e "${CYAN}Existing file preview (first 5 lines):${NC}"
+    echo "----------------------------------------"
+    head -5 "$existing_file" | sed 's/^/  /'
+    if [[ $existing_size -gt 5 ]]; then
+        echo -e "  ${CYAN}... ($existing_size total lines)${NC}"
+    fi
+    echo "----------------------------------------"
+    echo ""
+
+    if [[ "$NON_INTERACTIVE" == "true" ]]; then
+        echo -e "${BLUE}🤖 Non-interactive mode: Creating backup and replacing${NC}"
+        cp "$existing_file" "$existing_file.backup"
+        echo -e "${GREEN}✅ Backup created: $existing_file.backup${NC}"
+        return 0  # Proceed with replacement
+    fi
+
+    echo -e "${YELLOW}What would you like to do with your existing CLAUDE.md?${NC}"
+    echo ""
+    echo -e "${BOLD}[R] Replace${NC} - Create fresh CLAUDE.md (backup existing)"
+    echo -e "${BOLD}[M] Merge${NC}   - Use Claude to intelligently merge existing + new patterns"
+    echo -e "${BOLD}[S] Skip${NC}    - Keep existing file unchanged"
+    echo ""
+
+    local choice
+    while true; do
+        read -p "Choose [R/M/S]: " choice
+        choice=$(echo "$choice" | tr '[:lower:]' '[:upper:]')
+
+        case "$choice" in
+            "R"|"REPLACE")
+                echo -e "${BLUE}📋 Creating backup and replacing...${NC}"
+                cp "$existing_file" "$existing_file.backup"
+                echo -e "${GREEN}✅ Backup created: $existing_file.backup${NC}"
+                return 0  # Proceed with replacement
+                ;;
+            "M"|"MERGE")
+                echo -e "${CYAN}🤖 Claude will intelligently merge your existing content with new patterns...${NC}"
+                return 2  # Special code for merge
+                ;;
+            "S"|"SKIP")
+                echo -e "${BLUE}📄 Keeping existing CLAUDE.md unchanged${NC}"
+                return 1  # Skip setup
+                ;;
+            *)
+                echo -e "${RED}Invalid choice. Please enter R, M, or S${NC}"
+                ;;
+        esac
+    done
+}
+
+# Perform Claude-powered intelligent merging of CLAUDE.md files
+merge_claude_md_with_claude() {
+    local filename="$1"
+    local existing_file="$PROJECT_DIR/CLAUDE.md"
+
+    echo -e "${CYAN}🧠 Preparing intelligent merge with Claude...${NC}"
+
+    # Read existing content
+    local existing_content
+    existing_content=$(cat "$existing_file")
+
+    # Read new prompt content
+    local new_prompt_content
+    new_prompt_content=$(cat "$filename")
+
+    # Create backup
+    cp "$existing_file" "$existing_file.backup"
+    echo -e "${GREEN}✅ Backup created: $existing_file.backup${NC}"
+
+    # Create comprehensive merge prompt for Claude
+    local merge_request="# CLAUDE.md INTELLIGENT MERGING REQUEST
+
+You are tasked with intelligently merging an existing CLAUDE.md file with new stack-specific patterns and requirements.
+
+## EXISTING CLAUDE.md CONTENT:
+\`\`\`markdown
+$existing_content
+\`\`\`
+
+## NEW STACK-SPECIFIC PATTERNS TO INTEGRATE:
+$new_prompt_content
+
+## MERGING REQUIREMENTS:
+
+1. **PRESERVE USER CUSTOMIZATIONS**: Keep any custom patterns, project-specific requirements, or user-added content from the existing file
+2. **INTEGRATE NEW PATTERNS**: Add the new stack-specific patterns, requirements, and optimizations
+3. **AVOID DUPLICATION**: Remove or consolidate duplicate patterns/requirements
+4. **MAINTAIN STRUCTURE**: Keep a logical, well-organized structure
+5. **ENHANCE COMPLETENESS**: Create a comprehensive file that's better than either alone
+6. **PRESERVE CONTEXT**: Maintain any project-specific context or customizations
+
+## OUTPUT REQUIREMENTS:
+- Provide ONLY the complete merged CLAUDE.md file content
+- Start with: # CLAUDE.md
+- Maintain proper markdown formatting
+- Include both existing customizations AND new stack patterns
+- Create cohesive sections that flow logically
+- Ensure all critical patterns are covered without redundancy
+
+Create the intelligently merged CLAUDE.md file now:"
+
+    echo -e "${BLUE}🤖 Calling Claude for intelligent merge...${NC}"
+
+    # Call Claude with the merge request
+    local claude_response
+    if claude_response=$(echo "$merge_request" | timeout 300 claude --print --dangerously-skip-permissions 2>/dev/null); then
+        echo -e "${GREEN}✅ Claude merge completed successfully!${NC}"
+
+        # Validate the merged response
+        if echo "$claude_response" | grep -q "# CLAUDE.md" && echo "$claude_response" | grep -q "Project Overview\|MANDATORY.*DEVELOPMENT\|patterns\|requirements"; then
+            # Save the merged content
+            echo "$claude_response" > "$existing_file"
+            echo -e "${GREEN}🎉 Intelligent merge completed! Your CLAUDE.md now combines:${NC}"
+            echo -e "  ${CYAN}✓${NC} Your existing customizations and patterns"
+            echo -e "  ${CYAN}✓${NC} New stack-specific optimizations"
+            echo -e "  ${CYAN}✓${NC} Enhanced structure and completeness"
+            echo ""
+            echo -e "${BOLD}📄 Updated file: $existing_file${NC}"
+            echo -e "${CYAN}📋 Backup of original: $existing_file.backup${NC}"
+            return 0
+        else
+            echo -e "${YELLOW}⚠️ Claude merge response validation failed${NC}"
+            echo -e "${CYAN}Restoring backup and falling back to replacement mode...${NC}"
+            cp "$existing_file.backup" "$existing_file"
+            return 1  # Fall back to normal replacement
+        fi
+    else
+        echo -e "${RED}❌ Claude merge failed${NC}"
+        echo -e "${CYAN}Restoring backup and falling back to replacement mode...${NC}"
+        cp "$existing_file.backup" "$existing_file"
+        return 1  # Fall back to normal replacement
+    fi
+}
+
 setup_claude_automatically() {
     local filename="$1"
+
+    # Handle existing CLAUDE.md file first
+    local existing_action
+    handle_existing_claude_md
+    existing_action=$?
+
+    case $existing_action in
+        0)
+            echo -e "${BLUE}📋 Proceeding with CLAUDE.md setup...${NC}"
+            ;;
+        1)
+            echo -e "${BLUE}📄 Skipping CLAUDE.md setup (keeping existing)${NC}"
+            return 0
+            ;;
+        2)
+            echo -e "${CYAN}🤖 Performing intelligent merge with Claude...${NC}"
+            if merge_claude_md_with_claude "$filename"; then
+                return 0  # Merge successful
+            else
+                echo -e "${YELLOW}⚠️ Merge failed, proceeding with replacement${NC}"
+                # Continue with normal setup
+            fi
+            ;;
+    esac
 
     echo -e "${BLUE}📋 Reading generated prompt...${NC}"
 

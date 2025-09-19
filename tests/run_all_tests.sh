@@ -226,6 +226,16 @@ run_unit_tests() {
         "Unit - GitHub Integration" \
         "$SCRIPT_DIR/unit/test_github_integration.sh" \
         "GitHub PR automation and integration"
+
+    run_test_suite \
+        "Unit - Edge Cases & Security" \
+        "$SCRIPT_DIR/unit/test_edge_cases.sh" \
+        "Edge cases, security, and robustness testing"
+
+    run_test_suite \
+        "Unit - CLAUDE.md Handling" \
+        "$SCRIPT_DIR/unit/test_claude_md_handling.sh" \
+        "CLAUDE.md file management, merging, and backup functionality"
 }
 
 run_integration_tests() {
