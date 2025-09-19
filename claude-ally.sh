@@ -2,7 +2,7 @@
 #
 # Claude-Ally - Universal Claude Cognitive Enhancement System
 # Main CLI interface for all claude-ally functionality
-# Version 2.0 - Production-Ready Enterprise Tool
+# Production-Ready Enterprise Tool
 #
 
 # Get script directory
@@ -19,7 +19,7 @@ BOLD='\033[1m'
 NC='\033[0m'
 
 # Version
-VERSION="2.0.0"
+VERSION="1.0.0"
 
 # Load all modules
 load_modules() {
@@ -73,7 +73,11 @@ show_help() {
     echo -e "${BOLD}Claude-Ally - Universal Claude Cognitive Enhancement System${NC}"
     echo ""
     echo -e "${CYAN}USAGE:${NC}"
-    echo "  claude-ally <command> [options]"
+    echo "  /path/to/claude-ally/claude-ally.sh <command> [options]"
+    echo ""
+    echo -e "${YELLOW}NOTE:${NC} Run from your project directory for best results:"
+    echo "  cd /path/to/your/project"
+    echo "  /path/to/claude-ally/claude-ally.sh setup"
     echo ""
     echo -e "${CYAN}COMMANDS:${NC}"
     echo ""
@@ -106,12 +110,13 @@ show_help() {
     echo "  help                       Show this help message"
     echo ""
     echo -e "${CYAN}EXAMPLES:${NC}"
-    echo "  claude-ally setup                    # Setup current directory"
-    echo "  claude-ally setup /path/to/project   # Setup specific project"
-    echo "  claude-ally detect                   # Detect current project type"
-    echo "  claude-ally contribute               # Contribute unknown stack"
-    echo "  claude-ally config configure         # Configure interactively"
-    echo "  claude-ally perf stats               # Show performance stats"
+    echo "  cd /path/to/your/project"
+    echo "  /path/to/claude-ally/claude-ally.sh setup                    # Setup current directory"
+    echo "  /path/to/claude-ally/claude-ally.sh setup /path/to/project   # Setup specific project"
+    echo "  /path/to/claude-ally/claude-ally.sh detect                   # Detect current project type"
+    echo "  /path/to/claude-ally/claude-ally.sh contribute               # Contribute unknown stack"
+    echo "  /path/to/claude-ally/claude-ally.sh config configure         # Configure interactively"
+    echo "  /path/to/claude-ally/claude-ally.sh perf stats               # Show performance stats"
     echo ""
     echo -e "${BLUE}For more information: https://github.com/mglcel/claude-ally${NC}"
 }

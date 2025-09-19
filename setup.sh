@@ -3,7 +3,7 @@
 # Claude Ally Setup Script - Enhanced with Claude Intelligence
 # Generates a customized prompt for creating your project's CLAUDE.md file.
 # Now with Claude-powered repository analysis for intelligent defaults!
-# Version 2.0 - Optimized Performance & Error Handling
+# Optimized Performance & Error Handling
 
 set -e
 

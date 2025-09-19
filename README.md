@@ -2,7 +2,7 @@
 
 [![Tests](https://github.com/mglcel/claude-ally/actions/workflows/test-fixed.yml/badge.svg)](https://github.com/mglcel/claude-ally/actions/workflows/test-fixed.yml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/Version-2.0.0-green.svg)](https://github.com/mglcel/claude-ally/releases)
+[![Version](https://img.shields.io/badge/Version-1.0.0-green.svg)](https://github.com/mglcel/claude-ally/releases)
 
 > **🚀 Transform Claude into Your Project's Senior Technical Expert**
 >
@@ -10,19 +10,19 @@
 
 ## ⚡ Quick Start (30 seconds)
 
-### **🎛️ NEW: Professional CLI Interface (v2.0)**
+### **🎛️ Professional CLI Interface**
 ```bash
 # Setup cognitive enhancement for any project:
-claude-ally setup
+/path/to/claude-ally/claude-ally.sh setup
 
 # Detect technology stack:
-claude-ally detect
+/path/to/claude-ally/claude-ally.sh detect
 
 # Contribute new stack to community:
-claude-ally contribute
+/path/to/claude-ally/claude-ally.sh contribute
 
 # Configure system:
-claude-ally config show
+/path/to/claude-ally/claude-ally.sh config show
 ```
 
 ### **📊 Enhanced Interactive Setup (🧠 Claude-Powered)**
@@ -30,8 +30,8 @@ claude-ally config show
 # From your project directory:
 /path/to/claude-ally/setup.sh
 
-# Or using the new CLI:
-claude-ally setup
+# Or using the CLI:
+/path/to/claude-ally/claude-ally.sh setup
 ```
 The system analyzes your repository with Claude's intelligence and suggests smart defaults. Just press Enter to accept Claude's suggestions or modify them as needed. **Works from any project directory with 85% faster performance!**
 
@@ -68,7 +68,7 @@ After setup, test with these validation questions:
 - Repeated explanations of your tech stack requirements
 - Manual verification of compatibility issues
 
-**After Enhanced Claude v2.0:**
+**After Enhanced Claude:**
 - **85% faster development** - Claude spots issues before they become problems
 - **🧬 Modular architecture** - Extensible stack detection for any technology
 - **🤖 GitHub automation** - One-click community contributions with PR creation
@@ -112,7 +112,7 @@ After setup, test with these validation questions:
 - AWS, Azure, GCP cloud patterns
 - CI/CD pipeline optimization
 
-## 📊 Proven Results (v2.0)
+## 📊 Proven Results
 
 - **85% efficiency improvements** in development speed (30 seconds vs 10 minutes)
 - **100% detection accuracy** across 10+ project types tested
@@ -158,7 +158,7 @@ SECURITY PATTERNS TRIGGERED:
 
 **vs Generic Claude**: Basic Stripe integration steps without security analysis
 
-## 🔧 Features (v2.0)
+## 🔧 Features
 
 ### 🧬 **Modular Architecture**
 - Extensible stack detection system with individual modules
@@ -197,49 +197,50 @@ SECURITY PATTERNS TRIGGERED:
 - Cordova hybrid mobile apps
 - Static and legacy website preservation
 
-## 🎛️ CLI Usage (v2.0)
+## 🎛️ CLI Usage
 
 ### **Main Commands**
 ```bash
 # Core functionality
-claude-ally setup [directory]     # Setup cognitive enhancement
-claude-ally detect [directory]    # Detect technology stack
-claude-ally contribute [directory] # Contribute new stack
+/path/to/claude-ally/claude-ally.sh setup [directory]     # Setup cognitive enhancement
+/path/to/claude-ally/claude-ally.sh detect [directory]    # Detect technology stack
+/path/to/claude-ally/claude-ally.sh contribute [directory] # Contribute new stack
 
 # Configuration
-claude-ally config show           # Show current settings
-claude-ally config configure      # Interactive configuration
-claude-ally config set <key> <val> # Set specific value
+/path/to/claude-ally/claude-ally.sh config show           # Show current settings
+/path/to/claude-ally/claude-ally.sh config configure      # Interactive configuration
+/path/to/claude-ally/claude-ally.sh config set <key> <val> # Set specific value
 
 # Performance & monitoring
-claude-ally perf stats            # Performance statistics
-claude-ally perf report           # Generate report
-claude-ally cache stats           # Cache information
+/path/to/claude-ally/claude-ally.sh perf stats            # Performance statistics
+/path/to/claude-ally/claude-ally.sh perf report           # Generate report
+/path/to/claude-ally/claude-ally.sh cache stats           # Cache information
 
 # System management
-claude-ally validate              # System validation
-claude-ally recovery              # Recovery mode
-claude-ally version               # Version information
+/path/to/claude-ally/claude-ally.sh validate              # System validation
+/path/to/claude-ally/claude-ally.sh recovery              # Recovery mode
+/path/to/claude-ally/claude-ally.sh version               # Version information
 ```
 
 ### **Examples**
 ```bash
 # Quick setup for current project
-claude-ally setup
+cd /path/to/your/project
+/path/to/claude-ally/claude-ally.sh setup
 
 # Detect Next.js AI application
 cd /path/to/nextjs-ai-app
-claude-ally detect
+/path/to/claude-ally/claude-ally.sh detect
 # Output: ✅ Detected: TypeScript/Next.js, AI/LLM, Tailwind
 
 # Contribute new Flutter stack
 cd /path/to/flutter-app
-claude-ally contribute
+/path/to/claude-ally/claude-ally.sh contribute
 # Automated: Analysis → GitHub Fork → PR Creation
 
 # Configure caching
-claude-ally config set cache.enabled true
-claude-ally config set detection.confidence_threshold 70
+/path/to/claude-ally/claude-ally.sh config set cache.enabled true
+/path/to/claude-ally/claude-ally.sh config set detection.confidence_threshold 70
 ```
 
 ## 📚 Full Documentation

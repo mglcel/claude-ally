@@ -7,19 +7,19 @@
 
 ---
 
-## **⚡ IMMEDIATE QUICK START (30 seconds with v2.0 CLI)**
+## **⚡ IMMEDIATE QUICK START (30 seconds)**
 
-**⚡ NEW v2.0: Professional CLI Interface**
+**⚡ Professional CLI Interface**
 
 ```bash
 # One-command setup (recommended):
-claude-ally setup
+/path/to/claude-ally/claude-ally.sh setup
 
 # Detect your project type:
-claude-ally detect
+/path/to/claude-ally/claude-ally.sh detect
 
 # Contribute new stack to community:
-claude-ally contribute
+/path/to/claude-ally/claude-ally.sh contribute
 ```
 
 **📋 Manual Setup (if needed):**
