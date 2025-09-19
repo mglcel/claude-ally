@@ -151,11 +151,15 @@ EOF
 
 # Setup test environment
 setup() {
+    echo "DEBUG: Starting CLAUDE.md test setup in $TEST_TEMP_DIR" >&2
     mkdir -p "$TEST_TEMP_DIR"
+    echo "DEBUG: Created temp directory" >&2
     setup_claude_mock
+    echo "DEBUG: Set up Claude mock" >&2
 
     # Source setup.sh functions for testing
     source "$ROOT_DIR/lib/setup.sh"
+    echo "DEBUG: Sourced setup.sh successfully" >&2
 }
 
 # Cleanup test environment
@@ -462,18 +466,30 @@ run_tests() {
     echo "====================================="
     echo ""
 
+    echo "DEBUG: About to call setup function" >&2
     setup
+    echo "DEBUG: Setup completed, running tests" >&2
 
+    echo "DEBUG: Starting test_no_existing_claude_md" >&2
     test_no_existing_claude_md
+    echo "DEBUG: Starting test_existing_claude_md_detection" >&2
     test_existing_claude_md_detection
+    echo "DEBUG: Starting test_claude_powered_merging" >&2
     test_claude_powered_merging
+    echo "DEBUG: Starting test_merge_validation_and_fallback" >&2
     test_merge_validation_and_fallback
+    echo "DEBUG: Starting test_backup_functionality" >&2
     test_backup_functionality
+    echo "DEBUG: Starting test_complete_setup_workflow_integration" >&2
     test_complete_setup_workflow_integration
+    echo "DEBUG: Starting test_file_content_validation" >&2
     test_file_content_validation
+    echo "DEBUG: Starting test_interactive_choice_simulation" >&2
     test_interactive_choice_simulation
+    echo "DEBUG: Starting test_error_handling_missing_files" >&2
     test_error_handling_missing_files
 
+    echo "DEBUG: All tests completed, cleaning up" >&2
     cleanup
 
     echo ""
