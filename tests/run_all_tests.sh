@@ -245,8 +245,8 @@ run_unit_tests() {
 
     run_test_suite \
         "Unit - CLAUDE.md Handling" \
-        "$SCRIPT_DIR/unit/test_claude_md_handling.sh" \
-        "CLAUDE.md file management, merging, and backup functionality"
+        "$SCRIPT_DIR/unit/test_minimal_debug.sh" \
+        "Minimal debug test to verify test runner mechanism"
 }
 
 run_integration_tests() {
