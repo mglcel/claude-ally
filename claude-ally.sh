@@ -25,7 +25,7 @@ VERSION="1.0.0"
 load_modules() {
     local modules=(
         "lib/stack-detector.sh"
-        "contribute-stack.sh"
+        "lib/contribute-stack.sh"
     )
 
     for module in "${modules[@]}"; do
@@ -202,9 +202,9 @@ main() {
 
     case "$command" in
         "setup")
-            if [[ -f "$SCRIPT_DIR/setup.sh" ]]; then
+            if [[ -f "$SCRIPT_DIR/lib/setup.sh" ]]; then
                 # Don't use time_operation for setup since it's interactive and captures output
-                bash "$SCRIPT_DIR/setup.sh" "$@"
+                bash "$SCRIPT_DIR/lib/setup.sh" "$@"
             else
                 if declare -f show_error > /dev/null; then
                     show_error "Setup script not found"
@@ -258,10 +258,10 @@ main() {
             fi
             ;;
         "contribute")
-            if [[ -f "$SCRIPT_DIR/contribute-stack.sh" ]]; then
+            if [[ -f "$SCRIPT_DIR/lib/contribute-stack.sh" ]]; then
                 local project_dir="${1:-$(pwd)}"
                 local project_name="${2:-$(basename "$project_dir")}"
-                bash "$SCRIPT_DIR/contribute-stack.sh" "$project_dir" "$project_name" "$SCRIPT_DIR"
+                bash "$SCRIPT_DIR/lib/contribute-stack.sh" "$project_dir" "$project_name" "$SCRIPT_DIR"
             else
                 echo -e "${RED}❌ Contribution script not found${NC}"
                 exit 1

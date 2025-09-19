@@ -32,6 +32,8 @@ REPOSITORY_ANALYSIS=""
 SCRIPT_DIR=""
 PROJECT_DIR=""
 WORKING_DIR=""
+CONTRIBUTE_ACCEPTED=false
+STACK_IS_UNKNOWN=false
 
 # Detect if we're in non-interactive mode
 NON_INTERACTIVE=false
@@ -2121,6 +2123,60 @@ validate_inputs() {
     fi
 }
 
+# Check project stack and offer contribution for unknown stacks
+check_stack_and_offer_contribution() {
+    echo ""
+    echo -e "${CYAN}🔍 Detecting project technology stack...${NC}"
+
+    # Source stack detector if available
+    if [[ -f "$SCRIPT_DIR/lib/stack-detector.sh" ]]; then
+        source "$SCRIPT_DIR/lib/stack-detector.sh"
+
+        # Check if this is a known stack
+        if detect_project_stack "$PROJECT_DIR" > /dev/null 2>&1; then
+            local result
+            result=$(detect_project_stack "$PROJECT_DIR")
+            local stack_id tech_stack project_type confidence
+            IFS='|' read -r stack_id tech_stack project_type confidence <<< "$result"
+
+            echo -e "${GREEN}✅ Technology stack detected: $tech_stack${NC}"
+            echo -e "${BLUE}   Project type: $project_type (confidence: $confidence%)${NC}"
+            STACK_IS_UNKNOWN=false
+        else
+            echo -e "${YELLOW}🚀 Unknown technology stack detected!${NC}"
+            echo ""
+            echo -e "${CYAN}💡 You can help the claude-ally community by contributing this stack detection.${NC}"
+            echo -e "${CYAN}   This would help other developers using similar technology stacks.${NC}"
+            echo ""
+
+            STACK_IS_UNKNOWN=true
+
+            # Only ask in interactive mode
+            if [[ "$NON_INTERACTIVE" == false ]]; then
+                local contribute_choice
+                read -p "Would you like to contribute this stack to claude-ally after setup? (Y/n): " contribute_choice
+
+                if [[ ! "$contribute_choice" =~ ^[Nn] ]]; then
+                    CONTRIBUTE_ACCEPTED=true
+                    echo -e "${GREEN}✅ Great! We'll help you contribute this stack after the setup is complete.${NC}"
+                else
+                    CONTRIBUTE_ACCEPTED=false
+                    echo -e "${BLUE}No problem! Continuing with setup...${NC}"
+                fi
+            else
+                echo -e "${BLUE}ℹ️  Non-interactive mode: Skipping contribution offer${NC}"
+                CONTRIBUTE_ACCEPTED=false
+            fi
+        fi
+    else
+        echo -e "${YELLOW}⚠️  Stack detection not available${NC}"
+        STACK_IS_UNKNOWN=false
+        CONTRIBUTE_ACCEPTED=false
+    fi
+
+    echo ""
+}
+
 cleanup() {
     # Clean up temporary files
     if [[ -n "$CLAUDE_SUGGESTIONS_FILE" ]] && [[ -f "$CLAUDE_SUGGESTIONS_FILE" ]]; then
@@ -2136,6 +2192,9 @@ main() {
 
     # Detect and validate directories
     detect_directories
+
+    # Check project stack and offer contribution for unknown stacks
+    check_stack_and_offer_contribution
 
     # Check for Claude availability and analyze repository
     if check_claude_availability; then
@@ -2171,10 +2230,10 @@ main() {
         fi
 
         # Validate the generated file
-        if [ -f "$SCRIPT_DIR/validate.sh" ]; then
+        if [ -f "$SCRIPT_DIR/lib/validate.sh" ]; then
             echo ""
             echo -e "${BLUE}🔍 Running validation check...${NC}"
-            if "$SCRIPT_DIR/validate.sh" "$filename" | tail -1 | grep -q "EXCELLENT"; then
+            if "$SCRIPT_DIR/lib/validate.sh" "$filename" | tail -1 | grep -q "EXCELLENT"; then
                 echo -e "${GREEN}✅ Validation passed!${NC}"
             else
                 echo -e "${YELLOW}⚠️  Validation found minor issues (check above)${NC}"
@@ -2191,13 +2250,28 @@ main() {
         echo "3. Paste it to a new Claude conversation"
         echo "4. Claude will create your CLAUDE.md file and set up the system"
         echo ""
-        echo -e "${BOLD}💡 TIP: Use '$SCRIPT_DIR/validate.sh $filename' to check prompt quality${NC}"
+        echo -e "${BOLD}💡 TIP: Use '$SCRIPT_DIR/lib/validate.sh $filename' to check prompt quality${NC}"
 
-        # Check for contribution opportunities
-        echo ""
-        echo -e "${CYAN}🔍 Checking for contribution opportunities...${NC}"
-        if [[ -f "$SCRIPT_DIR/contribute-stack.sh" ]]; then
-            bash "$SCRIPT_DIR/contribute-stack.sh" "$PROJECT_DIR" "$PROJECT_NAME" "$SCRIPT_DIR"
+        # Execute contribution if accepted during setup
+        if [[ "$CONTRIBUTE_ACCEPTED" == true ]] && [[ "$STACK_IS_UNKNOWN" == true ]]; then
+            echo ""
+            echo -e "${PURPLE}🚀 CONTRIBUTING YOUR STACK TO CLAUDE-ALLY${NC}"
+            echo -e "${BOLD}============================================${NC}"
+            echo ""
+            echo -e "${CYAN}As promised, let's contribute your unknown stack to the claude-ally community!${NC}"
+            echo ""
+
+            if [[ -f "$SCRIPT_DIR/lib/contribute-stack.sh" ]]; then
+                bash "$SCRIPT_DIR/lib/contribute-stack.sh" "$PROJECT_DIR" "$PROJECT_NAME" "$SCRIPT_DIR"
+            else
+                echo -e "${RED}❌ Contribution script not found${NC}"
+                echo -e "${CYAN}You can still contribute manually by visiting:${NC}"
+                echo -e "${BLUE}https://github.com/mglcel/claude-ally/fork${NC}"
+            fi
+        elif [[ "$STACK_IS_UNKNOWN" == true ]]; then
+            echo ""
+            echo -e "${CYAN}💡 Remember: You can contribute this unknown stack anytime by running:${NC}"
+            echo -e "${BLUE}   $SCRIPT_DIR/claude-ally.sh contribute${NC}"
         fi
 
         echo ""

@@ -290,7 +290,7 @@ EOF
                     echo -e "${BOLD}================================${NC}"
 
                     # Check if GitHub PR script exists
-                    if [[ -f "$claude_ally_dir/github-pr.sh" ]]; then
+                    if [[ -f "$claude_ally_dir/lib/github-pr.sh" ]]; then
                         echo -e "${YELLOW}Would you like to create a pull request directly to the claude-ally GitHub repository?${NC}"
                         echo -e "${CYAN}This will automatically:${NC}"
                         echo "  🍴 Fork the repository"
@@ -305,7 +305,7 @@ EOF
 
                         if [[ ! "$github_pr_choice" =~ ^[Nn] ]]; then
                             echo ""
-                            if bash "$claude_ally_dir/github-pr.sh" "$stack_id" "$tech_stack" "$project_type" "Auto-detected patterns" "$project_dir" "$project_name"; then
+                            if bash "$claude_ally_dir/lib/github-pr.sh" "$stack_id" "$tech_stack" "$project_type" "Auto-detected patterns" "$project_dir" "$project_name"; then
                                 echo -e "${GREEN}🎉 Your contribution has been submitted to GitHub!${NC}"
                                 return 0
                             else

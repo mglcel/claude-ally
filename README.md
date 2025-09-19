@@ -25,9 +25,6 @@
 ### **📊 Enhanced Interactive Setup (🧠 Claude-Powered)**
 ```bash
 # From your project directory:
-/path/to/claude-ally/setup.sh
-
-# Or using the CLI:
 /path/to/claude-ally/claude-ally.sh setup
 ```
 The system analyzes your repository with Claude's intelligence and suggests smart defaults. Just press Enter to accept Claude's suggestions or modify them as needed. **Works from any project directory with 85% faster performance!**
@@ -205,15 +202,15 @@ The complete system is documented in `UNIVERSAL_COGNITIVE_ENHANCEMENT_PROMPT.md`
 
 ## 🛠️ Enhanced Interactive Setup Script (🧠 Claude-Powered)
 
-For the most intelligent setup experience, use the enhanced `setup.sh` script:
+For the most intelligent setup experience, use the enhanced setup via the CLI:
 
 ```bash
 # Clone claude-ally anywhere on your system
 git clone https://github.com/mglcel/claude-ally.git
 
-# Go to your project directory and run the script
+# Go to your project directory and run the setup
 cd /path/to/your/project
-/path/to/claude-ally/setup.sh
+/path/to/claude-ally/claude-ally.sh setup
 ```
 
 **✨ NEW: Cross-Directory Support** - Run the script from any project directory! The script automatically detects your project location and the claude-ally script location.
@@ -338,14 +335,14 @@ The script intelligently handles different scenarios:
 **✅ From your project directory:**
 ```bash
 cd /home/user/myproject
-/path/to/claude-ally/setup.sh
+/path/to/claude-ally/claude-ally.sh setup
 # ✅ Analyzes myproject, saves files to myproject/
 ```
 
 **⚠️ From claude-ally directory:**
 ```bash
 cd /path/to/claude-ally
-./setup.sh
+./claude-ally.sh setup
 # ⚠️ Warns: "You're running from claude-ally directory"
 # 💡 Suggests: "Run from your project directory instead"
 ```
