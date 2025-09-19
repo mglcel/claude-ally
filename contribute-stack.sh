@@ -182,6 +182,7 @@ propose_contribution() {
     local project_dir="$1"
     local project_name="$2"
     local claude_ally_dir="$3"
+    local claude_result="$4"  # Optional: existing Claude analysis result
 
     echo ""
     echo -e "${PURPLE}🚀 STACK CONTRIBUTION OPPORTUNITY DETECTED${NC}"
@@ -208,9 +209,12 @@ propose_contribution() {
     echo ""
     echo -e "${CYAN}🔍 Analyzing project for contribution...${NC}"
 
-    # Analyze with Claude if available
-    local analysis_result
-    if analyze_unknown_stack_with_claude "$project_dir" "$project_name"; then
+    # Use existing analysis or perform new analysis
+    local analysis_result="$claude_result"
+    if [[ -n "$claude_result" ]]; then
+        echo -e "${GREEN}✅ Using existing Claude analysis${NC}"
+        analysis_result="$claude_result"
+    elif analyze_unknown_stack_with_claude "$project_dir" "$project_name"; then
         echo ""
         echo -e "${GREEN}✅ Stack analysis completed!${NC}"
         echo ""
@@ -272,13 +276,13 @@ EOF
 
             # Extract contribution details for GitHub PR
             local stack_info
-            if stack_info=$(echo "$claude_result" | grep -A5 "STACK_ID\|TECH_STACK\|PROJECT_TYPE"); then
+            if stack_info=$(echo "$analysis_result" | grep -A5 "STACK_ID\|TECH_STACK\|PROJECT_TYPE"); then
                 local stack_id tech_stack project_type
 
                 # Parse Claude's analysis
-                stack_id=$(echo "$claude_result" | grep "STACK_ID" | sed 's/.*STACK_ID.*: *`\([^`]*\)`.*/\1/' | head -1)
-                tech_stack=$(echo "$claude_result" | grep "TECH_STACK" | sed 's/.*TECH_STACK.*: *`\([^`]*\)`.*/\1/' | head -1)
-                project_type=$(echo "$claude_result" | grep "PROJECT_TYPE" | sed 's/.*PROJECT_TYPE.*: *`\([^`]*\)`.*/\1/' | head -1)
+                stack_id=$(echo "$analysis_result" | grep "STACK_ID" | sed 's/.*STACK_ID.*: *`\([^`]*\)`.*/\1/' | head -1)
+                tech_stack=$(echo "$analysis_result" | grep "TECH_STACK" | sed 's/.*TECH_STACK.*: *`\([^`]*\)`.*/\1/' | head -1)
+                project_type=$(echo "$analysis_result" | grep "PROJECT_TYPE" | sed 's/.*PROJECT_TYPE.*: *`\([^`]*\)`.*/\1/' | head -1)
 
                 if [[ -n "$stack_id" ]] && [[ -n "$tech_stack" ]]; then
                     echo ""
@@ -373,11 +377,15 @@ main() {
     echo -e "${YELLOW}🚀 Unknown stack detected - let's contribute it!${NC}"
 
     # Try Claude analysis first if available
+    local claude_analysis_result=""
     if check_claude_availability; then
         echo -e "${CYAN}🤖 Claude is available - running automated analysis...${NC}"
-        if analyze_unknown_stack_with_claude "$project_dir" "$project_name"; then
-            propose_contribution "$project_dir" "$project_name" "$claude_ally_dir"
+        if claude_analysis_result=$(analyze_unknown_stack_with_claude "$project_dir" "$project_name"); then
+            echo -e "${GREEN}✅ Claude analysis completed successfully${NC}"
+            propose_contribution "$project_dir" "$project_name" "$claude_ally_dir" "$claude_analysis_result"
             return $?
+        else
+            echo -e "${YELLOW}⚠️ Claude analysis failed, proceeding with manual workflow${NC}"
         fi
     fi
 
