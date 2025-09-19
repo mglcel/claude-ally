@@ -1,11 +1,16 @@
 #!/bin/bash
 # Unit tests for CLAUDE.md handling and merging functionality
 
+echo "DEBUG: Script starting, about to set error handling" >&2
 set -euo pipefail
+echo "DEBUG: Error handling set" >&2
 
 # Test framework
+echo "DEBUG: Getting script directory" >&2
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+echo "DEBUG: SCRIPT_DIR=$SCRIPT_DIR" >&2
 ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+echo "DEBUG: ROOT_DIR=$ROOT_DIR" >&2
 
 # Colors for output
 RED='\033[0;31m'
@@ -158,8 +163,15 @@ setup() {
     echo "DEBUG: Set up Claude mock" >&2
 
     # Source setup.sh functions for testing
-    source "$ROOT_DIR/lib/setup.sh"
-    echo "DEBUG: Sourced setup.sh successfully" >&2
+    echo "DEBUG: About to source $ROOT_DIR/lib/setup.sh" >&2
+    if [[ -f "$ROOT_DIR/lib/setup.sh" ]]; then
+        echo "DEBUG: setup.sh exists, sourcing it" >&2
+        source "$ROOT_DIR/lib/setup.sh"
+        echo "DEBUG: Sourced setup.sh successfully" >&2
+    else
+        echo "DEBUG: ERROR - setup.sh not found at $ROOT_DIR/lib/setup.sh" >&2
+        exit 1
+    fi
 }
 
 # Cleanup test environment
@@ -508,6 +520,11 @@ run_tests() {
 }
 
 # Run tests if script is executed directly
+echo "DEBUG: About to check if script is executed directly" >&2
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    echo "DEBUG: Script is executed directly, calling run_tests" >&2
     run_tests
+else
+    echo "DEBUG: Script is being sourced, not calling run_tests" >&2
 fi
+echo "DEBUG: Script finished successfully" >&2

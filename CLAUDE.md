@@ -12,6 +12,11 @@ claude-ally - cli-tool using Shell scripting, Markdown, Git
 - When making changes ensure you check all implications/dependencies, analyze callers, documentation, signatures
 - When using python, use venv
 - Always run tests after a commit to ensure nothing is broken
+- **🔥 CRITICAL: MUST wait for GitHub Actions workflows to pass before considering work complete**
+  - Never give up the prompt to user while GitHub Actions are failing
+  - Continue debugging and fixing until ALL CI/CD workflows pass
+  - Only consider development task finished when tests pass in CI environment
+  - GitHub Actions success is mandatory for task completion
 
 ### Project-Specific Critical Assets
 - Configuration files, environment variables: Enhanced protection protocols required
@@ -259,12 +264,13 @@ LOW_CONFIDENCE (Monitor for Patterns):
 ## 🎯 QUALITY ASSURANCE
 
 ### Pre-Commit Checklist
-- [ ] All tests pass
+- [ ] All tests pass locally
 - [ ] No secrets or credentials committed
 - [ ] Documentation updated
 - [ ] Cross-platform compatibility verified
 - [ ] Error handling implemented
 - [ ] Code follows project conventions
+- [ ] **GitHub Actions workflows pass (MANDATORY)**
 
 ### Testing Requirements
 - Test setup procedures on clean environments
