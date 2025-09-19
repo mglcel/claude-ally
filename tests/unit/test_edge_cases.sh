@@ -119,6 +119,12 @@ assert_exit_code() {
 # Setup test environment
 setup() {
     mkdir -p "$TEST_TEMP_DIR"
+
+    # Validate that claude-ally.sh exists and is executable
+    if [[ ! -x "$ROOT_DIR/claude-ally.sh" ]]; then
+        echo -e "${RED}ERROR: claude-ally.sh not found or not executable at $ROOT_DIR/claude-ally.sh${NC}"
+        exit 1
+    fi
 }
 
 # Cleanup test environment
@@ -289,9 +295,9 @@ test_malicious_path_handling() {
     local project_dir
     project_dir=$(create_malicious_paths_project)
 
-    # Test that CLI handles malicious paths safely
+    # Test that CLI handles malicious paths safely (with timeout and better error handling)
     local detect_result
-    detect_result=$("$ROOT_DIR/claude-ally.sh" detect "$project_dir" 2>&1 || echo "FAILED")
+    detect_result=$(timeout 30 "$ROOT_DIR/claude-ally.sh" detect "$project_dir" 2>&1 || echo "FAILED")
 
     assert_not_contains "/etc/passwd" "$detect_result" "Malicious paths don't leak sensitive file access"
     assert_not_contains "rm -rf" "$detect_result" "Command injection attempts are sanitized"
@@ -390,10 +396,10 @@ test_concurrent_execution() {
 }
 EOF
 
-    # Run multiple detections concurrently
+    # Run multiple detections concurrently (with timeout)
     local pids=()
     for i in {1..5}; do
-        "$ROOT_DIR/claude-ally.sh" detect "$project_dir" >/dev/null 2>&1 &
+        timeout 15 "$ROOT_DIR/claude-ally.sh" detect "$project_dir" >/dev/null 2>&1 &
         pids+=($!)
     done
 
@@ -428,9 +434,9 @@ test_memory_usage() {
         echo '{"name": "module-'$i'", "dependencies": {"react": "^18.0.0"}}' > "$project_dir/module-$i/package.json"
     done
 
-    # Run detection and monitor if it completes
+    # Run detection and monitor if it completes (with timeout for CI reliability)
     local result
-    result=$("$ROOT_DIR/claude-ally.sh" detect "$project_dir" 2>&1 || echo "FAILED")
+    result=$(timeout 30 "$ROOT_DIR/claude-ally.sh" detect "$project_dir" 2>&1 || echo "FAILED")
 
     if [[ "$result" != "FAILED" ]]; then
         echo -e "${GREEN}✅ PASS${NC} Large project memory usage is manageable"
@@ -463,9 +469,9 @@ test_unicode_handling() {
 }
 EOF
 
-    # Test that detection handles unicode gracefully
+    # Test that detection handles unicode gracefully (with timeout)
     local result
-    result=$("$ROOT_DIR/claude-ally.sh" detect "$project_dir" 2>&1 || echo "FAILED")
+    result=$(timeout 20 "$ROOT_DIR/claude-ally.sh" detect "$project_dir" 2>&1 || echo "FAILED")
 
     if [[ "$result" != "FAILED" ]]; then
         echo -e "${GREEN}✅ PASS${NC} Unicode characters handled gracefully"
@@ -557,9 +563,9 @@ EOF
             continue  # Skip Windows paths on Unix
         fi
 
-        # Test with actual valid path
+        # Test with actual valid path (with timeout for CI stability)
         local result
-        result=$("$ROOT_DIR/claude-ally.sh" detect "$project_dir" 2>/dev/null || echo "no_detection")
+        result=$(timeout 15 "$ROOT_DIR/claude-ally.sh" detect "$project_dir" 2>/dev/null || echo "no_detection")
 
         if [[ "$result" != "no_detection" ]]; then
             ((paths_handled++))
