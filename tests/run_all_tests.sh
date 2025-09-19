@@ -213,16 +213,26 @@ pre_flight_checks() {
 # Main test execution
 run_unit_tests() {
     run_test_suite \
-        "Unit" \
+        "Unit - Stack Detector" \
         "$SCRIPT_DIR/unit/test_stack_detector.sh" \
-        "Core functionality and module testing"
+        "Core stack detection functionality"
+
+    run_test_suite \
+        "Unit - Contribute Functionality" \
+        "$SCRIPT_DIR/unit/test_contribute_functionality.sh" \
+        "Contribute workflow with Claude mocking"
+
+    run_test_suite \
+        "Unit - GitHub Integration" \
+        "$SCRIPT_DIR/unit/test_github_integration.sh" \
+        "GitHub PR automation and integration"
 }
 
 run_integration_tests() {
     run_test_suite \
-        "Integration" \
+        "Integration - CLI Commands" \
         "$SCRIPT_DIR/integration/test_cli_integration.sh" \
-        "CLI commands and module integration testing"
+        "Complete CLI workflow testing with mocking"
 }
 
 run_e2e_tests() {
