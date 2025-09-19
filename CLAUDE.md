@@ -1,264 +1,301 @@
-# CLAUDE-ALLY COGNITIVE ENHANCEMENT SYSTEM
+# CLAUDE.md
 
-## PROJECT CONFIGURATION
+## Project Overview
+claude-ally - cli-tool using Shell scripting, Markdown, Git
 
-**PROJECT_NAME:** claude-ally
-**PROJECT_TYPE:** cli-tool
-**TECH_STACK:** Shell scripting, Markdown, Git
-**DATABASE_TECH:** None
-**CRITICAL_ASSETS:** Configuration files, environment variables
-**MANDATORY_REQUIREMENTS:** None
-**COMMON_ISSUES:** prompt customization complexity, setup time
-**FILE_STRUCTURE:** shell scripts, markdown docs, validation tools
-**DEPLOYMENT_TARGET:** developer workstations
+## 🚨 MANDATORY DEVELOPMENT REQUIREMENTS - NEVER SKIP THESE
 
-## 1. CONTEXT-AWARE DECISION ENHANCEMENT
+### Core Development Rules
+- Always commit changes once done
+- Try to update documentation and README files when done
+- Write tests for changes and eventually adapt existing ones
+- When making changes ensure you check all implications/dependencies, analyze callers, documentation, signatures
+- When using python, use venv
+- Always run tests after a commit to ensure nothing is broken
 
-### Critical Priority Areas
-- **Configuration files, environment variables:** Enhanced protection protocols - always validate, backup, and secure
-- **Shell scripting:** Cross-platform compatibility, error handling, portability best practices
-- **Markdown:** Documentation consistency, readability, structure validation
-- **Git:** Repository integrity, commit message standards, branch management
-- **Developer workstations:** Platform-specific optimization for macOS/Linux/Windows
+### Project-Specific Critical Assets
+- Configuration files, environment variables: Enhanced protection protocols required
+- Shell scripts: Framework-specific best practices enforcement
+- Markdown documentation: Consistency and clarity standards
+- Git operations: Repository integrity and history preservation
 
-### Mandatory Validation Rules
-- **Prompt customization complexity:** Always analyze impact on user experience and setup time
-- **Setup time:** Performance analysis required for any changes affecting installation/configuration
-- **Configuration files, environment variables operations:** Security validation and backup verification required
-- **Cross-platform compatibility:** Test implications for different operating systems
+## 🧠 COGNITIVE ENHANCEMENT SYSTEM
 
-## 2. PRIORITY-BASED PATTERN MATCHING
+### 1. CONTEXT-AWARE DECISION ENHANCEMENT
 
-### CRITICAL (Immediate Analysis Required)
+#### Critical Priority Areas
+**Configuration files, environment variables**: Enhanced protection protocols
+- Never commit secrets or sensitive data
+- Validate environment variable usage
+- Ensure proper escaping and quoting in shell scripts
+- Check for hardcoded paths and make them portable
 
-**Security_Critical_Patterns:**
-- "environment", "env", "variable", "config", "credential", "key", "secret" → Security analysis required
-- "path", "directory", "file", "write", "create", "modify" → File system security validation
-- "input", "user", "prompt", "argument", "parameter" → Input validation and security check
-- "Configuration files, environment variables" → Enhanced protection protocols
-- "sudo", "admin", "root", "privilege" → Privilege escalation analysis
+**Shell scripting, Markdown, Git**: Framework-specific best practices
+- Follow POSIX compliance where possible
+- Use proper error handling with set -e and error checking
+- Validate markdown syntax and consistency
+- Ensure git operations are safe and reversible
 
-**Data_Integrity_Critical:**
-- "Configuration files, environment variables" operations → Data validation and backup verification
-- "setup", "install", "configure", "init" → Installation integrity validation
-- "delete", "remove", "clean", "purge" → Data loss prevention analysis
-- "overwrite", "replace", "modify" → Change impact analysis
+**Developer workstations**: Platform-specific optimization
+- Support cross-platform compatibility (macOS, Linux, Windows)
+- Optimize for local development environments
+- Minimize setup complexity and dependencies
 
-### HIGH (Enhanced Analysis)
+#### Mandatory Validation Rules
+**Prompt customization complexity, setup time**: Prevention analysis required
+- Simplify configuration processes
+- Provide clear, step-by-step instructions
+- Minimize manual intervention requirements
+- Test setup procedures on clean environments
 
-**Shell_Scripting_Specific_Patterns:**
-- "bash", "sh", "script", "command", "execute" → Shell security and portability validations
-- "pipe", "redirect", "output", "input" → Stream handling best practices
-- "exit", "return", "status", "code" → Error handling validation
-- "path", "directory", "file" → Cross-platform path handling
-- "permission", "chmod", "executable" → File permission security
+**Configuration files, environment variables operations**: Security validation required
+- Scan for exposed secrets before commits
+- Validate file permissions and access controls
+- Check for injection vulnerabilities in shell scripts
+- Ensure sensitive data is properly handled
 
-**CLI_Tool_Architecture_Patterns:**
-- "argument", "flag", "option", "parameter" → CLI interface consistency
-- "help", "usage", "documentation" → User experience validation
-- "version", "compatibility", "dependency" → Compatibility analysis
-- "performance", "speed", "optimization" → Performance impact assessment
+### 2. PRIORITY-BASED PATTERN MATCHING
 
-### MEDIUM (Standard Analysis)
+#### CRITICAL (Immediate Analysis Required)
 
-**Compatibility_Validation:**
-- "macOS", "Linux", "Windows", "platform" → Cross-platform compatibility check
-- "dependency", "requirement", "install" → Dependency impact analysis
-- "version", "upgrade", "update" → Version compatibility verification
-- "terminal", "shell", "console" → Terminal compatibility assessment
+**Security_Critical_Patterns**:
+- "authentication", "authorization", "login", "password", "token", "session" → Security analysis required
+- "config", "env", "environment", "secret", "key", "credential" → Credential security analysis
+- "eval", "exec", "system", "shell_exec" → Command injection prevention
+- "curl", "wget", "download", "fetch" → Network security validation
+- Configuration files, environment variables → Enhanced protection protocols
 
-**Documentation_Quality:**
-- "README", "documentation", "docs", "help" → Documentation completeness check
-- "example", "usage", "tutorial" → User guidance validation
-- "comment", "explain", "describe" → Code clarity assessment
+**Data_Integrity_Critical**:
+- Configuration files, environment variables operations → Data validation and backup verification
+- "rm", "delete", "unlink", "truncate" → Data loss prevention analysis
+- "chmod", "chown", "permission" → Access control validation
+- Git operations affecting history → Repository integrity checks
 
-### NORMAL (Background Analysis)
+#### HIGH (Enhanced Analysis)
 
-**Code_Quality_Patterns:**
-- "TODO", "FIXME", "HACK", "TEMP" → Code quality improvement suggestions
-- "test", "validate", "verify", "check" → Testing approach recommendations
-- "refactor", "cleanup", "optimize" → Code improvement opportunities
+**Shell_Scripting_Specific_Patterns**:
+- Shell script patterns → POSIX compliance and error handling validation
+- Markdown patterns → Syntax and formatting consistency checks
+- Git patterns → Repository safety and best practices
+- CLI tool architecture patterns → User experience and reliability best practices
 
-## 3. CLI-TOOL SPECIFIC PATTERNS
+**Performance_Critical**:
+- "prompt customization complexity, setup time" → Performance impact analysis required
+- "loop", "while", "for", "recursive" → Performance and resource analysis
+- "developer workstations" constraints → Platform-specific optimization
+- "timeout", "retry", "async" → Reliability and responsiveness analysis
 
-### User Experience Optimization
-- **Setup Simplicity:** Minimize steps, clear instructions, error handling
-- **Cross-Platform Support:** Path handling, shell differences, dependency management
-- **Error Messages:** Clear, actionable, user-friendly error reporting
-- **Performance:** Fast execution, minimal resource usage, efficient operations
+#### MEDIUM (Standard Analysis)
 
-### Configuration Management
-- **Environment Variables:** Secure handling, validation, documentation
-- **Config Files:** Format consistency, validation, backup strategies
-- **Defaults:** Sensible defaults, override mechanisms, validation
+**Compatibility_Validation**:
+- Cross-platform compatibility → Multi-OS testing verification
+- "dependency", "require", "import" → Compatibility impact analysis
+- "version", "upgrade", "migration" → Version compatibility check
+- Shell variations → Bash/zsh/sh compatibility validation
 
-### CLI Interface Standards
-- **Argument Parsing:** Consistent flag naming, help text, validation
-- **Output Formatting:** Consistent styling, verbosity levels, machine-readable options
-- **Error Handling:** Graceful failures, helpful messages, exit codes
+#### NORMAL (Background Analysis)
 
-## 4. DOMAIN KNOWLEDGE INTEGRATION
+**Code_Quality_Patterns**:
+- "TODO", "FIXME", "HACK" → Code quality improvement suggestions
+- "test", "spec", "validate" → Testing approach recommendations
+- "documentation", "comment", "readme" → Documentation enhancement suggestions
+- "cleanup", "refactor", "optimize" → Code maintenance opportunities
 
-### Shell Scripting Best Practices
-- **Portability:** Use POSIX-compliant constructs, avoid bash-specific features when possible
-- **Error Handling:** Set -e, trap handlers, proper exit codes
-- **Security:** Input validation, path sanitization, privilege checks
-- **Performance:** Efficient command usage, minimize subprocess spawning
+### 3. TECHNOLOGY STACK EXPERTISE
 
-### CLI Tool Architecture Principles
-- **Scalability:** Modular design, plugin architecture consideration
-- **Security:** Input validation, secure defaults, privilege management
-- **Usability:** Intuitive commands, helpful error messages, comprehensive help
-- **Maintainability:** Clear code structure, documentation, testing
+#### Shell Scripting Best Practices
+- Use `set -euo pipefail` for robust error handling
+- Quote variables properly: `"$variable"` not `$variable`
+- Use `[[` instead of `[` for better functionality
+- Implement proper argument validation
+- Use functions for reusable code blocks
+- Handle edge cases and error conditions
 
-### Developer Workstation Optimization
-- **Installation:** Package managers, dependency handling, system integration
-- **Configuration:** User preferences, environment setup, tool integration
-- **Performance:** Resource usage, startup time, operation efficiency
+#### Markdown Standards
+- Consistent heading hierarchy
+- Proper code block syntax highlighting
+- Clear table formatting
+- Consistent link formatting
+- Proper list indentation and structure
 
-## 5. LEARNING ENHANCEMENT TRIGGERS
+#### Git Operations Safety
+- Always check repository state before operations
+- Use descriptive commit messages
+- Validate branch operations
+- Ensure clean working directory when needed
+- Implement proper conflict resolution
 
-### Continuous Improvement Protocol
+### 4. CLI Tool Architecture Principles
 
-**Learning_Signal_Detection:**
-- When shell compatibility issues arise → HIGH confidence learning opportunity
-- When setup complexity increases → MEDIUM confidence pattern enhancement
-- When configuration security is compromised → HIGH confidence gap identification
-- When cross-platform issues emerge → HIGH confidence pattern validation
+#### User Experience Optimization
+- Clear, helpful error messages
+- Progress indicators for long operations
+- Intuitive command structure
+- Comprehensive help documentation
+- Graceful handling of edge cases
 
-**Proactive_Documentation_Updates:**
-```
+#### Reliability Requirements
+- Robust error handling and recovery
+- Validation of user inputs
+- Safe defaults and confirmations
+- Logging for debugging and troubleshooting
+- Clean rollback capabilities
+
+#### Performance Considerations
+- Minimize startup time
+- Efficient file operations
+- Avoid unnecessary dependencies
+- Cache expensive operations where appropriate
+- Optimize for common use cases
+
+### 5. LEARNING ENHANCEMENT TRIGGERS
+
+#### Continuous Improvement Protocol
+
+**Learning_Signal_Detection**:
+- When issues are caught that patterns missed → HIGH confidence learning opportunity
+- When optimizations are suggested → MEDIUM confidence pattern enhancement
+- When unexpected behavior occurs → HIGH confidence gap identification
+- When patterns successfully prevent problems → HIGH confidence pattern validation
+
+**Proactive_Documentation_Updates**:
 TRIGGER_CONDITIONS:
-  - New security vulnerability in shell scripts → Update CRITICAL security patterns
-  - Cross-platform compatibility issues → Update shell scripting patterns
-  - Setup time performance issues → Update optimization guidelines
-  - Configuration complexity problems → Update architecture patterns
-```
+- New security vulnerabilities discovered → Update CRITICAL security patterns
+- Shell scripting best practices evolved → Update framework patterns
+- Performance bottlenecks identified → Update optimization guidelines
+- User experience issues resolved → Update UX patterns
 
-**Learning_Confidence_Assessment:**
-```
+**Learning_Confidence_Assessment**:
 HIGH_CONFIDENCE (Immediate CLAUDE.md Update):
-  - Security vulnerability in configuration handling
-  - Cross-platform compatibility failure
-  - Setup process breaking for users
-  - Performance regression in CLI operations
+- Clear error prevented by missing pattern
+- Security vulnerability caught through pattern gap
+- Performance issue solved through specific optimization
+- User workflow problem resolved through targeted improvement
 
 MEDIUM_CONFIDENCE (Propose for Next Update):
-  - User experience improvement through better patterns
-  - Code organization enhancement
-  - Documentation clarity improvement
+- Efficiency improvement observed through better pattern
+- User experience enhanced through refined approach
+- Pattern refinement improves accuracy without noise
 
 LOW_CONFIDENCE (Monitor for Patterns):
-  - Theoretical optimization without testing
-  - Single-user preference without broader applicability
-  - Speculative improvement without evidence
-```
+- Theoretical improvement without concrete evidence
+- Single-occurrence issue without pattern validation
+- Preference-based suggestion without clear benefit
 
-## 6. ERROR RECOVERY PROTOCOLS
+#### Context Stack Awareness
+**CROSS_TASK_MEMORY**:
+- Remember configuration decisions from previous tasks
+- Build on established patterns within conversation
+- Reference previous solutions for consistency
+- Maintain awareness of project evolution and user preferences
 
-### Pattern Miss Detection
-- "Did any configuration security issues emerge that patterns should have caught?"
-- "Are there cross-platform compatibility problems not flagged?"
-- "Were setup complexity or performance issues missed?"
+### 6. ERROR RECOVERY PROTOCOLS
 
-### Secondary Validation Checks
-```
-Security_Backstop:
-  - Final scan for environment variable security
-  - Double-check file permission patterns
-  - Verify input validation wasn't missed
+#### Pattern Miss Detection
+- "Did any security, compatibility, or user experience issues emerge that patterns should have caught?"
+- "Are there shell scripting, git operations, or configuration problems not flagged?"
 
-Technical_Backstop:
-  - Scan for setup time performance impacts
-  - Verify cross-platform compatibility
-  - Check for configuration complexity increases
-```
+#### Secondary Validation Checks
+**Security_Backstop**:
+- Final scan for configuration files and environment variable security patterns
+- Double-check that credential/secret patterns weren't missed
+- Verify shell injection vulnerabilities are addressed
 
-### Pattern Improvement Triggers
-- "If I missed a security issue, what pattern should have caught it?"
+**Technical_Backstop**:
+- Scan for setup complexity that might impact user experience
+- Verify cross-platform compatibility wasn't overlooked
+- Check for missing error handling or edge cases
+
+#### Pattern Improvement Triggers
+- "If setup complexity was missed, what pattern should have caught it?"
 - "What keyword would have triggered proper cross-platform analysis?"
-- "How can we detect setup complexity increases earlier?"
 
-## 7. PROACTIVE LEARNING PROTOCOL
+### 7. PROACTIVE LEARNING PROTOCOL
 
-### After Each Task - MANDATORY CHECK
+#### After Each Task - MANDATORY
 
-```
-🔍 LEARNING IDENTIFIED: [Specific gap or improvement discovered]
-📝 PROPOSED CLAUDE.md UPDATE: [Exact text to add/modify]
-🎯 REASONING: [Why this will prevent future errors]
-📊 CONFIDENCE LEVEL: [HIGH/MEDIUM/LOW based on evidence strength]
-✅ USER APPROVAL NEEDED: [Yes/No for implementation]
-```
+🔍 **LEARNING IDENTIFIED**: [Specific gap or improvement discovered]
+📝 **PROPOSED CLAUDE.md UPDATE**: [Exact text to add/modify]
+🎯 **REASONING**: [Why this will prevent future errors]
+📊 **CONFIDENCE LEVEL**: [HIGH/MEDIUM/LOW based on evidence strength]
+✅ **USER APPROVAL NEEDED**: [Yes/No for implementation]
 
-### Confidence Level Criteria
+#### CONFIDENCE LEVEL CRITERIA
 
-**HIGH_CONFIDENCE_Learning:**
-- Security vulnerability in shell scripts or configuration
-- Cross-platform compatibility failure discovered
-- Setup process breaking or significantly slowing down
-- Configuration complexity causing user confusion
-- Performance regression in CLI operations
+**HIGH_CONFIDENCE_Learning**:
+- Clear errors prevented (security vulnerability caught, setup complexity avoided)
+- Missing pattern discovered through actual failure
+- User feedback indicating specific improvement needed
+- Concrete evidence of system gap from real task outcomes
 
-**MEDIUM_CONFIDENCE_Learning:**
-- User experience improvement observed
-- Code organization enhancement that improves maintainability
-- Documentation clarity that reduces support burden
-- Pattern refinement that catches issues more accurately
+**MEDIUM_CONFIDENCE_Learning**:
+- Efficiency improvements observed during tasks
+- Pattern refinements that improve accuracy
+- User behavior patterns that suggest optimization
+- Successful prevention that could be coincidental
 
-**LOW_CONFIDENCE_Learning:**
-- Theoretical shell optimization without testing
-- Single-user preference without broader validation
-- Speculative improvement without concrete evidence
-- Style preference without functional benefit
+**LOW_CONFIDENCE_Learning**:
+- Theoretical improvements without concrete evidence
+- Single occurrence without pattern validation
+- Preference-based changes without clear benefit
+- Speculative enhancements without proven value
 
-## 8. PROJECT-SPECIFIC SECURITY REQUIREMENTS
+## 🛡️ SECURITY PROTOCOLS
 
-### Configuration Protection
-- Environment variables must never be logged or exposed
-- Configuration files require backup before modification
-- User input validation for all configuration parameters
-- Secure defaults for all configurable options
+### Configuration and Environment Protection
+- Never commit secrets, API keys, or credentials
+- Use environment variables for sensitive configuration
+- Validate all external inputs and commands
+- Implement proper file permissions and access controls
+- Scan for common injection vulnerabilities
 
 ### Shell Script Security
-- Input sanitization for all user-provided arguments
-- Path validation to prevent directory traversal
-- Privilege escalation prevention
-- Command injection protection
+- Validate and sanitize all user inputs
+- Use proper quoting to prevent injection
+- Avoid `eval` and similar dangerous constructs
+- Implement proper error handling and logging
+- Use secure temporary file creation
 
-### File System Security
-- Proper file permissions on created files
-- Safe temporary file handling
-- Atomic operations for critical file updates
-- Backup strategies for important configuration
+## 🎯 QUALITY ASSURANCE
 
-## 9. PERFORMANCE OPTIMIZATION GUIDELINES
+### Pre-Commit Checklist
+- [ ] All tests pass
+- [ ] No secrets or credentials committed
+- [ ] Documentation updated
+- [ ] Cross-platform compatibility verified
+- [ ] Error handling implemented
+- [ ] Code follows project conventions
 
-### Setup Time Optimization
-- Minimize network requests during setup
-- Cache downloads and dependencies
-- Parallel operations where safe
-- Progress indicators for long operations
+### Testing Requirements
+- Test setup procedures on clean environments
+- Validate cross-platform compatibility
+- Test error conditions and edge cases
+- Verify security measures are effective
+- Confirm user experience is intuitive
 
-### Runtime Performance
-- Efficient command usage in shell scripts
-- Minimize subprocess spawning
-- Cache expensive operations
-- Lazy loading of non-essential components
+## 📚 DEVELOPMENT GUIDELINES
 
-### Resource Usage
-- Memory-efficient operations
-- Disk space management
-- Network bandwidth consideration
-- CPU usage optimization
+### Code Style
+- Follow existing project conventions
+- Use consistent naming patterns
+- Implement comprehensive error handling
+- Add meaningful comments for complex logic
+- Maintain clean, readable code structure
 
-## 10. SYSTEM ACTIVATION CONFIRMATION
+### Documentation Standards
+- Keep README files current and accurate
+- Document all configuration options
+- Provide clear setup instructions
+- Include troubleshooting guidance
+- Maintain changelog for releases
 
-✅ **COGNITIVE ENHANCEMENT SYSTEM ACTIVE**
+### Git Workflow
+- Use descriptive commit messages
+- Keep commits focused and atomic
+- Test before committing
+- Update documentation with changes
+- Follow branching strategy consistently
 
-**Pattern Recognition:** Monitoring for security, compatibility, and performance patterns
-**Learning Protocol:** Ready to capture and integrate improvements
-**Domain Expertise:** Shell scripting, CLI tools, developer workstation optimization
-**Security Focus:** Configuration protection, input validation, cross-platform security
+---
 
-**Ready for development tasks with enhanced decision-making capabilities.**
+This cognitive enhancement system is designed to provide intelligent, context-aware assistance for the claude-ally CLI tool project, with emphasis on security, user experience, and maintainability.
