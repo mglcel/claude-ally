@@ -79,7 +79,7 @@ After setup, test with these validation questions:
 - Rust web services (Result types, error handling)
 
 ✅ **Frontend Frameworks**
-- React (hooks, state management, performance)
+- `Kotlin Multiplatform + MOKO Resources` (`multiplatform-library`)- React (hooks, state management, performance)
 - Vue.js, Angular, Svelte patterns
 
 ✅ **Mobile Development**
