@@ -297,6 +297,24 @@ EOF
 
         echo -e "${GREEN}✅ Contribution template created at: $contrib_dir${NC}"
 
+        # Check if Claude recommends adding this stack
+        local worth_adding
+        worth_adding=$(echo "$analysis_result" | grep -i "WORTH_ADDING" | sed 's/.*WORTH_ADDING[^:]*:[[:space:]]*\(.*\)$/\1/' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | head -1)
+        worth_adding=$(echo "$worth_adding" | tr '[:lower:]' '[:upper:]' | sed 's/^["\*]*//;s/["\*]*$//')
+
+        if [[ "$worth_adding" =~ ^NO ]]; then
+            echo ""
+            echo -e "${YELLOW}ℹ️ Claude analysis suggests this project may not be suitable for contribution${NC}"
+            echo -e "${CYAN}Reason: Stack appears too minimal or generic for automated detection${NC}"
+            echo ""
+            echo -e "${BLUE}If you believe this assessment is incorrect, you can still contribute manually:${NC}"
+            echo -e "1. Review the analysis in the contribution template"
+            echo -e "2. Customize the detection logic for your specific use case"
+            echo -e "3. Fork claude-ally on GitHub: https://github.com/mglcel/claude-ally/fork"
+            echo -e "4. Submit a pull request with justification for why this stack should be supported"
+            return 0
+        fi
+
         # Extract contribution details for GitHub PR
         local stack_info
         if stack_info=$(echo "$analysis_result" | grep -A5 "STACK_ID\|TECH_STACK\|PROJECT_TYPE"); then
@@ -316,12 +334,12 @@ EOF
             stack_id=$(echo "$stack_id" | sed 's/[^a-zA-Z0-9-]/-/g' | sed 's/--*/-/g' | sed 's/^-\|-$//g' | tr '[:upper:]' '[:lower:]')
 
             # Ensure stack_id is not empty after sanitization
-            if [[ -z "$stack_id" ]]; then
+            if [[ -z "$stack_id" ]] || [[ "$stack_id" == "n-a" ]] || [[ "$stack_id" == "unknown" ]]; then
                 stack_id="unknown-stack"
             fi
 
 
-            if [[ -n "$stack_id" ]] && [[ -n "$tech_stack" ]]; then
+            if [[ -n "$stack_id" ]] && [[ -n "$tech_stack" ]] && [[ "$stack_id" != "unknown-stack" ]]; then
                 echo ""
                 echo -e "${PURPLE}🚀 GITHUB INTEGRATION AVAILABLE${NC}"
                 echo -e "${BOLD}================================${NC}"
