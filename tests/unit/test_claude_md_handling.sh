@@ -1,16 +1,16 @@
 #!/bin/bash
 # Unit tests for CLAUDE.md handling and merging functionality
 
-echo "DEBUG: Script starting, about to set error handling" >&2
+echo "DEBUG: Script starting, about to set error handling"
 set -euo pipefail
-echo "DEBUG: Error handling set" >&2
+echo "DEBUG: Error handling set"
 
 # Test framework
-echo "DEBUG: Getting script directory" >&2
+echo "DEBUG: Getting script directory"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-echo "DEBUG: SCRIPT_DIR=$SCRIPT_DIR" >&2
+echo "DEBUG: SCRIPT_DIR=$SCRIPT_DIR"
 ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
-echo "DEBUG: ROOT_DIR=$ROOT_DIR" >&2
+echo "DEBUG: ROOT_DIR=$ROOT_DIR"
 
 # Colors for output
 RED='\033[0;31m'
@@ -156,20 +156,20 @@ EOF
 
 # Setup test environment
 setup() {
-    echo "DEBUG: Starting CLAUDE.md test setup in $TEST_TEMP_DIR" >&2
+    echo "DEBUG: Starting CLAUDE.md test setup in $TEST_TEMP_DIR"
     mkdir -p "$TEST_TEMP_DIR"
-    echo "DEBUG: Created temp directory" >&2
+    echo "DEBUG: Created temp directory"
     setup_claude_mock
-    echo "DEBUG: Set up Claude mock" >&2
+    echo "DEBUG: Set up Claude mock"
 
     # Source setup.sh functions for testing
-    echo "DEBUG: About to source $ROOT_DIR/lib/setup.sh" >&2
+    echo "DEBUG: About to source $ROOT_DIR/lib/setup.sh"
     if [[ -f "$ROOT_DIR/lib/setup.sh" ]]; then
-        echo "DEBUG: setup.sh exists, sourcing it" >&2
+        echo "DEBUG: setup.sh exists, sourcing it"
         source "$ROOT_DIR/lib/setup.sh"
-        echo "DEBUG: Sourced setup.sh successfully" >&2
+        echo "DEBUG: Sourced setup.sh successfully"
     else
-        echo "DEBUG: ERROR - setup.sh not found at $ROOT_DIR/lib/setup.sh" >&2
+        echo "DEBUG: ERROR - setup.sh not found at $ROOT_DIR/lib/setup.sh"
         exit 1
     fi
 }
@@ -478,30 +478,30 @@ run_tests() {
     echo "====================================="
     echo ""
 
-    echo "DEBUG: About to call setup function" >&2
+    echo "DEBUG: About to call setup function"
     setup
-    echo "DEBUG: Setup completed, running tests" >&2
+    echo "DEBUG: Setup completed, running tests"
 
-    echo "DEBUG: Starting test_no_existing_claude_md" >&2
+    echo "DEBUG: Starting test_no_existing_claude_md"
     test_no_existing_claude_md
-    echo "DEBUG: Starting test_existing_claude_md_detection" >&2
+    echo "DEBUG: Starting test_existing_claude_md_detection"
     test_existing_claude_md_detection
-    echo "DEBUG: Starting test_claude_powered_merging" >&2
+    echo "DEBUG: Starting test_claude_powered_merging"
     test_claude_powered_merging
-    echo "DEBUG: Starting test_merge_validation_and_fallback" >&2
+    echo "DEBUG: Starting test_merge_validation_and_fallback"
     test_merge_validation_and_fallback
-    echo "DEBUG: Starting test_backup_functionality" >&2
+    echo "DEBUG: Starting test_backup_functionality"
     test_backup_functionality
-    echo "DEBUG: Starting test_complete_setup_workflow_integration" >&2
+    echo "DEBUG: Starting test_complete_setup_workflow_integration"
     test_complete_setup_workflow_integration
-    echo "DEBUG: Starting test_file_content_validation" >&2
+    echo "DEBUG: Starting test_file_content_validation"
     test_file_content_validation
-    echo "DEBUG: Starting test_interactive_choice_simulation" >&2
+    echo "DEBUG: Starting test_interactive_choice_simulation"
     test_interactive_choice_simulation
-    echo "DEBUG: Starting test_error_handling_missing_files" >&2
+    echo "DEBUG: Starting test_error_handling_missing_files"
     test_error_handling_missing_files
 
-    echo "DEBUG: All tests completed, cleaning up" >&2
+    echo "DEBUG: All tests completed, cleaning up"
     cleanup
 
     echo ""
@@ -520,11 +520,11 @@ run_tests() {
 }
 
 # Run tests if script is executed directly
-echo "DEBUG: About to check if script is executed directly" >&2
+echo "DEBUG: About to check if script is executed directly"
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    echo "DEBUG: Script is executed directly, calling run_tests" >&2
+    echo "DEBUG: Script is executed directly, calling run_tests"
     run_tests
 else
-    echo "DEBUG: Script is being sourced, not calling run_tests" >&2
+    echo "DEBUG: Script is being sourced, not calling run_tests"
 fi
-echo "DEBUG: Script finished successfully" >&2
+echo "DEBUG: Script finished successfully"
