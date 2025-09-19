@@ -243,7 +243,7 @@ run_unit_tests() {
 
     run_test_suite \
         "Unit - CLAUDE.md Handling" \
-        "$SCRIPT_DIR/unit/test_claude_md_handling_clean.sh" \
+        "$SCRIPT_DIR/unit/test_claude_md_minimal.sh" \
         "CLAUDE.md file management, merging, and backup functionality"
 }
 
