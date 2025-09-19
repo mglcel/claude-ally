@@ -1763,21 +1763,41 @@ setup_claude_automatically() {
 
 $prompt_content
 
-Please create a CLAUDE.md file with the appropriate cognitive enhancement configuration for this project. Respond with the contents of the CLAUDE.md file."
+CRITICAL: Your response must be ONLY the complete CLAUDE.md file contents in markdown format. Do not ask for permission or include explanatory text. The response should start with:
+
+# CLAUDE.md
+
+## Project Overview
+[PROJECT_NAME] - [PROJECT_TYPE] using [TECH_STACK]
+
+## 🚨 MANDATORY DEVELOPMENT REQUIREMENTS - NEVER SKIP THESE
+
+And continue with all the patterns, security rules, learning protocols, etc. based on the configuration above. Generate the FULL comprehensive cognitive enhancement system as specified in the implementation requirements."
 
         echo -e "${CYAN}⏳ Waiting for Claude's response...${NC}"
 
-        # Try to invoke Claude directly and capture response
+        # Try to invoke Claude directly and capture response with extended timeout and permissions bypass
         local claude_response
-        if claude_response=$(echo "$claude_request" | claude --print 2>/dev/null); then
+        if claude_response=$(echo "$claude_request" | timeout 300 claude --print --dangerously-skip-permissions 2>/dev/null); then
             echo -e "${GREEN}✅ Claude responded successfully!${NC}"
 
-            # Create the CLAUDE.md file with Claude's response
-            echo "$claude_response" > "$PROJECT_DIR/CLAUDE.md"
-            echo -e "${GREEN}✅ CLAUDE.md file created automatically!${NC}"
+            # Validate that the response looks like proper CLAUDE.md content
+            if echo "$claude_response" | grep -q "# CLAUDE.md" && echo "$claude_response" | grep -q "Project Overview" && echo "$claude_response" | grep -q "MANDATORY.*DEVELOPMENT.*REQUIREMENTS"; then
+                # Create the CLAUDE.md file with Claude's response
+                echo "$claude_response" > "$PROJECT_DIR/CLAUDE.md"
+                echo -e "${GREEN}✅ CLAUDE.md file created automatically!${NC}"
+            else
+                echo -e "${YELLOW}⚠️  Claude response doesn't appear to be CLAUDE.md content, falling back to manual mode${NC}"
+                return 1
+            fi
 
         else
-            echo -e "${YELLOW}⚠️ Direct Claude invocation failed, falling back to manual mode${NC}"
+            local exit_code=$?
+            if [ $exit_code -eq 124 ]; then
+                echo -e "${YELLOW}⚠️ Claude CLI timed out after 5 minutes, falling back to manual mode${NC}"
+            else
+                echo -e "${YELLOW}⚠️ Direct Claude invocation failed (exit code: $exit_code), falling back to manual mode${NC}"
+            fi
             echo ""
             echo "📝 Please copy the following request to Claude:"
             echo "----------------------------------------"
