@@ -369,14 +369,22 @@ main() {
         return 0  # Success - stack is already supported
     fi
 
-    # Check if this looks like an interesting unknown stack
-    if analyze_unknown_stack "$project_dir" "$project_name" > /dev/null; then
-        propose_contribution "$project_dir" "$project_name" "$claude_ally_dir"
-        return $?
-    else
-        echo -e "${BLUE}ℹ️ No new stack patterns detected for contribution${NC}"
-        return 0  # Success - no contribution needed
+    # This is an unknown stack - offer to help contribute it
+    echo -e "${YELLOW}🚀 Unknown stack detected - let's contribute it!${NC}"
+
+    # Try Claude analysis first if available
+    if check_claude_availability; then
+        echo -e "${CYAN}🤖 Claude is available - running automated analysis...${NC}"
+        if analyze_unknown_stack_with_claude "$project_dir" "$project_name"; then
+            propose_contribution "$project_dir" "$project_name" "$claude_ally_dir"
+            return $?
+        fi
     fi
+
+    # Claude not available or failed - offer manual contribution
+    echo -e "${BLUE}📝 Setting up manual contribution workflow...${NC}"
+    propose_contribution "$project_dir" "$project_name" "$claude_ally_dir"
+    return $?
 }
 
 # Run if called directly
