@@ -51,11 +51,11 @@ jobs:
           # Check core files
           required_files=(
             "claude-ally.sh"
-            "setup.sh"
+            "lib/setup.sh"
             "lib/stack-detector.sh"
             "lib/progress-indicator.sh"
             "lib/error-handler.sh"
-            "contribute-stack.sh"
+            "lib/contribute-stack.sh"
             "README.md"
           )
 
@@ -87,7 +87,7 @@ jobs:
 
           executable_files=(
             "claude-ally.sh"
-            "setup.sh"
+            "lib/setup.sh"
             "tests/run_all_tests.sh"
             "tests/unit/test_stack_detector.sh"
             "tests/integration/test_cli_integration.sh"

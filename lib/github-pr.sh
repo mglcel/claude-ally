@@ -326,16 +326,31 @@ EOF
         # Add the new stack to supported frameworks section
         local readme_temp="/tmp/readme_temp_$(date +%s).md"
 
-        # Add to the supported frameworks list
-        if grep -q "✅ \*\*Frontend Frameworks\*\*" README.md; then
+        # Add to the supported frameworks list - find appropriate section
+        if grep -q "✅ \*\*Mobile Development\*\*" README.md && [[ "$project_type" == "mobile-app" ]]; then
+            # Add to Mobile Development section
+            sed "/✅ \*\*Mobile Development\*\*/a\\
+- $tech_stack" README.md > "$readme_temp" && mv "$readme_temp" README.md
+        elif grep -q "✅ \*\*Backend Frameworks\*\*" README.md && [[ "$project_type" =~ backend|service|api ]]; then
+            # Add to Backend Frameworks section
+            sed "/✅ \*\*Backend Frameworks\*\*/a\\
+- $tech_stack" README.md > "$readme_temp" && mv "$readme_temp" README.md
+        elif grep -q "✅ \*\*Frontend Frameworks\*\*" README.md && [[ "$project_type" =~ web|frontend ]]; then
+            # Add to Frontend Frameworks section
             sed "/✅ \*\*Frontend Frameworks\*\*/a\\
-- $tech_stack ($project_type)" README.md > "$readme_temp" && mv "$readme_temp" README.md
+- $tech_stack" README.md > "$readme_temp" && mv "$readme_temp" README.md
         elif grep -q "## 🛠️ Supported Technology Stacks" README.md; then
+            # Add as a new category
             sed "/## 🛠️ Supported Technology Stacks/a\\
 \\
 ✅ **$tech_stack**\\
 - $project_type with automatic detection\\
 - Framework-specific patterns and best practices" README.md > "$readme_temp" && mv "$readme_temp" README.md
+        else
+            # Fallback: add to end of file or create basic entry
+            echo "" >> README.md
+            echo "✅ **$tech_stack**" >> README.md
+            echo "- $project_type with automatic detection" >> README.md
         fi
     fi
 
