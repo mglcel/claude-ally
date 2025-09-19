@@ -285,10 +285,16 @@ EOF
         if stack_info=$(echo "$analysis_result" | grep -A5 "STACK_ID\|TECH_STACK\|PROJECT_TYPE"); then
             local stack_id tech_stack project_type
 
-            # Parse Claude's analysis
-            stack_id=$(echo "$analysis_result" | grep "STACK_ID" | sed 's/.*STACK_ID.*: *`\([^`]*\)`.*/\1/' | head -1)
-            tech_stack=$(echo "$analysis_result" | grep "TECH_STACK" | sed 's/.*TECH_STACK.*: *`\([^`]*\)`.*/\1/' | head -1)
-            project_type=$(echo "$analysis_result" | grep "PROJECT_TYPE" | sed 's/.*PROJECT_TYPE.*: *`\([^`]*\)`.*/\1/' | head -1)
+            # Parse Claude's analysis - handle **FIELD**: value format
+            stack_id=$(echo "$analysis_result" | grep -i "STACK_ID" | sed 's/.*STACK_ID[^:]*:[[:space:]]*\(.*\)$/\1/' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | head -1)
+            tech_stack=$(echo "$analysis_result" | grep -i "TECH_STACK" | sed 's/.*TECH_STACK[^:]*:[[:space:]]*\(.*\)$/\1/' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | head -1)
+            project_type=$(echo "$analysis_result" | grep -i "PROJECT_TYPE" | sed 's/.*PROJECT_TYPE[^:]*:[[:space:]]*\(.*\)$/\1/' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | head -1)
+
+            # Clean up any remaining quotes or parentheses
+            stack_id=$(echo "$stack_id" | sed 's/^["\(]*//;s/["\)]*$//')
+            tech_stack=$(echo "$tech_stack" | sed 's/^["\(]*//;s/["\)]*$//')
+            project_type=$(echo "$project_type" | sed 's/^["\(]*//;s/["\)]*$//')
+
 
             if [[ -n "$stack_id" ]] && [[ -n "$tech_stack" ]]; then
                 echo ""
