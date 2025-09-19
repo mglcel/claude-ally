@@ -10,19 +10,16 @@
 
 ## ⚡ Quick Start (30 seconds)
 
-### **🎛️ Professional CLI Interface**
+### **🎛️ Simple CLI Interface**
 ```bash
 # Setup cognitive enhancement for any project:
 /path/to/claude-ally/claude-ally.sh setup
 
-# Detect technology stack:
+# See what technology stack was detected:
 /path/to/claude-ally/claude-ally.sh detect
 
 # Contribute new stack to community:
 /path/to/claude-ally/claude-ally.sh contribute
-
-# Configure system:
-/path/to/claude-ally/claude-ally.sh config show
 ```
 
 ### **📊 Enhanced Interactive Setup (🧠 Claude-Powered)**
@@ -69,14 +66,11 @@ After setup, test with these validation questions:
 - Manual verification of compatibility issues
 
 **After Enhanced Claude:**
-- **85% faster development** - Claude spots issues before they become problems
-- **🧬 Modular architecture** - Extensible stack detection for any technology
-- **🤖 GitHub automation** - One-click community contributions with PR creation
-- **📊 Performance optimization** - Intelligent caching reduces API calls by 80%
-- **🛡️ Enterprise reliability** - Advanced error handling and recovery systems
-- **⚡ Professional CLI** - Unified interface with powerful subcommands
-- **🔍 Enhanced detection** - 100% accuracy across 10+ project types
-- **⚙️ Intelligent configuration** - Customizable behavior with JSON settings
+- **Faster development** - Claude spots issues before they become problems
+- **Smart stack detection** - Automatically detects your technology stack
+- **Community contributions** - Easy workflow to add new technology stacks
+- **Cross-platform** - Works on Linux, macOS, and Windows
+- **Simple CLI** - Clean interface focused on core functionality
 
 ## 🛠️ Supported Technology Stacks
 
@@ -112,16 +106,14 @@ After setup, test with these validation questions:
 - AWS, Azure, GCP cloud patterns
 - CI/CD pipeline optimization
 
-## 📊 Proven Results
+## 📊 Results
 
-- **85% efficiency improvements** in development speed (30 seconds vs 10 minutes)
-- **100% detection accuracy** across 10+ project types tested
-- **80% reduction in API calls** through intelligent caching system
-- **Enterprise-grade reliability** with advanced error handling
-- **Community-driven growth** through automated GitHub contributions
-- **Cross-platform compatibility** (Linux, macOS, Windows)
+- **Fast setup** - Get cognitive enhancement in 30 seconds
+- **Accurate detection** - Supports 10+ project types
+- **Community-driven** - Easy contribution workflow
+- **Cross-platform** - Works on Linux, macOS, Windows
 
-*Based on comprehensive testing across diverse real-world projects including Next.js AI apps, Python ML services, Cordova mobile apps, and legacy websites.*
+*Tested across diverse projects including Next.js AI apps, Python ML services, Cordova mobile apps, and legacy websites.*
 
 ### **📋 Real-World Example**
 
@@ -160,66 +152,30 @@ SECURITY PATTERNS TRIGGERED:
 
 ## 🔧 Features
 
-### 🧬 **Modular Architecture**
-- Extensible stack detection system with individual modules
-- Easy addition of new technology stacks
-- Automatic loading and confidence-based selection
-- Community-driven module contributions
+### 🔍 **Automatic Stack Detection**
+- Supports 10+ project types automatically
+- Detects frameworks, languages, and databases
+- Works with modern and legacy projects
 
-### 🤖 **GitHub Integration Automation**
-- One-click repository forking and pull request creation
-- Claude-powered analysis of unknown technology stacks
-- Automated contribution workflow for new stack modules
-- Platform-specific installation guidance for GitHub CLI
+### 🚀 **Simple Setup**
+- One command setup for any project
+- Automatic Claude integration
+- Cross-platform compatibility
 
-### 📊 **Performance & Reliability**
-- Intelligent caching system (80% API call reduction)
-- Performance monitoring and analytics
-- Enterprise-grade error handling with recovery
-- Cross-platform compatibility (Linux/macOS/Windows)
-
-### ⚙️ **Configuration Management**
-- JSON-based configuration with validation
-- Interactive configuration wizard
-- User-customizable behavior and thresholds
-- Backward compatibility with automatic migration
-
-### 🎛️ **Professional CLI Interface**
-- Unified command-line interface with subcommands
-- System validation and diagnostics
-- Performance reports and cache management
-- Help system and version information
-
-### 🔍 **Enhanced Detection Capabilities**
-- 100% accuracy across 10+ project types
-- Next.js + AI/LLM applications
-- Python AI/ML services (PyTorch, TensorFlow)
-- Cordova hybrid mobile apps
-- Static and legacy website preservation
+### 🤝 **Community Contributions**
+- Easy workflow to add new technology stacks
+- GitHub integration for contributions
+- Claude-powered analysis of unknown stacks
 
 ## 🎛️ CLI Usage
 
-### **Main Commands**
+### **Commands**
 ```bash
-# Core functionality
 /path/to/claude-ally/claude-ally.sh setup [directory]     # Setup cognitive enhancement
-/path/to/claude-ally/claude-ally.sh detect [directory]    # Detect technology stack
+/path/to/claude-ally/claude-ally.sh detect [directory]    # Detect technology stack (optional)
 /path/to/claude-ally/claude-ally.sh contribute [directory] # Contribute new stack
-
-# Configuration
-/path/to/claude-ally/claude-ally.sh config show           # Show current settings
-/path/to/claude-ally/claude-ally.sh config configure      # Interactive configuration
-/path/to/claude-ally/claude-ally.sh config set <key> <val> # Set specific value
-
-# Performance & monitoring
-/path/to/claude-ally/claude-ally.sh perf stats            # Performance statistics
-/path/to/claude-ally/claude-ally.sh perf report           # Generate report
-/path/to/claude-ally/claude-ally.sh cache stats           # Cache information
-
-# System management
-/path/to/claude-ally/claude-ally.sh validate              # System validation
-/path/to/claude-ally/claude-ally.sh recovery              # Recovery mode
 /path/to/claude-ally/claude-ally.sh version               # Version information
+/path/to/claude-ally/claude-ally.sh help                  # Show help
 ```
 
 ### **Examples**
@@ -228,19 +184,12 @@ SECURITY PATTERNS TRIGGERED:
 cd /path/to/your/project
 /path/to/claude-ally/claude-ally.sh setup
 
-# Detect Next.js AI application
-cd /path/to/nextjs-ai-app
+# See what technology stack was detected
 /path/to/claude-ally/claude-ally.sh detect
-# Output: ✅ Detected: TypeScript/Next.js, AI/LLM, Tailwind
 
-# Contribute new Flutter stack
+# Contribute new stack to the community
 cd /path/to/flutter-app
 /path/to/claude-ally/claude-ally.sh contribute
-# Automated: Analysis → GitHub Fork → PR Creation
-
-# Configure caching
-/path/to/claude-ally/claude-ally.sh config set cache.enabled true
-/path/to/claude-ally/claude-ally.sh config set detection.confidence_threshold 70
 ```
 
 ## 📚 Full Documentation

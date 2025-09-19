@@ -21,17 +21,11 @@ NC='\033[0m'
 # Version
 VERSION="1.0.0"
 
-# Load all modules
+# Load essential modules only
 load_modules() {
     local modules=(
-        "lib/error-handler.sh"
-        "lib/config-manager.sh"
-        "lib/cache-manager.sh"
-        "lib/performance-monitor.sh"
-        "lib/progress-indicator.sh"
         "lib/stack-detector.sh"
         "contribute-stack.sh"
-        "github-pr.sh"
     )
 
     for module in "${modules[@]}"; do
@@ -39,17 +33,6 @@ load_modules() {
             source "$SCRIPT_DIR/$module" 2>/dev/null || echo "Warning: Failed to load $module"
         fi
     done
-
-    # Setup error trapping if available
-    # Temporarily disabled to debug setup issues
-    # if declare -f setup_error_trapping > /dev/null; then
-    #     setup_error_trapping 2>/dev/null || true
-    # fi
-
-    # Initialize progress indicators if available
-    if declare -f init_progress_config > /dev/null; then
-        init_progress_config 2>/dev/null || true
-    fi
 }
 
 # Show version information
@@ -59,12 +42,10 @@ show_version() {
     echo -e "${BLUE}Repository: https://github.com/mglcel/claude-ally${NC}"
     echo ""
     echo -e "${GREEN}Features:${NC}"
-    echo "  ✅ Modular stack detection (10+ project types)"
-    echo "  ✅ Claude-powered unknown stack analysis"
-    echo "  ✅ Automated GitHub contribution workflow"
-    echo "  ✅ Cross-platform compatibility (Linux/macOS/Windows)"
-    echo "  ✅ Performance monitoring and optimization"
-    echo "  ✅ Intelligent caching system"
+    echo "  ✅ Automatic project stack detection"
+    echo "  ✅ Cognitive enhancement setup for Claude"
+    echo "  ✅ Community contribution workflow"
+    echo "  ✅ Cross-platform compatibility"
     echo ""
 }
 
@@ -80,32 +61,9 @@ show_help() {
     echo "  /path/to/claude-ally/claude-ally.sh setup"
     echo ""
     echo -e "${CYAN}COMMANDS:${NC}"
-    echo ""
-    echo -e "${YELLOW}Core Commands:${NC}"
     echo "  setup [directory]          Setup cognitive enhancement for a project"
-    echo "  detect [directory]         Detect project technology stack"
+    echo "  detect [directory]         Detect project technology stack (optional)"
     echo "  contribute [directory]     Contribute new stack to claude-ally"
-    echo ""
-    echo -e "${YELLOW}Configuration:${NC}"
-    echo "  config show                Show current configuration"
-    echo "  config set <key> <value>   Set configuration value"
-    echo "  config get <key>           Get configuration value"
-    echo "  config configure           Interactive configuration"
-    echo "  config reset               Reset to default configuration"
-    echo ""
-    echo -e "${YELLOW}Performance & Monitoring:${NC}"
-    echo "  perf stats                 Show performance statistics"
-    echo "  perf slowest               Show slowest operations"
-    echo "  perf report                Generate performance report"
-    echo "  perf clean                 Clean old performance data"
-    echo ""
-    echo -e "${YELLOW}Cache Management:${NC}"
-    echo "  cache stats                Show cache statistics"
-    echo "  cache clean                Clean expired cache entries"
-    echo ""
-    echo -e "${YELLOW}System:${NC}"
-    echo "  validate                   Validate system setup"
-    echo "  recovery                   Run system recovery mode"
     echo "  version                    Show version information"
     echo "  help                       Show this help message"
     echo ""
@@ -113,10 +71,8 @@ show_help() {
     echo "  cd /path/to/your/project"
     echo "  /path/to/claude-ally/claude-ally.sh setup                    # Setup current directory"
     echo "  /path/to/claude-ally/claude-ally.sh setup /path/to/project   # Setup specific project"
-    echo "  /path/to/claude-ally/claude-ally.sh detect                   # Detect current project type"
+    echo "  /path/to/claude-ally/claude-ally.sh detect                   # See what was detected"
     echo "  /path/to/claude-ally/claude-ally.sh contribute               # Contribute unknown stack"
-    echo "  /path/to/claude-ally/claude-ally.sh config configure         # Configure interactively"
-    echo "  /path/to/claude-ally/claude-ally.sh perf stats               # Show performance stats"
     echo ""
     echo -e "${BLUE}For more information: https://github.com/mglcel/claude-ally${NC}"
 }
@@ -311,57 +267,6 @@ main() {
                 exit 1
             fi
             ;;
-        "config")
-            if declare -f config_cli > /dev/null; then
-                config_cli "$@"
-            else
-                echo -e "${RED}❌ Configuration manager not available${NC}"
-                exit 1
-            fi
-            ;;
-        "perf"|"performance")
-            if declare -f performance_cli > /dev/null; then
-                performance_cli "$@"
-            else
-                echo -e "${RED}❌ Performance monitor not available${NC}"
-                exit 1
-            fi
-            ;;
-        "cache")
-            if declare -f cache_stats > /dev/null; then
-                case "${1:-stats}" in
-                    "stats")
-                        if declare -f with_progress > /dev/null; then
-                            with_progress "Analyzing cache statistics" "minimal" cache_stats
-                        else
-                            cache_stats
-                        fi
-                        ;;
-                    "clean")
-                        if declare -f with_progress > /dev/null; then
-                            with_progress "Cleaning cache entries" "spinner" clean_cache
-                        else
-                            clean_cache
-                        fi
-                        ;;
-                    *) echo "Cache commands: stats, clean" ;;
-                esac
-            else
-                echo -e "${RED}❌ Cache manager not available${NC}"
-                exit 1
-            fi
-            ;;
-        "validate")
-            validate_system
-            ;;
-        "recovery")
-            if declare -f recovery_mode > /dev/null; then
-                recovery_mode
-            else
-                echo -e "${RED}❌ Recovery mode not available${NC}"
-                exit 1
-            fi
-            ;;
         "version")
             show_version
             ;;
@@ -377,14 +282,7 @@ main() {
     esac
 }
 
-# Cleanup on exit
-cleanup() {
-    if declare -f cleanup_error_trapping > /dev/null; then
-        cleanup_error_trapping 2>/dev/null || true
-    fi
-}
-
-trap cleanup EXIT
+# Removed complex cleanup since we simplified modules
 
 # Run main function if script is executed directly
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
