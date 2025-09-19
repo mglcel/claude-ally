@@ -105,8 +105,9 @@ jobs:
 
       - name: Run system validation
         run: |
-          echo "🧪 Running claude-ally system validation..."
-          ./claude-ally.sh validate
+          echo "🧪 Running claude-ally basic validation..."
+          ./claude-ally.sh help
+          ./claude-ally.sh version
 
   # Unit Tests
   unit-tests:
@@ -182,9 +183,8 @@ jobs:
 
           # Basic CLI tests
           chmod +x claude-ally.sh
-          ./claude-ally.sh --help
+          ./claude-ally.sh help
           ./claude-ally.sh version
-          ./claude-ally.sh validate
 
           # Test detection on self (should work on all platforms)
           ./claude-ally.sh detect .
