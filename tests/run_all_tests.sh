@@ -134,8 +134,6 @@ run_test_suite() {
                 echo "$line"
             elif [[ "$line" =~ ^(Testing:|Running|Scenario:) ]]; then
                 echo "$line"
-            elif [[ "$line" =~ ^DEBUG: ]]; then
-                echo "$line"  # Temporarily show debug messages
             fi
         done < "$temp_output"
 
@@ -245,8 +243,8 @@ run_unit_tests() {
 
     run_test_suite \
         "Unit - CLAUDE.md Handling" \
-        "$SCRIPT_DIR/unit/test_claude_md_simple.sh" \
-        "Simple CLAUDE.md test to isolate the issue"
+        "$SCRIPT_DIR/unit/test_claude_md_handling_clean.sh" \
+        "CLAUDE.md file management, merging, and backup functionality"
 }
 
 run_integration_tests() {

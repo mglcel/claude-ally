@@ -126,7 +126,7 @@ jobs:
           chmod +x tests/unit/test_contribute_functionality.sh
           chmod +x tests/unit/test_github_integration.sh
           chmod +x tests/unit/test_edge_cases.sh
-          chmod +x tests/unit/test_claude_md_handling.sh
+          chmod +x tests/unit/test_claude_md_handling_clean.sh
           ./tests/run_all_tests.sh unit
 
       - name: Upload unit test results
@@ -205,7 +205,7 @@ jobs:
           chmod +x tests/unit/test_contribute_functionality.sh
           chmod +x tests/unit/test_github_integration.sh
           chmod +x tests/unit/test_edge_cases.sh
-          chmod +x tests/unit/test_claude_md_handling.sh
+          chmod +x tests/unit/test_claude_md_handling_clean.sh
           ./tests/run_all_tests.sh unit
 
   # Security and Code Quality
