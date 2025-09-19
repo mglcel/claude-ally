@@ -245,8 +245,8 @@ run_unit_tests() {
 
     run_test_suite \
         "Unit - CLAUDE.md Handling" \
-        "$SCRIPT_DIR/unit/test_minimal_debug.sh" \
-        "Minimal debug test to verify test runner mechanism"
+        "$SCRIPT_DIR/unit/test_claude_md_simple.sh" \
+        "Simple CLAUDE.md test to isolate the issue"
 }
 
 run_integration_tests() {
