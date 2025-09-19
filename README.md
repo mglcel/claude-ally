@@ -71,6 +71,9 @@ After setup, test with these validation questions:
 
 ## 🛠️ Supported Technology Stacks
 
+✅ **Generic Node.js Test Project**
+- test-project/minimal-example with automatic detection
+- Framework-specific patterns and best practices
 ✅ **Backend Frameworks**
 - Java Spring Boot (JPA, security, validation)
 - Node.js/Express (middleware, async patterns)
