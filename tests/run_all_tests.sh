@@ -122,14 +122,23 @@ run_test_suite() {
     if [[ "$VERBOSE" == "true" ]]; then
         bash "$test_script" || exit_code=$?
     else
-        bash "$test_script" 2>&1 | while IFS= read -r line; do
+        # Use temporary file to preserve exit code while filtering output
+        local temp_output="$TEST_TEMP_DIR/test_output_$$"
+        bash "$test_script" > "$temp_output" 2>&1
+        exit_code=$?
+
+        # Filter and display output
+        while IFS= read -r line; do
             # Filter output to show only important information
             if [[ "$line" =~ (✅|❌|⚠️|🎉|📊|Total:|Passed:|Failed:) ]]; then
                 echo "$line"
             elif [[ "$line" =~ ^(Testing:|Running|Scenario:) ]]; then
                 echo "$line"
             fi
-        done || exit_code=$?
+        done < "$temp_output"
+
+        # Clean up temporary file
+        rm -f "$temp_output" 2>/dev/null || true
     fi
 
     local end_time
@@ -327,6 +336,10 @@ main() {
         esac
     done
 
+    # Set up temporary directory for test runner
+    TEST_TEMP_DIR="/tmp/claude-ally-test-runner-$(date +%Y%m%d%H%M%S)"
+    mkdir -p "$TEST_TEMP_DIR"
+
     # Show configuration
     echo -e "${BOLD}Claude-Ally Comprehensive Test Suite${NC}"
     echo -e "${CYAN}Version: 2.0.0${NC}"
@@ -337,6 +350,7 @@ main() {
     echo "  Verbose:          $VERBOSE"
     echo "  Stop on Failure:  $STOP_ON_FAILURE"
     echo "  Working Dir:      $ROOT_DIR"
+    echo "  Temp Dir:         $TEST_TEMP_DIR"
     echo ""
 
     # Run pre-flight checks
@@ -380,6 +394,9 @@ cleanup() {
     # Clean up any temporary files or processes
     if [[ -d "/tmp/claude-ally-test-"* ]]; then
         rm -rf /tmp/claude-ally-test-* 2>/dev/null || true
+    fi
+    if [[ -n "$TEST_TEMP_DIR" && -d "$TEST_TEMP_DIR" ]]; then
+        rm -rf "$TEST_TEMP_DIR" 2>/dev/null || true
     fi
 }
 
