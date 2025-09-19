@@ -250,12 +250,15 @@ create_automated_pr() {
     mkdir -p stacks
     local module_file="stacks/${stack_id}.sh"
 
+    # Create safe function name (replace hyphens with underscores)
+    local function_name="${stack_id//-/_}"
+
     cat > "$module_file" << EOF
 #!/bin/bash
 # $tech_stack Stack Detection
 # Contributed via claude-ally automated contribution system
 
-detect_${stack_id//-/_}() {
+detect_$function_name() {
     local project_dir="\$1"
     local confidence=0
     local tech_stack="$tech_stack"
@@ -291,11 +294,11 @@ detect_${stack_id//-/_}() {
     return 1
 }
 
-get_${stack_id//-/_}_patterns() {
+get_${function_name}_patterns() {
     cat << 'EOL'
-${tech_stack^^} PATTERNS
-${tech_stack//-/_}_Patterns (HIGH - Technology Specific):
-  CRITICAL_${tech_stack^^}:
+\${tech_stack^^} PATTERNS
+\${tech_stack//-/_}_Patterns (HIGH - Technology Specific):
+  CRITICAL_\${tech_stack^^}:
     - "framework pattern" → Critical validation needed
     - "security pattern" → Security analysis required
     - "performance pattern" → Performance check needed
@@ -306,15 +309,15 @@ ${tech_stack//-/_}_Patterns (HIGH - Technology Specific):
 EOL
 }
 
-get_${stack_id//-/_}_assets() {
+get_${function_name}_assets() {
     echo "framework configurations, API keys, build artifacts, deployment files"
 }
 
-get_${stack_id//-/_}_requirements() {
+get_${function_name}_requirements() {
     echo "framework-specific security, performance optimization, cross-platform compatibility"
 }
 
-get_${stack_id//-/_}_issues() {
+get_${function_name}_issues() {
     echo "framework updates, dependency conflicts, build optimization, platform compatibility"
 }
 EOF
@@ -370,12 +373,25 @@ EOF
 
     echo -e "${CYAN}📤 Step 4/5: Pushing to your fork...${NC}"
 
-    # Push to fork
+    # Try to push, if it fails due to being behind, pull and retry
     if ! git push -u origin "$branch_name"; then
-        echo -e "${RED}❌ Failed to push changes${NC}"
-        cd - > /dev/null
-        rm -rf "$work_dir"
-        return 1
+        echo -e "${YELLOW}⚠️ Push failed, trying to sync with remote...${NC}"
+
+        # Pull latest changes and try to merge/rebase
+        if git pull origin "$branch_name" --no-edit 2>/dev/null; then
+            echo -e "${BLUE}📥 Synced with remote, retrying push...${NC}"
+            if ! git push -u origin "$branch_name"; then
+                echo -e "${RED}❌ Failed to push changes after sync${NC}"
+                cd - > /dev/null
+                rm -rf "$work_dir"
+                return 1
+            fi
+        else
+            echo -e "${RED}❌ Failed to sync with remote and push changes${NC}"
+            cd - > /dev/null
+            rm -rf "$work_dir"
+            return 1
+        fi
     fi
 
     echo -e "${CYAN}🔄 Step 5/5: Creating pull request...${NC}"

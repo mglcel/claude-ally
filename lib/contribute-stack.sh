@@ -38,6 +38,17 @@ analyze_unknown_stack_with_claude() {
     local project_dir="$1"
     local project_name="$2"
 
+    # Create cache key based on project path and name
+    local cache_key=$(echo "${project_dir}_${project_name}" | md5sum | cut -d' ' -f1 2>/dev/null || echo "${project_dir}_${project_name}" | shasum -a 256 | cut -d' ' -f1)
+    local cache_file="/tmp/claude_analysis_cache_${cache_key}.md"
+
+    # Check if we have a recent analysis (less than 1 hour old)
+    if [[ -f "$cache_file" ]] && [[ $(find "$cache_file" -mmin -60 2>/dev/null) ]]; then
+        echo -e "${GREEN}🔄 Using cached Claude analysis (found recent analysis for this project)${NC}"
+        cat "$cache_file"
+        return 0
+    fi
+
     echo -e "${CYAN}🤖 Using Claude to analyze unknown stack...${NC}"
 
     # Create analysis prompt for Claude
@@ -87,7 +98,13 @@ EOF
         local claude_result
         if claude_result=$(claude < "$analysis_file" 2>/dev/null); then
             echo -e "${GREEN}✅ Claude analysis completed${NC}"
+
+            # Save to cache for future use
+            echo "$claude_result" > "$cache_file"
+
+            # Also save to timestamped file for debugging
             echo "$claude_result" > "/tmp/claude_stack_analysis_$(date +%s).md"
+
             echo "$claude_result"
             rm -f "$analysis_file"
             return 0
@@ -294,6 +311,14 @@ EOF
             stack_id=$(echo "$stack_id" | sed 's/^["\(]*//;s/["\)]*$//')
             tech_stack=$(echo "$tech_stack" | sed 's/^["\(]*//;s/["\)]*$//')
             project_type=$(echo "$project_type" | sed 's/^["\(]*//;s/["\)]*$//')
+
+            # Sanitize stack_id for filename and shell variable safety
+            stack_id=$(echo "$stack_id" | sed 's/[^a-zA-Z0-9-]/-/g' | sed 's/--*/-/g' | sed 's/^-\|-$//g' | tr '[:upper:]' '[:lower:]')
+
+            # Ensure stack_id is not empty after sanitization
+            if [[ -z "$stack_id" ]]; then
+                stack_id="unknown-stack"
+            fi
 
 
             if [[ -n "$stack_id" ]] && [[ -n "$tech_stack" ]]; then
