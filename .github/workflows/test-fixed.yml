@@ -202,6 +202,10 @@ jobs:
           echo "🧩 Running unit tests on ${{ matrix.os }}"
           chmod +x tests/run_all_tests.sh
           chmod +x tests/unit/test_stack_detector.sh
+          chmod +x tests/unit/test_contribute_functionality.sh
+          chmod +x tests/unit/test_github_integration.sh
+          chmod +x tests/unit/test_edge_cases.sh
+          chmod +x tests/unit/test_claude_md_handling.sh
           ./tests/run_all_tests.sh unit
 
   # Security and Code Quality
