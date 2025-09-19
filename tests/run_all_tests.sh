@@ -134,6 +134,8 @@ run_test_suite() {
                 echo "$line"
             elif [[ "$line" =~ ^(Testing:|Running|Scenario:) ]]; then
                 echo "$line"
+            elif [[ "$line" =~ ^DEBUG: ]]; then
+                echo "$line"  # Temporarily show debug messages
             fi
         done < "$temp_output"
 
