@@ -217,21 +217,27 @@ propose_contribution() {
     elif analyze_unknown_stack_with_claude "$project_dir" "$project_name"; then
         echo ""
         echo -e "${GREEN}✅ Stack analysis completed!${NC}"
-        echo ""
-        echo -e "${YELLOW}Based on the analysis, would you like to generate the contribution files?${NC}"
+    else
+        echo -e "${RED}❌ Failed to analyze stack${NC}"
+        return 1
+    fi
 
-        local generate_choice
-        read -p "Generate contribution files? (Y/n): " generate_choice
+    # Ask user about generating contribution files (for both existing and new analysis)
+    echo ""
+    echo -e "${YELLOW}Based on the analysis, would you like to generate the contribution files?${NC}"
 
-        if [[ ! "$generate_choice" =~ ^[Nn] ]]; then
-            # Generate contribution template
-            local contrib_dir="/tmp/claude-ally-contribution-$(date +%s)"
-            mkdir -p "$contrib_dir"
+    local generate_choice
+    read -p "Generate contribution files? (Y/n): " generate_choice
 
-            echo -e "${CYAN}📝 Generating contribution template...${NC}"
+    if [[ ! "$generate_choice" =~ ^[Nn] ]]; then
+        # Generate contribution template
+        local contrib_dir="/tmp/claude-ally-contribution-$(date +%s)"
+        mkdir -p "$contrib_dir"
 
-            # Create contribution guide
-            cat > "$contrib_dir/CONTRIBUTION_GUIDE.md" << 'EOF'
+        echo -e "${CYAN}📝 Generating contribution template...${NC}"
+
+        # Create contribution guide
+        cat > "$contrib_dir/CONTRIBUTION_GUIDE.md" << 'EOF'
 # Stack Detection Contribution Guide
 
 Thank you for contributing a new stack detection module to claude-ally!
@@ -272,75 +278,74 @@ detect_your_stack "/path/to/test/project"
 Feel free to open an issue on GitHub if you need help with your contribution!
 EOF
 
-            echo -e "${GREEN}✅ Contribution template created at: $contrib_dir${NC}"
+        echo -e "${GREEN}✅ Contribution template created at: $contrib_dir${NC}"
 
-            # Extract contribution details for GitHub PR
-            local stack_info
-            if stack_info=$(echo "$analysis_result" | grep -A5 "STACK_ID\|TECH_STACK\|PROJECT_TYPE"); then
-                local stack_id tech_stack project_type
+        # Extract contribution details for GitHub PR
+        local stack_info
+        if stack_info=$(echo "$analysis_result" | grep -A5 "STACK_ID\|TECH_STACK\|PROJECT_TYPE"); then
+            local stack_id tech_stack project_type
 
-                # Parse Claude's analysis
-                stack_id=$(echo "$analysis_result" | grep "STACK_ID" | sed 's/.*STACK_ID.*: *`\([^`]*\)`.*/\1/' | head -1)
-                tech_stack=$(echo "$analysis_result" | grep "TECH_STACK" | sed 's/.*TECH_STACK.*: *`\([^`]*\)`.*/\1/' | head -1)
-                project_type=$(echo "$analysis_result" | grep "PROJECT_TYPE" | sed 's/.*PROJECT_TYPE.*: *`\([^`]*\)`.*/\1/' | head -1)
+            # Parse Claude's analysis
+            stack_id=$(echo "$analysis_result" | grep "STACK_ID" | sed 's/.*STACK_ID.*: *`\([^`]*\)`.*/\1/' | head -1)
+            tech_stack=$(echo "$analysis_result" | grep "TECH_STACK" | sed 's/.*TECH_STACK.*: *`\([^`]*\)`.*/\1/' | head -1)
+            project_type=$(echo "$analysis_result" | grep "PROJECT_TYPE" | sed 's/.*PROJECT_TYPE.*: *`\([^`]*\)`.*/\1/' | head -1)
 
-                if [[ -n "$stack_id" ]] && [[ -n "$tech_stack" ]]; then
+            if [[ -n "$stack_id" ]] && [[ -n "$tech_stack" ]]; then
+                echo ""
+                echo -e "${PURPLE}🚀 GITHUB INTEGRATION AVAILABLE${NC}"
+                echo -e "${BOLD}================================${NC}"
+
+                # Check if GitHub PR script exists
+                if [[ -f "$claude_ally_dir/lib/github-pr.sh" ]]; then
+                    echo -e "${YELLOW}Would you like to create a pull request directly to the claude-ally GitHub repository?${NC}"
+                    echo -e "${CYAN}This will automatically:${NC}"
+                    echo "  🍴 Fork the repository"
+                    echo "  📥 Clone your fork"
+                    echo "  🔧 Create your stack detection module"
+                    echo "  📤 Push changes"
+                    echo "  🔄 Create pull request"
                     echo ""
-                    echo -e "${PURPLE}🚀 GITHUB INTEGRATION AVAILABLE${NC}"
-                    echo -e "${BOLD}================================${NC}"
 
-                    # Check if GitHub PR script exists
-                    if [[ -f "$claude_ally_dir/lib/github-pr.sh" ]]; then
-                        echo -e "${YELLOW}Would you like to create a pull request directly to the claude-ally GitHub repository?${NC}"
-                        echo -e "${CYAN}This will automatically:${NC}"
-                        echo "  🍴 Fork the repository"
-                        echo "  📥 Clone your fork"
-                        echo "  🔧 Create your stack detection module"
-                        echo "  📤 Push changes"
-                        echo "  🔄 Create pull request"
+                    local github_pr_choice
+                    read -p "Create GitHub pull request automatically? (Y/n): " github_pr_choice
+
+                    if [[ ! "$github_pr_choice" =~ ^[Nn] ]]; then
                         echo ""
-
-                        local github_pr_choice
-                        read -p "Create GitHub pull request automatically? (Y/n): " github_pr_choice
-
-                        if [[ ! "$github_pr_choice" =~ ^[Nn] ]]; then
-                            echo ""
-                            if bash "$claude_ally_dir/lib/github-pr.sh" "$stack_id" "$tech_stack" "$project_type" "Auto-detected patterns" "$project_dir" "$project_name"; then
-                                echo -e "${GREEN}🎉 Your contribution has been submitted to GitHub!${NC}"
-                                return 0
-                            else
-                                echo -e "${YELLOW}⚠️ Automated GitHub PR failed, providing manual instructions...${NC}"
-                            fi
+                        if bash "$claude_ally_dir/lib/github-pr.sh" "$stack_id" "$tech_stack" "$project_type" "Auto-detected patterns" "$project_dir" "$project_name"; then
+                            echo -e "${GREEN}🎉 Your contribution has been submitted to GitHub!${NC}"
+                            return 0
+                        else
+                            echo -e "${YELLOW}⚠️ Automated GitHub PR failed, providing manual instructions...${NC}"
                         fi
                     fi
                 fi
             fi
-
-            echo ""
-            echo -e "${CYAN}Manual contribution options:${NC}"
-            echo -e "1. Review files in: ${BOLD}$contrib_dir${NC}"
-            echo -e "2. Customize the detection logic for your stack"
-            echo -e "3. Fork claude-ally on GitHub: https://github.com/mglcel/claude-ally/fork"
-            echo -e "4. Submit a pull request with your new stack module"
-            echo ""
-
-            # Open directory if possible
-            local os_type
-            os_type=$(detect_os)
-            case "$os_type" in
-                "macos")
-                    open "$contrib_dir" 2>/dev/null || true
-                    ;;
-                "linux")
-                    xdg-open "$contrib_dir" 2>/dev/null || true
-                    ;;
-                "windows")
-                    explorer "$contrib_dir" 2>/dev/null || true
-                    ;;
-            esac
-
-            return 0
         fi
+
+        echo ""
+        echo -e "${CYAN}Manual contribution options:${NC}"
+        echo -e "1. Review files in: ${BOLD}$contrib_dir${NC}"
+        echo -e "2. Customize the detection logic for your stack"
+        echo -e "3. Fork claude-ally on GitHub: https://github.com/mglcel/claude-ally/fork"
+        echo -e "4. Submit a pull request with your new stack module"
+        echo ""
+
+        # Open directory if possible
+        local os_type
+        os_type=$(detect_os)
+        case "$os_type" in
+            "macos")
+                open "$contrib_dir" 2>/dev/null || true
+                ;;
+            "linux")
+                xdg-open "$contrib_dir" 2>/dev/null || true
+                ;;
+            "windows")
+                explorer "$contrib_dir" 2>/dev/null || true
+                ;;
+        esac
+
+        return 0
     else
         echo -e "${YELLOW}⚠️ Automated analysis not available${NC}"
         echo -e "${CYAN}You can still contribute manually:${NC}"

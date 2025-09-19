@@ -2233,7 +2233,7 @@ main() {
         if [ -f "$SCRIPT_DIR/lib/validate.sh" ]; then
             echo ""
             echo -e "${BLUE}🔍 Running validation check...${NC}"
-            if "$SCRIPT_DIR/lib/validate.sh" "$filename" | tail -1 | grep -q "EXCELLENT"; then
+            if bash "$SCRIPT_DIR/claude-ally.sh" validate "$filename" | tail -1 | grep -q "EXCELLENT"; then
                 echo -e "${GREEN}✅ Validation passed!${NC}"
             else
                 echo -e "${YELLOW}⚠️  Validation found minor issues (check above)${NC}"
@@ -2250,7 +2250,7 @@ main() {
         echo "3. Paste it to a new Claude conversation"
         echo "4. Claude will create your CLAUDE.md file and set up the system"
         echo ""
-        echo -e "${BOLD}💡 TIP: Use '$SCRIPT_DIR/lib/validate.sh $filename' to check prompt quality${NC}"
+        echo -e "${BOLD}💡 TIP: Use '$SCRIPT_DIR/claude-ally.sh validate $filename' to check prompt quality${NC}"
 
         # Execute contribution if accepted during setup
         if [[ "$CONTRIBUTE_ACCEPTED" == true ]] && [[ "$STACK_IS_UNKNOWN" == true ]]; then

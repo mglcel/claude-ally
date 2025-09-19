@@ -64,6 +64,7 @@ show_help() {
     echo "  setup [directory]          Setup cognitive enhancement for a project"
     echo "  detect [directory]         Detect project technology stack (optional)"
     echo "  contribute [directory]     Contribute new stack to claude-ally"
+    echo "  validate <file>            Validate a generated prompt file"
     echo "  version                    Show version information"
     echo "  help                       Show this help message"
     echo ""
@@ -73,6 +74,7 @@ show_help() {
     echo "  /path/to/claude-ally/claude-ally.sh setup /path/to/project   # Setup specific project"
     echo "  /path/to/claude-ally/claude-ally.sh detect                   # See what was detected"
     echo "  /path/to/claude-ally/claude-ally.sh contribute               # Contribute unknown stack"
+    echo "  /path/to/claude-ally/claude-ally.sh validate prompt.txt     # Validate prompt quality"
     echo ""
     echo -e "${BLUE}For more information: https://github.com/mglcel/claude-ally${NC}"
 }
@@ -264,6 +266,20 @@ main() {
                 bash "$SCRIPT_DIR/lib/contribute-stack.sh" "$project_dir" "$project_name" "$SCRIPT_DIR"
             else
                 echo -e "${RED}❌ Contribution script not found${NC}"
+                exit 1
+            fi
+            ;;
+        "validate")
+            if [[ -f "$SCRIPT_DIR/lib/validate.sh" ]]; then
+                local file_path="${1}"
+                if [[ -z "$file_path" ]]; then
+                    echo -e "${RED}❌ Please specify a file to validate${NC}"
+                    echo -e "${CYAN}Usage: claude-ally.sh validate <file>${NC}"
+                    exit 1
+                fi
+                bash "$SCRIPT_DIR/lib/validate.sh" "$file_path"
+            else
+                echo -e "${RED}❌ Validation script not found${NC}"
                 exit 1
             fi
             ;;
