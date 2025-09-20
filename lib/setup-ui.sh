@@ -195,41 +195,84 @@ get_project_type_description() {
     esac
 }
 
-# Show project type options with intelligent detection
-show_project_type_options() {
-    local detected_stack_info="$1"
-    local custom_option_text=""
-    local detected_type=""
-    local detected_description=""
+# Interactive menu with arrow key navigation
+show_interactive_menu() {
+    local -a options=("$@")
+    local selected=0
+    local num_options=${#options[@]}
 
-    if [[ -n "$detected_stack_info" ]]; then
-        IFS='|' read -r _ _ detected_type _ <<< "$detected_stack_info"
-        detected_description=$(get_project_type_description "$detected_type")
-
-        # Check if detected type maps to existing options
-        local mapped_option
-        mapped_option=$(map_detected_project_type "$detected_type")
-
-        if [[ "$mapped_option" == "8" ]] && [[ "$detected_type" != "other" ]]; then
-            custom_option_text="9. Create new project type: $detected_description"
-        fi
+    # Check if terminal supports interactive features
+    if [[ ! -t 0 ]] || [[ "${NON_INTERACTIVE:-false}" == "true" ]]; then
+        # Fallback to numbered list for non-interactive mode
+        echo ""
+        echo -e "${CYAN}Project Types:${NC}"
+        for i in "${!options[@]}"; do
+            echo "$((i+1)). ${options[$i]}"
+        done
+        return 0
     fi
 
-    echo ""
-    echo -e "${CYAN}Project Types:${NC}"
-    echo "1. Web Application (Frontend + Backend)"
-    echo "2. Mobile Application"
-    echo "3. Backend API Service"
-    echo "4. Desktop Application"
-    echo "5. CLI Tool/Utility"
-    echo "6. Library/Package"
-    echo "7. Data Science/ML Project"
-    echo "8. Other"
+    # Hide cursor and enable raw mode
+    tput civis 2>/dev/null || true
+    stty -echo 2>/dev/null || true
 
-    if [[ -n "$custom_option_text" ]]; then
-        echo -e "${YELLOW}$custom_option_text${NC}"
-    fi
+    cleanup_menu() {
+        # Restore cursor and normal mode
+        tput cnorm 2>/dev/null || true
+        stty echo 2>/dev/null || true
+    }
+    trap cleanup_menu EXIT
+
+    while true; do
+        # Clear and redraw menu
+        echo -e "\033[2J\033[H" # Clear screen and move to top
+        echo -e "${CYAN}Project Types (Use ↑↓ arrows, Enter to select):${NC}"
+        echo ""
+
+        for i in "${!options[@]}"; do
+            if [[ $i -eq $selected ]]; then
+                echo -e "  ${GREEN}► $((i+1)). ${options[$i]}${NC}"
+            else
+                echo "    $((i+1)). ${options[$i]}"
+            fi
+        done
+
+        echo ""
+        echo -e "${YELLOW}Use ↑/↓ arrows to navigate, Enter to select, 'q' to quit${NC}"
+
+        # Read single character
+        IFS= read -r -s -n1 char
+
+        case "$char" in
+            $'\x1b') # ESC sequence
+                read -r -s -n2 char
+                case "$char" in
+                    '[A') # Up arrow
+                        ((selected > 0)) && ((selected--))
+                        ;;
+                    '[B') # Down arrow
+                        ((selected < num_options - 1)) && ((selected++))
+                        ;;
+                esac
+                ;;
+            '') # Enter
+                cleanup_menu
+                trap - EXIT
+                echo "" # Clear line after selection
+                MENU_SELECTION=$selected
+                return 0
+                ;;
+            'q'|'Q') # Quit
+                cleanup_menu
+                trap - EXIT
+                echo ""
+                echo -e "${YELLOW}Setup cancelled by user${NC}"
+                exit 0
+                ;;
+        esac
+    done
 }
+
 
 # Get project information
 get_project_info() {
@@ -314,9 +357,24 @@ get_project_info() {
         fi
     fi
 
-    show_project_type_options "$detected_stack_info"
+    # Prepare menu options
+    local -a menu_options=(
+        "Web Application (Frontend + Backend)"
+        "Mobile Application"
+        "Backend API Service"
+        "Desktop Application"
+        "CLI Tool/Utility"
+        "Library/Package"
+        "Data Science/ML Project"
+        "Other"
+    )
 
-    # Show intelligent suggestion
+    # Add custom option if detected
+    if [[ "$custom_type_available" == "true" ]]; then
+        menu_options+=("Create new project type: $suggested_description")
+    fi
+
+    # Show intelligent suggestion if available
     if [[ -n "$suggested_option" ]] && [[ "$suggested_option" != "8" ]]; then
         echo -e "${CYAN}🤖 Claude suggests: $suggested_option ($suggested_description)${NC}"
     elif [[ "$custom_type_available" == "true" ]]; then
@@ -329,11 +387,39 @@ get_project_info() {
         PROJECT_TYPE_NUM="${suggested_option:-1}"
         echo "Select project type (1-$max_option) [$PROJECT_TYPE_NUM]: $PROJECT_TYPE_NUM (non-interactive mode)"
     else
-        local default_choice="${suggested_option:-1}"
-        read -r -p "Select project type (1-$max_option) [$default_choice]: " PROJECT_TYPE_NUM || {
-            echo -e "\n\033[1;33m⚠️  Input interrupted by user.\033[0m"
-            exit 130
-        }
+        # Check if terminal supports interactive features
+        if [[ -t 0 ]] && command -v tput >/dev/null 2>&1; then
+            echo ""
+            echo -e "${BLUE}Choose project type:${NC}"
+
+            # Use interactive menu
+            if show_interactive_menu "${menu_options[@]}"; then
+                PROJECT_TYPE_NUM=$((MENU_SELECTION + 1)) # Convert 0-based to 1-based
+            else
+                # Fallback if interactive menu fails
+                echo ""
+                for i in "${!menu_options[@]}"; do
+                    echo "$((i+1)). ${menu_options[$i]}"
+                done
+                local default_choice="${suggested_option:-1}"
+                read -r -p "Select project type (1-$max_option) [$default_choice]: " PROJECT_TYPE_NUM || {
+                    echo -e "\n\033[1;33m⚠️  Input interrupted by user.\033[0m"
+                    exit 130
+                }
+            fi
+        else
+            # Fallback for terminals without interactive support
+            echo ""
+            echo -e "${CYAN}Project Types:${NC}"
+            for i in "${!menu_options[@]}"; do
+                echo "$((i+1)). ${menu_options[$i]}"
+            done
+            local default_choice="${suggested_option:-1}"
+            read -r -p "Select project type (1-$max_option) [$default_choice]: " PROJECT_TYPE_NUM || {
+                echo -e "\n\033[1;33m⚠️  Input interrupted by user.\033[0m"
+                exit 130
+            }
+        fi
     fi
     PROJECT_TYPE_NUM=${PROJECT_TYPE_NUM:-${suggested_option:-1}}
 
