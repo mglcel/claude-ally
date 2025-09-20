@@ -1,8 +1,7 @@
 #!/bin/bash
 #
-# Claude-Ally - Universal Claude Cognitive Enhancement System
-# Main CLI interface for all claude-ally functionality
-# Production-Ready Enterprise Tool
+# Claude-Ally - Configure Claude with your project's tech stack
+# Automatically detects your tech stack and creates project-specific Claude configuration
 #
 
 # Get script directory
@@ -51,32 +50,23 @@ show_version() {
 
 # Show help information
 show_help() {
-    echo -e "${BOLD}Claude-Ally - Universal Claude Cognitive Enhancement System${NC}"
+    echo -e "${BOLD}Claude-Ally - Configure Claude with your project's tech stack${NC}"
     echo ""
     echo -e "${CYAN}USAGE:${NC}"
-    echo "  /path/to/claude-ally/claude-ally.sh <command> [options]"
-    echo ""
-    echo -e "${YELLOW}NOTE:${NC} Run from your project directory for best results:"
-    echo "  cd /path/to/your/project"
-    echo "  /path/to/claude-ally/claude-ally.sh setup"
+    echo "  claude-ally.sh <command> [directory]"
     echo ""
     echo -e "${CYAN}COMMANDS:${NC}"
-    echo "  setup [directory]          Setup cognitive enhancement for a project"
-    echo "  detect [directory]         Detect project technology stack (optional)"
-    echo "  contribute [directory]     Contribute new stack to claude-ally"
-    echo "  validate <file>            Validate a generated prompt file"
-    echo "  version                    Show version information"
-    echo "  help                       Show this help message"
+    echo "  setup [directory]      Configure Claude for your project"
+    echo "  detect [directory]     Show detected technology stack"
+    echo "  contribute [directory] Add your stack to the community"
+    echo "  version               Show version information"
+    echo "  help                  Show this help message"
     echo ""
     echo -e "${CYAN}EXAMPLES:${NC}"
     echo "  cd /path/to/your/project"
-    echo "  /path/to/claude-ally/claude-ally.sh setup                    # Setup current directory"
-    echo "  /path/to/claude-ally/claude-ally.sh setup /path/to/project   # Setup specific project"
-    echo "  /path/to/claude-ally/claude-ally.sh detect                   # See what was detected"
-    echo "  /path/to/claude-ally/claude-ally.sh contribute               # Contribute unknown stack"
-    echo "  /path/to/claude-ally/claude-ally.sh validate prompt.txt     # Validate prompt quality"
-    echo ""
-    echo -e "${BLUE}For more information: https://github.com/mglcel/claude-ally${NC}"
+    echo "  /path/to/claude-ally/claude-ally.sh setup      # Configure current project"
+    echo "  /path/to/claude-ally/claude-ally.sh detect     # Show detected tech stack"
+    echo "  /path/to/claude-ally/claude-ally.sh contribute # Add new stack to community"
 }
 
 # Validate system setup
