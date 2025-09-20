@@ -255,6 +255,13 @@ get_project_info() {
     local detected_stack_info=""
     local contribute_analysis=""
 
+    # Load stack detector if not already loaded
+    if ! declare -f detect_project_stack > /dev/null; then
+        if [[ -f "$SCRIPT_DIR/stack-detector.sh" ]]; then
+            source "$SCRIPT_DIR/stack-detector.sh"
+        fi
+    fi
+
     if declare -f detect_project_stack > /dev/null; then
         echo -e "${CYAN}🔍 Analyzing project structure...${NC}"
         detected_stack_info=$(detect_project_stack "$PROJECT_DIR" 2>/dev/null || echo "")

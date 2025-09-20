@@ -15,6 +15,11 @@ source "$SCRIPT_DIR/setup-claude.sh"
 source "$SCRIPT_DIR/setup-ui.sh"
 source "$SCRIPT_DIR/setup-config.sh"
 
+# Source stack detector for intelligent project type detection
+if [[ -f "$SCRIPT_DIR/stack-detector.sh" ]]; then
+    source "$SCRIPT_DIR/stack-detector.sh"
+fi
+
 # Global variables for the setup process
 PROJECT_NAME=""
 PROJECT_TYPE=""
