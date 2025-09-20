@@ -42,7 +42,8 @@ main() {
 
     # Handle existing CLAUDE.md
     local existing_action
-    existing_action=$(handle_existing_claude_md; echo $?)
+    handle_existing_claude_md
+    existing_action=$?
 
     case $existing_action in
         1)  # Skip setup
