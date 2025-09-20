@@ -88,7 +88,7 @@ Please analyze this project directory and determine if it represents a technolog
 5. **Is this worth adding?**: Should this be added to claude-ally? (YES/NO with reasoning)
 
 ## Project Files Analysis:
-$(find "$project_dir" -maxdepth 2 -name "*.json" -o -name "*.toml" -o -name "*.yaml" -o -name "*.yml" -o -name "*.config.*" -o -name "Dockerfile" -o -name "README*" | head -10)
+$(timeout 5 find "$project_dir" -maxdepth 2 -name "*.json" -o -name "*.toml" -o -name "*.yaml" -o -name "*.yml" -o -name "*.config.*" -o -name "Dockerfile" -o -name "README*" 2>/dev/null | head -10 || echo "File analysis timed out")
 
 Please provide a structured analysis that I can use to generate a new stack detection module.
 
@@ -106,7 +106,7 @@ EOF
         echo -e "${BLUE}📝 Calling Claude for analysis...${NC}"
 
         local claude_result
-        if claude_result=$(claude < "$analysis_file" 2>/dev/null); then
+        if claude_result=$(timeout 30 claude < "$analysis_file" 2>/dev/null); then
             echo -e "${GREEN}✅ Claude analysis completed${NC}"
 
             # Save to cache for future use
