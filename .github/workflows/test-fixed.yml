@@ -226,8 +226,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y shellcheck
 
-          # Check all shell scripts (allowing some common exceptions)
-          find . -name "*.sh" -type f -exec shellcheck -e SC1091,SC2034,SC2086 {} \; || true
+          # Check all shell scripts (allowing some common exceptions for module-based code)
+          find . -name "*.sh" -type f -exec shellcheck -e SC1091,SC2034,SC2086,SC2162 {} \;
 
       - name: Check for secrets
         run: |

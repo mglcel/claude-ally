@@ -1,5 +1,5 @@
-# **UNIVERSAL CLAUDE COGNITIVE ENHANCEMENT SYSTEM**
-## **Transform Claude into Your Project's Senior Technical Expert**
+# **Claude-Ally - Manual Configuration Guide**
+## **Configure Claude with your project's tech stack for better responses**
 
 > **🚀 30-Second Setup → 85% Faster Development (v2.0)**
 >
@@ -7,9 +7,9 @@
 
 ---
 
-## **⚡ IMMEDIATE QUICK START (30 seconds)**
+## **⚡ QUICK START - Choose Your Method**
 
-**⚡ Professional CLI Interface**
+**🎯 Recommended: Automated CLI Setup**
 
 ```bash
 # One-command setup (recommended):
@@ -22,7 +22,9 @@
 /path/to/claude-ally/claude-ally.sh contribute
 ```
 
-**📋 Manual Setup (if needed):**
+**📋 Manual Setup (for advanced users or custom scenarios):**
+
+*Use this method if you want full control over the configuration or need to customize beyond what the CLI provides.*
 
 1. **Choose Your Tech Stack Template** (scroll to copy-paste templates section)
 2. **Fill in [Bracketed] Details** with your project specifics
