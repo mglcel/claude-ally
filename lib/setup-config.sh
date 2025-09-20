@@ -31,18 +31,35 @@ handle_existing_claude_md() {
         return 0
     fi
 
-    echo "Choose how to handle the existing CLAUDE.md:"
-    echo "  [R] Replace with new configuration"
-    echo "  [M] Merge with existing content (Claude-powered)"
-    echo "  [S] Skip setup and keep existing file"
-    echo ""
-    read -r -p "Your choice (R/M/S): " EXISTING_ACTION || {
-        echo -e "\n\033[1;33m⚠️  Input interrupted by user.\033[0m"
-        exit 130
-    }
+    # Try interactive choice first
+    local choice_made=false
+    if show_interactive_choice "Choose how to handle the existing CLAUDE.md:" \
+        "[R] Replace with new configuration" \
+        "[M] Merge with existing content (Claude-powered)" \
+        "[S] Skip setup and keep existing file"; then
+        # Convert choice index to action
+        case "$CHOICE_SELECTION" in
+            0) EXISTING_ACTION="R" ;;
+            1) EXISTING_ACTION="M" ;;
+            2) EXISTING_ACTION="S" ;;
+        esac
+        choice_made=true
+    fi
 
-    # Convert to uppercase for comparison (bash 3.x compatible)
-    EXISTING_ACTION=$(echo "$EXISTING_ACTION" | tr '[:lower:]' '[:upper:]')
+    # Fallback to traditional prompt if interactive failed
+    if [[ "$choice_made" != "true" ]]; then
+        echo "Choose how to handle the existing CLAUDE.md:"
+        echo "  [R] Replace with new configuration"
+        echo "  [M] Merge with existing content (Claude-powered)"
+        echo "  [S] Skip setup and keep existing file"
+        echo ""
+        read -r -p "Your choice (R/M/S): " EXISTING_ACTION || {
+            echo -e "\n\033[1;33m⚠️  Input interrupted by user.\033[0m"
+            exit 130
+        }
+        # Convert to uppercase for comparison (bash 3.x compatible)
+        EXISTING_ACTION=$(echo "$EXISTING_ACTION" | tr '[:lower:]' '[:upper:]')
+    fi
     case "$EXISTING_ACTION" in
         "R"|"REPLACE")
             cp "$PROJECT_DIR/CLAUDE.md" "$PROJECT_DIR/CLAUDE.md.backup.$(date +%Y%m%d_%H%M%S)"

@@ -195,7 +195,173 @@ get_project_type_description() {
     esac
 }
 
-# Interactive menu with arrow key navigation
+# Interactive Y/n choice
+show_interactive_yn() {
+    local prompt="$1"
+    local default="${2:-Y}" # Default to Y if not specified
+
+    # Check if terminal supports interactive features
+    if [[ ! -t 0 ]] || [[ "${NON_INTERACTIVE:-false}" == "true" ]] || ! command -v tput >/dev/null 2>&1; then
+        return 1 # Fallback to traditional prompt
+    fi
+
+    local selected=0
+    if [[ "$default" == "n" ]] || [[ "$default" == "N" ]]; then
+        selected=1 # Start with No selected
+    fi
+
+    # Hide cursor and enable raw mode
+    tput civis 2>/dev/null || true
+    stty -echo 2>/dev/null || true
+
+    cleanup_yn() {
+        tput cnorm 2>/dev/null || true
+        stty echo 2>/dev/null || true
+    }
+    trap cleanup_yn EXIT
+
+    while true; do
+        # Clear and redraw choice
+        echo -e "\033[2J\033[H" # Clear screen and move to top
+        echo -e "${CYAN}$prompt${NC}"
+        echo ""
+
+        if [[ $selected -eq 0 ]]; then
+            echo -e "  ${GREEN}► Yes${NC}"
+            echo "    No"
+        else
+            echo "    Yes"
+            echo -e "  ${GREEN}► No${NC}"
+        fi
+
+        echo ""
+        echo -e "${YELLOW}Use ↑/↓ arrows to navigate, Enter to select, 'q' to quit${NC}"
+
+        # Read single character
+        IFS= read -r -s -n1 char
+
+        case "$char" in
+            $'\x1b') # ESC sequence
+                read -r -s -n2 char
+                case "$char" in
+                    '[A'|'[B') # Up or down arrow
+                        selected=$((1 - selected)) # Toggle between 0 and 1
+                        ;;
+                esac
+                ;;
+            '') # Enter
+                cleanup_yn
+                trap - EXIT
+                echo "" # Clear line after selection
+                YN_SELECTION=$selected
+                return 0
+                ;;
+            'y'|'Y') # Direct Y
+                cleanup_yn
+                trap - EXIT
+                echo ""
+                YN_SELECTION=0
+                return 0
+                ;;
+            'n'|'N') # Direct N
+                cleanup_yn
+                trap - EXIT
+                echo ""
+                YN_SELECTION=1
+                return 0
+                ;;
+            'q'|'Q') # Quit
+                cleanup_yn
+                trap - EXIT
+                echo ""
+                echo -e "${YELLOW}Setup cancelled by user${NC}"
+                exit 0
+                ;;
+        esac
+    done
+}
+
+# Universal interactive choice selector
+show_interactive_choice() {
+    local prompt="$1"
+    shift
+    local -a choices=("$@")
+    local selected=0
+    local num_choices=${#choices[@]}
+
+    # Check if terminal supports interactive features
+    if [[ ! -t 0 ]] || [[ "${NON_INTERACTIVE:-false}" == "true" ]]; then
+        # Fallback to traditional prompt for non-interactive mode
+        return 1 # Indicates fallback should be used
+    fi
+
+    # Check for required commands
+    if ! command -v tput >/dev/null 2>&1; then
+        return 1 # Fallback to traditional prompt
+    fi
+
+    # Hide cursor and enable raw mode
+    tput civis 2>/dev/null || true
+    stty -echo 2>/dev/null || true
+
+    cleanup_choice() {
+        # Restore cursor and normal mode
+        tput cnorm 2>/dev/null || true
+        stty echo 2>/dev/null || true
+    }
+    trap cleanup_choice EXIT
+
+    while true; do
+        # Clear and redraw choice
+        echo -e "\033[2J\033[H" # Clear screen and move to top
+        echo -e "${CYAN}$prompt${NC}"
+        echo ""
+
+        for i in "${!choices[@]}"; do
+            if [[ $i -eq $selected ]]; then
+                echo -e "  ${GREEN}► ${choices[$i]}${NC}"
+            else
+                echo "    ${choices[$i]}"
+            fi
+        done
+
+        echo ""
+        echo -e "${YELLOW}Use ↑/↓ arrows to navigate, Enter to select, 'q' to quit${NC}"
+
+        # Read single character
+        IFS= read -r -s -n1 char
+
+        case "$char" in
+            $'\x1b') # ESC sequence
+                read -r -s -n2 char
+                case "$char" in
+                    '[A') # Up arrow
+                        ((selected > 0)) && ((selected--))
+                        ;;
+                    '[B') # Down arrow
+                        ((selected < num_choices - 1)) && ((selected++))
+                        ;;
+                esac
+                ;;
+            '') # Enter
+                cleanup_choice
+                trap - EXIT
+                echo "" # Clear line after selection
+                CHOICE_SELECTION=$selected
+                return 0
+                ;;
+            'q'|'Q') # Quit
+                cleanup_choice
+                trap - EXIT
+                echo ""
+                echo -e "${YELLOW}Setup cancelled by user${NC}"
+                exit 0
+                ;;
+        esac
+    done
+}
+
+# Interactive menu with arrow key navigation (for complex menus)
 show_interactive_menu() {
     local -a options=("$@")
     local selected=0

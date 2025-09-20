@@ -42,10 +42,20 @@ check_claude_availability() {
         echo "Non-interactive mode: assuming Claude is available..."
         CLAUDE_RESPONSE="y"
     else
-        read -r -p "Are you running this script from within Claude Code? (y/N): " CLAUDE_RESPONSE || {
-            echo -e "\n\033[1;33m⚠️  Input interrupted by user.\033[0m"
-            exit 130
-        }
+        # Try interactive choice first
+        if show_interactive_yn "Are you running this script from within Claude Code?" "N"; then
+            if [[ $YN_SELECTION -eq 0 ]]; then
+                CLAUDE_RESPONSE="y"
+            else
+                CLAUDE_RESPONSE="n"
+            fi
+        else
+            # Fallback to traditional prompt
+            read -r -p "Are you running this script from within Claude Code? (y/N): " CLAUDE_RESPONSE || {
+                echo -e "\n\033[1;33m⚠️  Input interrupted by user.\033[0m"
+                exit 130
+            }
+        fi
     fi
 
     if [[ "$CLAUDE_RESPONSE" =~ ^[Yy]$ ]]; then
