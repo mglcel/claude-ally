@@ -483,7 +483,19 @@ get_project_info() {
 
                 if declare -f analyze_unknown_stack_with_claude > /dev/null; then
                     echo -e "${CYAN}🤖 Running Claude analysis for unknown project...${NC}"
-                    contribute_analysis=$(analyze_unknown_stack_with_claude "$PROJECT_DIR" "$(basename "$PROJECT_DIR")" 2>/dev/null || echo "")
+                    echo -e "${BLUE}This may take 30-60 seconds. Press Ctrl+C to skip if needed.${NC}"
+                    # Add timeout wrapper to prevent hanging
+                    if contribute_analysis=$(timeout 90 analyze_unknown_stack_with_claude "$PROJECT_DIR" "$(basename "$PROJECT_DIR")" 2>&1); then
+                        echo -e "${GREEN}✅ Claude analysis completed${NC}"
+                    else
+                        local exit_code=$?
+                        if [[ $exit_code -eq 124 ]]; then
+                            echo -e "${YELLOW}⚠️  Claude analysis timed out after 90 seconds${NC}"
+                        else
+                            echo -e "${YELLOW}⚠️  Claude analysis failed (exit code: $exit_code)${NC}"
+                        fi
+                        contribute_analysis=""
+                    fi
 
                     if [[ -n "$contribute_analysis" ]]; then
                         # Extract suggested stack info from Claude's analysis
