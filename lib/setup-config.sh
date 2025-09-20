@@ -36,7 +36,10 @@ handle_existing_claude_md() {
     echo "  [M] Merge with existing content (Claude-powered)"
     echo "  [S] Skip setup and keep existing file"
     echo ""
-    read -r -p "Your choice (R/M/S): " EXISTING_ACTION
+    read -r -p "Your choice (R/M/S): " EXISTING_ACTION || {
+        echo -e "\n\033[1;33m⚠️  Input interrupted by user.\033[0m"
+        exit 130
+    }
 
     # Convert to uppercase for comparison (bash 3.x compatible)
     EXISTING_ACTION=$(echo "$EXISTING_ACTION" | tr '[:lower:]' '[:upper:]')
@@ -211,7 +214,10 @@ check_stack_and_offer_contribution() {
                 return 0
             fi
 
-            read -r -p "Would you like to contribute this stack? (y/N): " CONTRIBUTE_CHOICE
+            read -r -p "Would you like to contribute this stack? (y/N): " CONTRIBUTE_CHOICE || {
+                echo -e "\n\033[1;33m⚠️  Input interrupted by user.\033[0m"
+                exit 130
+            }
 
             if [[ "$CONTRIBUTE_CHOICE" =~ ^[Yy]$ ]]; then
                 echo -e "${GREEN}🎉 Thank you for contributing!${NC}"

@@ -42,7 +42,10 @@ check_claude_availability() {
         echo "Non-interactive mode: assuming Claude is available..."
         CLAUDE_RESPONSE="y"
     else
-        read -r -p "Are you running this script from within Claude Code? (y/N): " CLAUDE_RESPONSE
+        read -r -p "Are you running this script from within Claude Code? (y/N): " CLAUDE_RESPONSE || {
+            echo -e "\n\033[1;33m⚠️  Input interrupted by user.\033[0m"
+            exit 130
+        }
     fi
 
     if [[ "$CLAUDE_RESPONSE" =~ ^[Yy]$ ]]; then
@@ -204,7 +207,10 @@ offer_automatic_claude_setup() {
         SETUP_CHOICE="Y"
         echo "Non-interactive mode: proceeding with automatic setup..."
     else
-        read -r -p "Would you like me to automatically set up Claude for your project? (Y/n): " SETUP_CHOICE
+        read -r -p "Would you like me to automatically set up Claude for your project? (Y/n): " SETUP_CHOICE || {
+            echo -e "\n\033[1;33m⚠️  Input interrupted by user.\033[0m"
+            exit 130
+        }
     fi
 
     if [[ "$SETUP_CHOICE" =~ ^[Nn]$ ]]; then

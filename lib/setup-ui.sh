@@ -14,7 +14,10 @@ read_with_default() {
         result="$default"
         echo >&2 "$prompt$default (non-interactive mode)"
     else
-        read -r -p "$prompt" result
+        read -r -p "$prompt" result || {
+            echo -e "\n\033[1;33m⚠️  Input interrupted by user.\033[0m"
+            exit 130
+        }
         if [[ -z "$result" ]]; then
             result="$default"
         fi
@@ -38,7 +41,10 @@ read_with_suggestion() {
         result="$suggestion"
         echo >&2 "$prompt$suggestion (non-interactive mode)"
     else
-        read -r -p "$prompt" result
+        read -r -p "$prompt" result || {
+            echo -e "\n\033[1;33m⚠️  Input interrupted by user.\033[0m"
+            exit 130
+        }
         if [[ -z "$result" ]] && [[ -n "$suggestion" ]]; then
             result="$suggestion"
         fi
@@ -193,7 +199,10 @@ get_project_info() {
         PROJECT_TYPE_NUM="1"
         echo "Select project type (1-8) [1]: 1 (non-interactive mode)"
     else
-        read -r -p "Select project type (1-8) [1]: " PROJECT_TYPE_NUM
+        read -r -p "Select project type (1-8) [1]: " PROJECT_TYPE_NUM || {
+            echo -e "\n\033[1;33m⚠️  Input interrupted by user.\033[0m"
+            exit 130
+        }
     fi
     PROJECT_TYPE_NUM=${PROJECT_TYPE_NUM:-1}
 
@@ -221,7 +230,10 @@ get_security_info() {
         CRITICAL_ASSETS="user data, configuration files"
         echo "Critical assets [user data]: user data, configuration files (non-interactive mode)"
     else
-        read -r -p "Critical assets (comma-separated or describe): " CRITICAL_ASSETS
+        read -r -p "Critical assets (comma-separated or describe): " CRITICAL_ASSETS || {
+            echo -e "\n\033[1;33m⚠️  Input interrupted by user.\033[0m"
+            exit 130
+        }
     fi
     CRITICAL_ASSETS=${CRITICAL_ASSETS:-"user data"}
 
@@ -231,7 +243,10 @@ get_security_info() {
         COMPLIANCE="7"
         echo "Compliance requirements [7]: 7 (non-interactive mode)"
     else
-        read -r -p "Compliance requirements (1-8) [7]: " COMPLIANCE
+        read -r -p "Compliance requirements (1-8) [7]: " COMPLIANCE || {
+            echo -e "\n\033[1;33m⚠️  Input interrupted by user.\033[0m"
+            exit 130
+        }
     fi
     COMPLIANCE=${COMPLIANCE:-7}
 }
@@ -256,7 +271,10 @@ get_technical_info() {
             TECH_STACK="React + Node.js + PostgreSQL"
             echo "Tech stack [React + Node.js]: React + Node.js + PostgreSQL (non-interactive mode)"
         else
-            read -r -p "Tech stack (describe or select): " TECH_STACK
+            read -r -p "Tech stack (describe or select): " TECH_STACK || {
+                echo -e "\n\033[1;33m⚠️  Input interrupted by user.\033[0m"
+                exit 130
+            }
         fi
         TECH_STACK=${TECH_STACK:-"React + Node.js"}
     fi
@@ -267,7 +285,10 @@ get_technical_info() {
         COMMON_ISSUES="authentication, input validation, error handling"
         echo "Common issues [authentication]: authentication, input validation, error handling (non-interactive mode)"
     else
-        read -r -p "Common issues (comma-separated): " COMMON_ISSUES
+        read -r -p "Common issues (comma-separated): " COMMON_ISSUES || {
+            echo -e "\n\033[1;33m⚠️  Input interrupted by user.\033[0m"
+            exit 130
+        }
     fi
     COMMON_ISSUES=${COMMON_ISSUES:-"authentication, input validation"}
 }

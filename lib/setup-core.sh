@@ -55,7 +55,10 @@ detect_directories() {
             ANALYZE_SELF="Y"
             echo "Non-interactive mode: continuing with claude-ally analysis..."
         else
-            read -r -p "Do you want to continue analyzing claude-ally? (Y/n): " ANALYZE_SELF
+            read -r -p "Do you want to continue analyzing claude-ally? (Y/n): " ANALYZE_SELF || {
+                echo -e "\n\033[1;33m⚠️  Input interrupted by user.\033[0m"
+                exit 130
+            }
         fi
 
         if [[ "$ANALYZE_SELF" =~ ^[Nn]$ ]]; then
@@ -97,11 +100,26 @@ validate_inputs() {
 
 # Cleanup function
 cleanup() {
+    local exit_code=$?
+
     # Clean up any temporary files
     if [[ -n "${CLAUDE_SUGGESTIONS_FILE:-}" ]] && [[ -f "$CLAUDE_SUGGESTIONS_FILE" ]]; then
         rm -f "$CLAUDE_SUGGESTIONS_FILE" 2>/dev/null || true
     fi
+
+    # If this was triggered by an interrupt signal, show message and exit
+    if [[ $exit_code -eq 130 ]] || [[ "${1:-}" == "INT" ]]; then
+        echo ""
+        echo -e "\n\033[1;33m⚠️  Setup interrupted by user. Cleanup completed.\033[0m"
+        exit 130
+    fi
 }
 
-# Set up cleanup trap
-trap cleanup EXIT INT TERM
+# Handle interrupt signal specifically
+handle_interrupt() {
+    cleanup "INT"
+}
+
+# Set up cleanup traps
+trap cleanup EXIT
+trap handle_interrupt INT TERM

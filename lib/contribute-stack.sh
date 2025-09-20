@@ -226,7 +226,10 @@ propose_contribution() {
     echo ""
 
     local contribute_choice
-    read -r -p "Contribute to claude-ally? (Y/n): " contribute_choice
+    read -r -p "Contribute to claude-ally? (Y/n): " contribute_choice || {
+        echo -e "\n\033[1;33m⚠️  Input interrupted by user.\033[0m"
+        exit 130
+    }
 
     if [[ "$contribute_choice" =~ ^[Nn] ]]; then
         echo -e "${BLUE}No problem! Continuing with setup...${NC}"
@@ -254,7 +257,10 @@ propose_contribution() {
     echo -e "${YELLOW}Based on the analysis, would you like to generate the contribution files?${NC}"
 
     local generate_choice
-    read -r -p "Generate contribution files? (Y/n): " generate_choice
+    read -r -p "Generate contribution files? (Y/n): " generate_choice || {
+        echo -e "\n\033[1;33m⚠️  Input interrupted by user.\033[0m"
+        exit 130
+    }
 
     if [[ ! "$generate_choice" =~ ^[Nn] ]]; then
         # Generate contribution template
@@ -367,7 +373,10 @@ EOF
                     echo ""
 
                     local github_pr_choice
-                    read -r -p "Create GitHub pull request automatically? (Y/n): " github_pr_choice
+                    read -r -p "Create GitHub pull request automatically? (Y/n): " github_pr_choice || {
+                        echo -e "\n\033[1;33m⚠️  Input interrupted by user.\033[0m"
+                        exit 130
+                    }
 
                     if [[ ! "$github_pr_choice" =~ ^[Nn] ]]; then
                         echo ""
