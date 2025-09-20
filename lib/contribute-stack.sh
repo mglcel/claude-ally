@@ -53,7 +53,7 @@ analyze_unknown_stack_with_claude() {
 
     # Check if we have a recent analysis (less than 1 hour old)
     if is_cache_valid "$cache_file"; then
-        echo -e "${GREEN}🔄 Using cached Claude analysis (found recent analysis for this project)${NC}"
+        echo -e "${GREEN}🔄 Using cached Claude analysis (found recent analysis for this project)${NC}" >&2
         cat "$cache_file"
         return 0
     fi
