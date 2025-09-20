@@ -38,7 +38,9 @@ handle_existing_claude_md() {
     echo ""
     read -r -p "Your choice (R/M/S): " EXISTING_ACTION
 
-    case "${EXISTING_ACTION^^}" in
+    # Convert to uppercase for comparison (bash 3.x compatible)
+    EXISTING_ACTION=$(echo "$EXISTING_ACTION" | tr '[:lower:]' '[:upper:]')
+    case "$EXISTING_ACTION" in
         "R"|"REPLACE")
             cp "$PROJECT_DIR/CLAUDE.md" "$PROJECT_DIR/CLAUDE.md.backup.$(date +%Y%m%d_%H%M%S)"
             echo -e "${GREEN}✅ Backup created, will replace with new configuration${NC}"
@@ -130,7 +132,7 @@ generate_prompt() {
     safe_name=$(echo "$clean_name" | tr ' ' '_' | tr -cd '[:alnum:]_-')
     local prompt_file="$PROJECT_DIR/claude_prompt_${safe_name}.txt"
 
-    echo -e "${BLUE}📝 Generating Claude prompt...${NC}"
+    echo -e "${BLUE}📝 Generating Claude prompt...${NC}" >&2
 
     cat > "$prompt_file" << EOF
 # CLAUDE COGNITIVE ENHANCEMENT SETUP
@@ -175,7 +177,7 @@ Please create a comprehensive CLAUDE.md file for this project that includes:
 Please format the response as a complete CLAUDE.md file that can be directly saved to the project directory.
 EOF
 
-    echo -e "${GREEN}✅ Prompt generated: $prompt_file${NC}"
+    echo -e "${GREEN}✅ Prompt generated: $prompt_file${NC}" >&2
     echo "$prompt_file"
 }
 
