@@ -152,8 +152,69 @@ show_deployment_options() {
     echo "8. Custom/Other"
 }
 
-# Show project type options
+# Map detected project types to standard categories
+map_detected_project_type() {
+    local detected_type="$1"
+
+    case "$detected_type" in
+        "web-app"|"nextjs-ai-app"|"vue-app"|"react-app"|"svelte-app") echo "1" ;;
+        "mobile-app"|"cordova-hybrid-app"|"react-native-app"|"flutter-app") echo "2" ;;
+        "backend-service"|"api-service"|"ai-ml-service"|"microservice") echo "3" ;;
+        "desktop-app"|"electron-app"|"tauri-app") echo "4" ;;
+        "cli-tool"|"bash-cli"|"python-cli"|"node-cli") echo "5" ;;
+        "library"|"package"|"npm-package"|"python-package") echo "6" ;;
+        "data-science"|"ml-project"|"jupyter-project") echo "7" ;;
+        *) echo "8" ;;
+    esac
+}
+
+# Get human-readable description for detected project type
+get_project_type_description() {
+    local detected_type="$1"
+
+    case "$detected_type" in
+        "nextjs-ai-app") echo "Next.js AI Application" ;;
+        "cordova-hybrid-app") echo "Cordova Hybrid Mobile App" ;;
+        "ai-ml-service") echo "AI/ML Backend Service" ;;
+        "bash-cli") echo "Bash CLI Tool" ;;
+        "python-cli") echo "Python CLI Tool" ;;
+        "vue-app") echo "Vue.js Application" ;;
+        "react-app") echo "React Application" ;;
+        "svelte-app") echo "Svelte Application" ;;
+        "react-native-app") echo "React Native App" ;;
+        "flutter-app") echo "Flutter App" ;;
+        "electron-app") echo "Electron Desktop App" ;;
+        "tauri-app") echo "Tauri Desktop App" ;;
+        "npm-package") echo "NPM Package" ;;
+        "python-package") echo "Python Package" ;;
+        "jupyter-project") echo "Jupyter Notebook Project" ;;
+        "kotlin-multiplatform-mobile") echo "Kotlin Multiplatform Mobile App" ;;
+        "kotlin-multiplatform-desktop") echo "Kotlin Multiplatform Desktop App" ;;
+        "kotlin-multiplatform") echo "Kotlin Multiplatform Project" ;;
+        *) echo "$detected_type" ;;
+    esac
+}
+
+# Show project type options with intelligent detection
 show_project_type_options() {
+    local detected_stack_info="$1"
+    local custom_option_text=""
+    local detected_type=""
+    local detected_description=""
+
+    if [[ -n "$detected_stack_info" ]]; then
+        IFS='|' read -r _ _ detected_type _ <<< "$detected_stack_info"
+        detected_description=$(get_project_type_description "$detected_type")
+
+        # Check if detected type maps to existing options
+        local mapped_option
+        mapped_option=$(map_detected_project_type "$detected_type")
+
+        if [[ "$mapped_option" == "8" ]] && [[ "$detected_type" != "other" ]]; then
+            custom_option_text="9. Create new project type: $detected_description"
+        fi
+    fi
+
     echo ""
     echo -e "${CYAN}Project Types:${NC}"
     echo "1. Web Application (Frontend + Backend)"
@@ -164,6 +225,10 @@ show_project_type_options() {
     echo "6. Library/Package"
     echo "7. Data Science/ML Project"
     echo "8. Other"
+
+    if [[ -n "$custom_option_text" ]]; then
+        echo -e "${YELLOW}$custom_option_text${NC}"
+    fi
 }
 
 # Get project information
@@ -186,26 +251,86 @@ get_project_info() {
         PROJECT_NAME=$(read_with_default "Project name [$default_name]: " "$default_name")
     fi
 
-    # Project type
-    show_project_type_options
-    if [[ -f "$CLAUDE_SUGGESTIONS_FILE" ]]; then
-        claude_suggestion=$(grep "PROJECT_TYPE_SUGGESTION:" "$CLAUDE_SUGGESTIONS_FILE" 2>/dev/null | cut -d: -f2- | xargs || echo "")
-        if [[ -n "$claude_suggestion" ]]; then
-            echo -e "${CYAN}🤖 Claude suggests: 1 ($claude_suggestion)${NC}"
+    # Run stack detection for intelligent project type suggestions
+    local detected_stack_info=""
+    local contribute_analysis=""
+
+    if declare -f detect_project_stack > /dev/null; then
+        echo -e "${CYAN}🔍 Analyzing project structure...${NC}"
+        detected_stack_info=$(detect_project_stack "$PROJECT_DIR" 2>/dev/null || echo "")
+
+        # If no stack detected, try Claude analysis to see what it would suggest
+        if [[ -z "$detected_stack_info" ]]; then
+            # Load contribute functionality to access Claude analysis
+            if [[ -f "$SCRIPT_DIR/contribute-stack.sh" ]]; then
+                source "$SCRIPT_DIR/contribute-stack.sh"
+
+                if declare -f analyze_unknown_stack_with_claude > /dev/null; then
+                    echo -e "${CYAN}🤖 Running Claude analysis for unknown project...${NC}"
+                    contribute_analysis=$(analyze_unknown_stack_with_claude "$PROJECT_DIR" "$(basename "$PROJECT_DIR")" 2>/dev/null || echo "")
+
+                    if [[ -n "$contribute_analysis" ]]; then
+                        # Extract suggested stack info from Claude's analysis
+                        local suggested_stack_id suggested_tech_stack suggested_project_type
+
+                        # Parse Claude's structured response
+                        suggested_stack_id=$(echo "$contribute_analysis" | grep -i "STACK_ID:" | head -1 | sed 's/.*STACK_ID:[[:space:]]*//' | sed 's/[[:space:]]*$//' | tr -d '"*`')
+                        suggested_tech_stack=$(echo "$contribute_analysis" | grep -i "TECH_STACK:" | head -1 | sed 's/.*TECH_STACK:[[:space:]]*//' | sed 's/[[:space:]]*$//' | tr -d '"*`')
+                        suggested_project_type=$(echo "$contribute_analysis" | grep -i "PROJECT_TYPE:" | head -1 | sed 's/.*PROJECT_TYPE:[[:space:]]*//' | sed 's/[[:space:]]*$//' | tr -d '"*`')
+
+                        if [[ -n "$suggested_stack_id" ]] && [[ -n "$suggested_tech_stack" ]] && [[ -n "$suggested_project_type" ]]; then
+                            detected_stack_info="$suggested_stack_id|$suggested_tech_stack|$suggested_project_type|75"
+                            echo -e "${GREEN}✅ Claude detected: $suggested_tech_stack${NC}"
+                        fi
+                    fi
+                fi
+            fi
         fi
     fi
 
+    # Project type with intelligent detection
+    local suggested_option=""
+    local suggested_description=""
+    local detected_type=""
+    local custom_type_available=false
+    local max_option=8
+
+    if [[ -n "$detected_stack_info" ]]; then
+        IFS='|' read -r _ _ detected_type _ <<< "$detected_stack_info"
+        suggested_option=$(map_detected_project_type "$detected_type")
+        suggested_description=$(get_project_type_description "$detected_type")
+
+        # Check if we need to offer a custom option
+        if [[ "$suggested_option" == "8" ]] && [[ "$detected_type" != "other" ]]; then
+            custom_type_available=true
+            max_option=9
+        fi
+    fi
+
+    show_project_type_options "$detected_stack_info"
+
+    # Show intelligent suggestion
+    if [[ -n "$suggested_option" ]] && [[ "$suggested_option" != "8" ]]; then
+        echo -e "${CYAN}🤖 Claude suggests: $suggested_option ($suggested_description)${NC}"
+    elif [[ "$custom_type_available" == "true" ]]; then
+        echo -e "${CYAN}🤖 Claude suggests: 9 (Create new: $suggested_description)${NC}"
+        suggested_option="9"
+    fi
+
+    # Get user choice
     if [[ "${NON_INTERACTIVE:-false}" == "true" ]]; then
-        PROJECT_TYPE_NUM="1"
-        echo "Select project type (1-8) [1]: 1 (non-interactive mode)"
+        PROJECT_TYPE_NUM="${suggested_option:-1}"
+        echo "Select project type (1-$max_option) [$PROJECT_TYPE_NUM]: $PROJECT_TYPE_NUM (non-interactive mode)"
     else
-        read -r -p "Select project type (1-8) [1]: " PROJECT_TYPE_NUM || {
+        local default_choice="${suggested_option:-1}"
+        read -r -p "Select project type (1-$max_option) [$default_choice]: " PROJECT_TYPE_NUM || {
             echo -e "\n\033[1;33m⚠️  Input interrupted by user.\033[0m"
             exit 130
         }
     fi
-    PROJECT_TYPE_NUM=${PROJECT_TYPE_NUM:-1}
+    PROJECT_TYPE_NUM=${PROJECT_TYPE_NUM:-${suggested_option:-1}}
 
+    # Handle project type selection
     case $PROJECT_TYPE_NUM in
         1) PROJECT_TYPE="web-app" ;;
         2) PROJECT_TYPE="mobile-app" ;;
@@ -214,6 +339,17 @@ get_project_info() {
         5) PROJECT_TYPE="cli-tool" ;;
         6) PROJECT_TYPE="library" ;;
         7) PROJECT_TYPE="data-science" ;;
+        8) PROJECT_TYPE="other" ;;
+        9)
+            if [[ "$custom_type_available" == "true" ]]; then
+                PROJECT_TYPE="$detected_type"
+                DETECTED_CUSTOM_TYPE="$detected_type"
+                echo -e "${GREEN}✅ Selected new project type: $suggested_description${NC}"
+                echo -e "${CYAN}💡 This will be offered for contribution at the end of setup${NC}"
+            else
+                PROJECT_TYPE="other"
+            fi
+            ;;
         *) PROJECT_TYPE="other" ;;
     esac
 }

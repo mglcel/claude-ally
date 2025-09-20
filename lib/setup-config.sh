@@ -189,6 +189,38 @@ check_stack_and_offer_contribution() {
     local tech_stack="$1"
     local project_type="$2"
 
+    # Check if a custom project type was detected and selected
+    if [[ -n "${DETECTED_CUSTOM_TYPE:-}" ]]; then
+        echo ""
+        echo -e "${YELLOW}🤝 New Project Type Contribution Opportunity${NC}"
+        echo "================================================"
+        echo "You selected a new project type that isn't currently supported"
+        echo "by claude-ally. This is a great opportunity to contribute!"
+        echo ""
+        echo "Detected type: $DETECTED_CUSTOM_TYPE"
+        echo "Tech stack: $tech_stack"
+        echo ""
+        echo "Contributing this will help other developers using similar"
+        echo "technology stacks get automatic detection in the future."
+
+        if [[ "${NON_INTERACTIVE:-false}" == "true" ]]; then
+            echo "Non-interactive mode: skipping contribution offer"
+            return 0
+        fi
+
+        read -r -p "Would you like to contribute this new project type? (Y/n): " CONTRIBUTE_CHOICE || {
+            echo -e "\n\033[1;33m⚠️  Input interrupted by user.\033[0m"
+            exit 130
+        }
+
+        if [[ "$CONTRIBUTE_CHOICE" =~ ^[Yy]$ ]] || [[ -z "$CONTRIBUTE_CHOICE" ]]; then
+            echo -e "${GREEN}🎉 Thank you for contributing!${NC}"
+            echo "After setup completes, run: claude-ally contribute"
+            echo "This will analyze your project and help add the new project type detection."
+        fi
+        return 0
+    fi
+
     # Load stack detector to check if this is a known stack
     if [[ -f "$SCRIPT_DIR/stack-detector.sh" ]]; then
         source "$SCRIPT_DIR/stack-detector.sh"
