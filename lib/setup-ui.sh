@@ -497,8 +497,14 @@ get_project_info() {
                         if [[ -n "$suggested_stack_id" ]] && [[ -n "$suggested_tech_stack" ]] && [[ -n "$suggested_project_type" ]]; then
                             detected_stack_info="$suggested_stack_id|$suggested_tech_stack|$suggested_project_type|75"
                             echo -e "${GREEN}✅ Claude detected: $suggested_tech_stack${NC}"
+                        else
+                            echo -e "${YELLOW}⚠️  Claude analysis completed but could not parse project type${NC}"
                         fi
+                    else
+                        echo -e "${YELLOW}⚠️  Claude analysis failed, continuing with standard options${NC}"
                     fi
+                else
+                    echo -e "${YELLOW}⚠️  Claude analysis not available, using standard detection${NC}"
                 fi
             fi
         fi
