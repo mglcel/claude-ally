@@ -36,14 +36,6 @@ That's it! Claude will now understand your project structure and give more relev
 2. **Creates a CLAUDE.md file** - Contains your project context and requirements
 3. **Claude reads this context** - Gives responses specific to your setup
 
-## Supported Stacks
-
-- **Frontend**: React, Vue, Angular, Next.js
-- **Backend**: Node.js, Python (Django/FastAPI), Go, Java Spring
-- **Mobile**: React Native, Flutter, Cordova
-- **Databases**: PostgreSQL, MySQL, MongoDB, Redis
-- **Cloud**: AWS, Azure, GCP patterns
-
 ## Commands
 
 ```bash

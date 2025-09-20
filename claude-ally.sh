@@ -80,13 +80,6 @@ show_help() {
     echo ""
     echo -e "  ${GREEN}# System management${NC}"
     echo "  claude-ally.sh validate                  # Check installation"
-    echo ""
-    echo -e "${CYAN}SUPPORTED STACKS:${NC}"
-    echo "  • Next.js + AI/LLM (TypeScript, OpenAI, Anthropic)"
-    echo "  • Python AI/ML (FastAPI, TensorFlow, PyTorch)"
-    echo "  • Cordova Mobile Apps (with Maps integration)"
-    echo "  • Bash CLI Tools"
-    echo "  • And more... (contribute new stacks!)"
 }
 
 # Validate system setup
