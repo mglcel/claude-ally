@@ -10,11 +10,8 @@ set -e
 # Load optimization modules
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Source optimization modules if available (fail silently if not present)
-[[ -f "$SCRIPT_DIR/lib/error-handler.sh" ]] && source "$SCRIPT_DIR/lib/error-handler.sh" && setup_error_trapping 2>/dev/null || true
-[[ -f "$SCRIPT_DIR/lib/config-manager.sh" ]] && source "$SCRIPT_DIR/lib/config-manager.sh" 2>/dev/null || true
-[[ -f "$SCRIPT_DIR/lib/cache-manager.sh" ]] && source "$SCRIPT_DIR/lib/cache-manager.sh" 2>/dev/null || true
-[[ -f "$SCRIPT_DIR/lib/performance-monitor.sh" ]] && source "$SCRIPT_DIR/lib/performance-monitor.sh" 2>/dev/null || true
+# Simple error handling
+set -euo pipefail
 
 # Colors for output
 RED='\033[0;31m'

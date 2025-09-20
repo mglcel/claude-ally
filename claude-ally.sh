@@ -36,7 +36,7 @@ load_modules() {
 
 # Show version information
 show_version() {
-    echo -e "${BOLD}Claude-Ally Universal Cognitive Enhancement System${NC}"
+    echo -e "${BOLD}Claude-Ally - Configure Claude with your project's tech stack${NC}"
     echo -e "${CYAN}Version: $VERSION${NC}"
     echo -e "${BLUE}Repository: https://github.com/mglcel/claude-ally${NC}"
     echo ""
