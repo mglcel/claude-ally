@@ -475,49 +475,55 @@ get_project_info() {
         echo -e "${CYAN}🔍 Analyzing project structure...${NC}"
         detected_stack_info=$(detect_project_stack "$PROJECT_DIR" 2>/dev/null || echo "")
 
-        # If no stack detected, try Claude analysis to see what it would suggest
+        # If no stack detected, try to analyze files manually and offer Claude-based contribution
         if [[ -z "$detected_stack_info" ]]; then
-            # Load contribute functionality to access Claude analysis
-            if [[ -f "$SCRIPT_DIR/contribute-stack.sh" ]]; then
-                source "$SCRIPT_DIR/contribute-stack.sh"
+            echo -e "${CYAN}🔍 Analyzing project files for unknown project type...${NC}"
 
-                if declare -f analyze_unknown_stack_with_claude > /dev/null; then
-                    echo -e "${CYAN}🤖 Running Claude analysis for unknown project...${NC}"
-                    echo -e "${BLUE}This may take 30-60 seconds. Press Ctrl+C to skip if needed.${NC}"
-                    # Add timeout wrapper to prevent hanging
-                    if contribute_analysis=$(timeout 90 analyze_unknown_stack_with_claude "$PROJECT_DIR" "$(basename "$PROJECT_DIR")" 2>&1); then
-                        echo -e "${GREEN}✅ Claude analysis completed${NC}"
-                    else
-                        local exit_code=$?
-                        if [[ $exit_code -eq 124 ]]; then
-                            echo -e "${YELLOW}⚠️  Claude analysis timed out after 90 seconds${NC}"
-                        else
-                            echo -e "${YELLOW}⚠️  Claude analysis failed (exit code: $exit_code)${NC}"
-                        fi
-                        contribute_analysis=""
-                    fi
+            # Do basic file analysis to suggest a project type
+            local suggested_type="other"
+            local suggested_tech="Unknown Project"
+            local confidence=50
 
-                    if [[ -n "$contribute_analysis" ]]; then
-                        # Extract suggested stack info from Claude's analysis
-                        local suggested_stack_id suggested_tech_stack suggested_project_type
-
-                        # Parse Claude's structured response
-                        suggested_stack_id=$(echo "$contribute_analysis" | grep -i "STACK_ID:" | head -1 | sed 's/.*STACK_ID:[[:space:]]*//' | sed 's/[[:space:]]*$//' | tr -d '"*`')
-                        suggested_tech_stack=$(echo "$contribute_analysis" | grep -i "TECH_STACK:" | head -1 | sed 's/.*TECH_STACK:[[:space:]]*//' | sed 's/[[:space:]]*$//' | tr -d '"*`')
-                        suggested_project_type=$(echo "$contribute_analysis" | grep -i "PROJECT_TYPE:" | head -1 | sed 's/.*PROJECT_TYPE:[[:space:]]*//' | sed 's/[[:space:]]*$//' | tr -d '"*`')
-
-                        if [[ -n "$suggested_stack_id" ]] && [[ -n "$suggested_tech_stack" ]] && [[ -n "$suggested_project_type" ]]; then
-                            detected_stack_info="$suggested_stack_id|$suggested_tech_stack|$suggested_project_type|75"
-                            echo -e "${GREEN}✅ Claude detected: $suggested_tech_stack${NC}"
-                        else
-                            echo -e "${YELLOW}⚠️  Claude analysis completed but could not parse project type${NC}"
-                        fi
-                    else
-                        echo -e "${YELLOW}⚠️  Claude analysis failed, continuing with standard options${NC}"
-                    fi
-                else
-                    echo -e "${YELLOW}⚠️  Claude analysis not available, using standard detection${NC}"
+            # Check for common Kotlin Multiplatform patterns
+            if [[ -f "$PROJECT_DIR/build.gradle.kts" ]] && [[ -f "$PROJECT_DIR/settings.gradle.kts" ]]; then
+                if [[ -d "$PROJECT_DIR/composeApp" ]] || [[ -d "$PROJECT_DIR/shared" ]] || [[ -d "$PROJECT_DIR/iosApp" ]]; then
+                    suggested_type="kotlin-multiplatform-mobile"
+                    suggested_tech="Kotlin/Compose Multiplatform"
+                    confidence=85
+                    echo -e "${GREEN}📱 Detected Kotlin Multiplatform Mobile project${NC}"
                 fi
+            # Check for Flutter
+            elif [[ -f "$PROJECT_DIR/pubspec.yaml" ]] && [[ -d "$PROJECT_DIR/lib" ]]; then
+                suggested_type="flutter-app"
+                suggested_tech="Flutter"
+                confidence=90
+                echo -e "${GREEN}📱 Detected Flutter project${NC}"
+            # Check for React Native
+            elif [[ -f "$PROJECT_DIR/package.json" ]] && [[ -d "$PROJECT_DIR/android" ]] && [[ -d "$PROJECT_DIR/ios" ]]; then
+                suggested_type="react-native-app"
+                suggested_tech="React Native"
+                confidence=90
+                echo -e "${GREEN}📱 Detected React Native project${NC}"
+            # Check for Go projects
+            elif [[ -f "$PROJECT_DIR/go.mod" ]]; then
+                suggested_type="go-app"
+                suggested_tech="Go"
+                confidence=85
+                echo -e "${GREEN}🐹 Detected Go project${NC}"
+            # Check for Rust projects
+            elif [[ -f "$PROJECT_DIR/Cargo.toml" ]]; then
+                suggested_type="rust-app"
+                suggested_tech="Rust"
+                confidence=85
+                echo -e "${GREEN}🦀 Detected Rust project${NC}"
+            fi
+
+            # If we found a suggestion, use it
+            if [[ "$suggested_type" != "other" ]]; then
+                detected_stack_info="$suggested_type|$suggested_tech|$suggested_type|$confidence"
+                echo -e "${BLUE}💡 Will offer this as a custom project type option${NC}"
+            else
+                echo -e "${YELLOW}⚠️  Could not determine project type from file structure${NC}"
             fi
         fi
     fi

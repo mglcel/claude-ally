@@ -436,8 +436,8 @@ main() {
 
     echo -e "${CYAN}🔍 Checking for contribution opportunities...${NC}"
 
-    # Source the stack detector
-    source "$claude_ally_dir/lib/stack-detector.sh"
+    # Source the stack detector (claude_ally_dir is already lib directory)
+    source "$claude_ally_dir/stack-detector.sh"
 
     # Check if this is a known stack
     if detect_project_stack "$project_dir" > /dev/null; then
