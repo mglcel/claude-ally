@@ -363,9 +363,26 @@ show_interactive_choice() {
 
 # Interactive menu with arrow key navigation (for complex menus)
 show_interactive_menu() {
-    local -a options=("$@")
-    local selected=0
+    # Parse arguments: first argument might be default selection, rest are options
+    local default_selected=0
+    local recommended_index=-1
+    local -a options=()
+
+    # Check if first argument is a number (default selection)
+    if [[ $1 =~ ^[0-9]+$ ]]; then
+        default_selected=$1
+        recommended_index=$1
+        shift
+    fi
+
+    options=("$@")
+    local selected=$default_selected
     local num_options=${#options[@]}
+
+    # Ensure selected is within bounds
+    if [[ $selected -ge $num_options ]]; then
+        selected=$((num_options - 1))
+    fi
 
     # Check if terminal supports interactive features
     if [[ ! -t 0 ]] || [[ "${NON_INTERACTIVE:-false}" == "true" ]]; then
@@ -396,10 +413,21 @@ show_interactive_menu() {
         echo ""
 
         for i in "${!options[@]}"; do
+            local prefix="  "
+            local option_text="$((i+1)). ${options[$i]}"
+
             if [[ $i -eq $selected ]]; then
-                echo -e "  ${GREEN}► $((i+1)). ${options[$i]}${NC}"
+                if [[ $i -eq $recommended_index ]]; then
+                    echo -e "  ${GREEN}► 🎯 $option_text (Recommended)${NC}"
+                else
+                    echo -e "  ${GREEN}► $option_text${NC}"
+                fi
             else
-                echo "    $((i+1)). ${options[$i]}"
+                if [[ $i -eq $recommended_index ]]; then
+                    echo -e "    ${BLUE}🎯 $option_text (Recommended)${NC}"
+                else
+                    echo "    $option_text"
+                fi
             fi
         done
 
@@ -566,9 +594,10 @@ get_project_info() {
 
     # Show intelligent suggestion if available
     if [[ -n "$suggested_option" ]] && [[ "$suggested_option" != "8" ]]; then
-        echo -e "${CYAN}🤖 Claude suggests: $suggested_option ($suggested_description)${NC}"
+        echo -e "${GREEN}🎯 Recommended: $suggested_option ($suggested_description)${NC}"
     elif [[ "$custom_type_available" == "true" ]]; then
-        echo -e "${CYAN}🤖 Claude suggests: 9 (Create new: $suggested_description)${NC}"
+        echo -e "${GREEN}🎯 Recommended: 9 (Create new: $suggested_description)${NC}"
+        echo -e "${CYAN}💡 This project type was automatically detected for you${NC}"
         suggested_option="9"
     fi
 
@@ -582,8 +611,13 @@ get_project_info() {
             echo ""
             echo -e "${BLUE}Choose project type:${NC}"
 
-            # Use interactive menu
-            if show_interactive_menu "${menu_options[@]}"; then
+            # Use interactive menu with suggested default
+            local default_index=0
+            if [[ -n "$suggested_option" ]]; then
+                default_index=$((suggested_option - 1)) # Convert 1-based to 0-based
+            fi
+
+            if show_interactive_menu "$default_index" "${menu_options[@]}"; then
                 PROJECT_TYPE_NUM=$((MENU_SELECTION + 1)) # Convert 0-based to 1-based
             else
                 # Fallback if interactive menu fails
