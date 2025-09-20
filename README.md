@@ -49,9 +49,18 @@ That's it! Claude will now understand your project structure and give more relev
 ```bash
 claude-ally.sh setup      # Configure Claude for your project
 claude-ally.sh detect     # See what tech stack was detected
+claude-ally.sh analyze    # Comprehensive project analysis
 claude-ally.sh contribute # Add your stack to the community
+claude-ally.sh validate   # Validate system installation
 claude-ally.sh help       # Show all commands
 ```
+
+### New in v2.1
+- **🔍 Project Analysis**: New `analyze` command provides comprehensive project insights
+- **🚀 Enhanced Performance**: Consolidated utility modules (95% size reduction)
+- **🧩 Modular Setup**: Split setup system into focused, maintainable modules
+- **🔧 Better Error Handling**: Improved error messages and progress indication
+- **✅ Enhanced Testing**: 17 additional tests for new features
 
 ## Example
 

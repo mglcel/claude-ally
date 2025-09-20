@@ -2,6 +2,14 @@
 # Stack Contribution Feature
 # Helps users contribute new stack detection modules to claude-ally
 
+# Get script directory for sourcing utilities
+CONTRIB_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Source utilities if available
+if [[ -f "$CONTRIB_SCRIPT_DIR/utilities.sh" ]]; then
+    source "$CONTRIB_SCRIPT_DIR/utilities.sh"
+fi
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -38,12 +46,13 @@ analyze_unknown_stack_with_claude() {
     local project_dir="$1"
     local project_name="$2"
 
-    # Create cache key based on project path and name
-    local cache_key=$(echo "${project_dir}_${project_name}" | md5sum | cut -d' ' -f1 2>/dev/null || echo "${project_dir}_${project_name}" | shasum -a 256 | cut -d' ' -f1)
+    # Create cache key and file
+    local cache_key
+    cache_key=$(create_cache_key "$project_dir" "$project_name")
     local cache_file="/tmp/claude_analysis_cache_${cache_key}.md"
 
     # Check if we have a recent analysis (less than 1 hour old)
-    if [[ -f "$cache_file" ]] && [[ $(find "$cache_file" -mmin -60 2>/dev/null) ]]; then
+    if is_cache_valid "$cache_file"; then
         echo -e "${GREEN}🔄 Using cached Claude analysis (found recent analysis for this project)${NC}"
         cat "$cache_file"
         return 0
@@ -52,7 +61,8 @@ analyze_unknown_stack_with_claude() {
     echo -e "${CYAN}🤖 Using Claude to analyze unknown stack...${NC}"
 
     # Create analysis prompt for Claude
-    local analysis_file="/tmp/stack_analysis_$(date +%s).md"
+    local analysis_file
+    analysis_file="/tmp/stack_analysis_$(date +%s).md"
 
     cat > "$analysis_file" << EOF
 # New Stack Detection Analysis for Claude-Ally
@@ -216,7 +226,7 @@ propose_contribution() {
     echo ""
 
     local contribute_choice
-    read -p "Contribute to claude-ally? (Y/n): " contribute_choice
+    read -r -p "Contribute to claude-ally? (Y/n): " contribute_choice
 
     if [[ "$contribute_choice" =~ ^[Nn] ]]; then
         echo -e "${BLUE}No problem! Continuing with setup...${NC}"
@@ -244,11 +254,12 @@ propose_contribution() {
     echo -e "${YELLOW}Based on the analysis, would you like to generate the contribution files?${NC}"
 
     local generate_choice
-    read -p "Generate contribution files? (Y/n): " generate_choice
+    read -r -p "Generate contribution files? (Y/n): " generate_choice
 
     if [[ ! "$generate_choice" =~ ^[Nn] ]]; then
         # Generate contribution template
-        local contrib_dir="/tmp/claude-ally-contribution-$(date +%s)"
+        local contrib_dir
+        contrib_dir="/tmp/claude-ally-contribution-$(date +%s)"
         mkdir -p "$contrib_dir"
 
         echo -e "${CYAN}📝 Generating contribution template...${NC}"
@@ -356,7 +367,7 @@ EOF
                     echo ""
 
                     local github_pr_choice
-                    read -p "Create GitHub pull request automatically? (Y/n): " github_pr_choice
+                    read -r -p "Create GitHub pull request automatically? (Y/n): " github_pr_choice
 
                     if [[ ! "$github_pr_choice" =~ ^[Nn] ]]; then
                         echo ""
@@ -406,8 +417,6 @@ EOF
         echo -e "${BLUE}See existing modules in the stacks/ directory for examples${NC}"
         return 1
     fi
-
-    return 1
 }
 
 # Main contribution workflow

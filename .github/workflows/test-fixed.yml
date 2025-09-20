@@ -53,8 +53,7 @@ jobs:
             "claude-ally.sh"
             "lib/setup.sh"
             "lib/stack-detector.sh"
-            "lib/progress-indicator.sh"
-            "lib/error-handler.sh"
+            "lib/utilities.sh"
             "lib/contribute-stack.sh"
             "README.md"
           )
@@ -127,6 +126,7 @@ jobs:
           chmod +x tests/unit/test_github_integration.sh
           chmod +x tests/unit/test_edge_cases.sh
           chmod +x tests/unit/test_claude_md_minimal.sh
+          chmod +x tests/unit/test_analyze_feature.sh
           ./tests/run_all_tests.sh unit
 
       - name: Upload unit test results
@@ -206,6 +206,7 @@ jobs:
           chmod +x tests/unit/test_github_integration.sh
           chmod +x tests/unit/test_edge_cases.sh
           chmod +x tests/unit/test_claude_md_minimal.sh
+          chmod +x tests/unit/test_analyze_feature.sh
           ./tests/run_all_tests.sh unit
 
   # Security and Code Quality

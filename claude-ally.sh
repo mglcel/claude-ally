@@ -29,6 +29,7 @@ load_modules() {
 
     for module in "${modules[@]}"; do
         if [[ -f "$SCRIPT_DIR/$module" ]]; then
+            # shellcheck source=/dev/null
             source "$SCRIPT_DIR/$module" 2>/dev/null || echo "Warning: Failed to load $module"
         fi
     done
@@ -58,15 +59,34 @@ show_help() {
     echo -e "${CYAN}COMMANDS:${NC}"
     echo "  setup [directory]      Configure Claude for your project"
     echo "  detect [directory]     Show detected technology stack"
+    echo "  analyze [directory]    Comprehensive project analysis"
     echo "  contribute [directory] Add your stack to the community"
+    echo "  validate              Validate system installation"
     echo "  version               Show version information"
     echo "  help                  Show this help message"
     echo ""
     echo -e "${CYAN}EXAMPLES:${NC}"
-    echo "  cd /path/to/your/project"
-    echo "  /path/to/claude-ally/claude-ally.sh setup      # Configure current project"
-    echo "  /path/to/claude-ally/claude-ally.sh detect     # Show detected tech stack"
-    echo "  /path/to/claude-ally/claude-ally.sh contribute # Add new stack to community"
+    echo -e "  ${GREEN}# Basic usage (run from project directory)${NC}"
+    echo "  claude-ally.sh setup"
+    echo "  claude-ally.sh detect"
+    echo ""
+    echo -e "  ${GREEN}# Specify project directory${NC}"
+    echo "  claude-ally.sh setup /path/to/project"
+    echo "  claude-ally.sh detect /path/to/project"
+    echo ""
+    echo -e "  ${GREEN}# Community contribution${NC}"
+    echo "  claude-ally.sh contribute                # Current directory"
+    echo "  claude-ally.sh contribute /path/to/novel-stack"
+    echo ""
+    echo -e "  ${GREEN}# System management${NC}"
+    echo "  claude-ally.sh validate                  # Check installation"
+    echo ""
+    echo -e "${CYAN}SUPPORTED STACKS:${NC}"
+    echo "  • Next.js + AI/LLM (TypeScript, OpenAI, Anthropic)"
+    echo "  • Python AI/ML (FastAPI, TensorFlow, PyTorch)"
+    echo "  • Cordova Mobile Apps (with Maps integration)"
+    echo "  • Bash CLI Tools"
+    echo "  • And more... (contribute new stacks!)"
 }
 
 # Validate system setup
@@ -102,7 +122,7 @@ validate_system() {
     # Check optimization modules
     echo ""
     echo "2. Checking optimization modules..."
-    local opt_modules=("lib/error-handler.sh" "lib/config-manager.sh" "lib/cache-manager.sh" "lib/performance-monitor.sh")
+    local opt_modules=("lib/utilities.sh")
     for module in "${opt_modules[@]}"; do
         if [[ -f "$SCRIPT_DIR/$module" ]]; then
             echo -e "  ✅ $module"
@@ -156,14 +176,20 @@ validate_system() {
     # Check configuration
     echo ""
     echo "5. Checking configuration..."
-    if declare -f validate_config > /dev/null; then
-        if validate_config &> /dev/null; then
-            echo -e "  ✅ Configuration valid"
+    if [[ -f "$HOME/.claude-ally/config.json" ]]; then
+        # Source utilities for validation
+        if [[ -f "$SCRIPT_DIR/lib/utilities.sh" ]]; then
+            source "$SCRIPT_DIR/lib/utilities.sh"
+            if validate_basic_config "$HOME/.claude-ally/config.json"; then
+                echo -e "  ✅ Configuration valid"
+            else
+                echo -e "  ⚠️ Configuration issues detected"
+            fi
         else
-            echo -e "  ⚠️ Configuration issues detected"
+            echo -e "  ⚠️ Configuration validation not available"
         fi
     else
-        echo -e "  ⚠️ Configuration validation not available"
+        echo -e "  ⚠️ No configuration file found"
     fi
 
     # Finish multi-step operation if available
@@ -210,17 +236,9 @@ main() {
             if declare -f detect_project_stack > /dev/null; then
                 local project_dir="${1:-$(pwd)}"
 
-                # Start progress indicator if available
-                if declare -f start_progress > /dev/null; then
-                    start_progress "Detecting project stack: $project_dir" "spinner"
-                else
-                    echo -e "${CYAN}🔍 Detecting project stack: $project_dir${NC}"
-                fi
+                echo -e "${CYAN}🔍 Detecting project stack: $project_dir${NC}"
 
                 if result=$(detect_project_stack "$project_dir"); then
-                    if declare -f stop_progress > /dev/null; then
-                        stop_progress
-                    fi
 
                     local stack_id tech_stack project_type confidence
                     IFS='|' read -r stack_id tech_stack project_type confidence <<< "$result"
@@ -247,6 +265,95 @@ main() {
             else
                 echo -e "${RED}❌ Stack detector not available${NC}"
                 exit 1
+            fi
+            ;;
+        "analyze")
+            local project_dir="${1:-$(pwd)}"
+            echo -e "${CYAN}🔍 Comprehensive Project Analysis: $project_dir${NC}"
+            echo ""
+
+            # Source utilities for enhanced output
+            if [[ -f "$SCRIPT_DIR/lib/utilities.sh" ]]; then
+                source "$SCRIPT_DIR/lib/utilities.sh"
+            fi
+
+            # 1. Basic project info
+            echo -e "${BOLD}📋 Project Information${NC}"
+            echo "   Directory: $project_dir"
+
+            # Try to get project name from config files
+            local project_name=""
+            if [[ -f "$project_dir/package.json" ]] && command_exists jq; then
+                project_name=$(jq -r '.name // empty' "$project_dir/package.json" 2>/dev/null)
+            elif [[ -f "$project_dir/package.json" ]]; then
+                project_name=$(grep -o '"name"[[:space:]]*:[[:space:]]*"[^"]*"' "$project_dir/package.json" 2>/dev/null | cut -d'"' -f4)
+            elif [[ -f "$project_dir/Cargo.toml" ]]; then
+                project_name=$(grep -E '^name[[:space:]]*=' "$project_dir/Cargo.toml" 2>/dev/null | cut -d'=' -f2 | tr -d '"' | xargs)
+            fi
+
+            if [[ -n "$project_name" ]]; then
+                echo "   Name: $project_name (from config)"
+            else
+                echo "   Name: $(basename "$project_dir") (directory name)"
+            fi
+            if [[ -d "$project_dir/.git" ]]; then
+                local git_remote
+                git_remote=$(cd "$project_dir" && git remote get-url origin 2>/dev/null || echo "No remote")
+                echo "   Git: $git_remote"
+            fi
+            echo ""
+
+            # 2. Stack detection
+            echo -e "${BOLD}🔧 Technology Stack${NC}"
+            if declare -f detect_project_stack > /dev/null; then
+                if result=$(detect_project_stack "$project_dir"); then
+                    local stack_id tech_stack project_type confidence
+                    IFS='|' read -r stack_id tech_stack project_type confidence <<< "$result"
+                    echo "   Stack: $tech_stack"
+                    echo "   Type: $project_type"
+                    echo "   Confidence: $confidence%"
+                else
+                    echo "   Stack: Unknown (consider contributing!)"
+                fi
+            else
+                echo "   Stack detector not available"
+            fi
+            echo ""
+
+            # 3. File analysis
+            echo -e "${BOLD}📁 Project Structure${NC}"
+            local file_count
+            local dir_count
+            file_count=$(find "$project_dir" -type f 2>/dev/null | wc -l | tr -d ' ')
+            dir_count=$(find "$project_dir" -type d 2>/dev/null | wc -l | tr -d ' ')
+            echo "   Files: $file_count"
+            echo "   Directories: $dir_count"
+            if command_exists du; then
+                local size
+                size=$(du -sh "$project_dir" 2>/dev/null | cut -f1)
+                echo "   Size: $size"
+            fi
+            echo ""
+
+            # 4. Configuration files
+            echo -e "${BOLD}⚙️  Configuration Files${NC}"
+            local config_files=("package.json" "requirements.txt" "Cargo.toml" "go.mod" "pom.xml" "build.gradle" "Makefile" "Dockerfile" ".gitignore")
+            for config in "${config_files[@]}"; do
+                if [[ -f "$project_dir/$config" ]]; then
+                    echo "   ✅ $config"
+                fi
+            done
+            echo ""
+
+            # 5. Claude setup status
+            echo -e "${BOLD}🤖 Claude Integration${NC}"
+            if [[ -f "$project_dir/CLAUDE.md" ]]; then
+                local claude_size
+                claude_size=$(wc -l < "$project_dir/CLAUDE.md" 2>/dev/null || echo 0)
+                echo "   ✅ CLAUDE.md exists ($claude_size lines)"
+            else
+                echo "   ❌ CLAUDE.md not found"
+                echo "   💡 Run 'claude-ally setup' to create it"
             fi
             ;;
         "contribute")

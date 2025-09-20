@@ -245,6 +245,11 @@ run_unit_tests() {
         "Unit - CLAUDE.md Handling" \
         "$SCRIPT_DIR/unit/test_claude_md_minimal.sh" \
         "CLAUDE.md file management, merging, and backup functionality"
+
+    run_test_suite \
+        "Unit - Analyze Feature" \
+        "$SCRIPT_DIR/unit/test_analyze_feature.sh" \
+        "Comprehensive project analysis functionality"
 }
 
 run_integration_tests() {
@@ -392,9 +397,11 @@ main() {
 # Cleanup function
 cleanup() {
     # Clean up any temporary files or processes
-    if [[ -d "/tmp/claude-ally-test-"* ]]; then
-        rm -rf /tmp/claude-ally-test-* 2>/dev/null || true
-    fi
+    for dir in /tmp/claude-ally-test-*; do
+        if [[ -d "$dir" ]]; then
+            rm -rf "$dir" 2>/dev/null || true
+        fi
+    done
     if [[ -n "$TEST_TEMP_DIR" && -d "$TEST_TEMP_DIR" ]]; then
         rm -rf "$TEST_TEMP_DIR" 2>/dev/null || true
     fi

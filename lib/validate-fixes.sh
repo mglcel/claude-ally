@@ -11,11 +11,10 @@ echo ""
 # Test the exact required files check from our workflow
 required_files=(
   "claude-ally.sh"
-  "setup.sh"
+  "lib/setup.sh"
   "lib/stack-detector.sh"
-  "lib/progress-indicator.sh"
-  "lib/error-handler.sh"
-  "contribute-stack.sh"
+  "lib/utilities.sh"
+  "lib/contribute-stack.sh"
   "README.md"
 )
 

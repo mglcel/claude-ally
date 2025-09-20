@@ -75,19 +75,19 @@ detect_bash_cli() {
     local tech_stack="Bash/Shell CLI Tool"
 
     # Add specific features
-    if [[ " ${features[@]} " =~ " Modular architecture " ]]; then
+    if [[ " ${features[*]} " =~ " Modular architecture " ]]; then
         tech_stack="$tech_stack, Modular"
     fi
 
-    if [[ " ${features[@]} " =~ " Test suite " ]]; then
+    if [[ " ${features[*]} " =~ " Test suite " ]]; then
         tech_stack="$tech_stack, Tested"
     fi
 
-    if [[ " ${features[@]} " =~ " CI/CD Pipeline " ]]; then
+    if [[ " ${features[*]} " =~ " CI/CD Pipeline " ]]; then
         tech_stack="$tech_stack, CI/CD"
     fi
 
-    if [[ " ${features[@]} " =~ " Configuration management " ]]; then
+    if [[ " ${features[*]} " =~ " Configuration management " ]]; then
         tech_stack="$tech_stack, Configurable"
     fi
 
