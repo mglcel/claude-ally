@@ -679,14 +679,24 @@ get_security_info() {
 
     # Critical assets
     show_critical_assets_options
-    if [[ "${NON_INTERACTIVE:-false}" == "true" ]]; then
-        CRITICAL_ASSETS="user data, configuration files"
-        echo "Critical assets [user data]: user data, configuration files (non-interactive mode)"
+
+    local claude_suggestion=""
+    if [[ -f "$CLAUDE_SUGGESTIONS_FILE" ]]; then
+        claude_suggestion=$(grep "CRITICAL_ASSETS_SUGGESTION:" "$CLAUDE_SUGGESTIONS_FILE" 2>/dev/null | cut -d: -f2- | xargs || echo "")
+    fi
+
+    if [[ -n "$claude_suggestion" ]]; then
+        CRITICAL_ASSETS=$(read_with_suggestion "Critical assets (comma-separated or describe): " "$claude_suggestion")
     else
-        read -r -p "Critical assets (comma-separated or describe): " CRITICAL_ASSETS || {
-            echo -e "\n\033[1;33m⚠️  Input interrupted by user.\033[0m"
-            exit 130
-        }
+        if [[ "${NON_INTERACTIVE:-false}" == "true" ]]; then
+            CRITICAL_ASSETS="user data, configuration files"
+            echo "Critical assets [user data]: user data, configuration files (non-interactive mode)"
+        else
+            read -r -p "Critical assets (comma-separated or describe): " CRITICAL_ASSETS || {
+                echo -e "\n\033[1;33m⚠️  Input interrupted by user.\033[0m"
+                exit 130
+            }
+        fi
     fi
     CRITICAL_ASSETS=${CRITICAL_ASSETS:-"user data"}
 
@@ -734,14 +744,24 @@ get_technical_info() {
 
     # Common issues
     show_common_issues_options
-    if [[ "${NON_INTERACTIVE:-false}" == "true" ]]; then
-        COMMON_ISSUES="authentication, input validation, error handling"
-        echo "Common issues [authentication]: authentication, input validation, error handling (non-interactive mode)"
+
+    local claude_suggestion=""
+    if [[ -f "$CLAUDE_SUGGESTIONS_FILE" ]]; then
+        claude_suggestion=$(grep "COMMON_ISSUES_SUGGESTION:" "$CLAUDE_SUGGESTIONS_FILE" 2>/dev/null | cut -d: -f2- | xargs || echo "")
+    fi
+
+    if [[ -n "$claude_suggestion" ]]; then
+        COMMON_ISSUES=$(read_with_suggestion "Common issues (comma-separated): " "$claude_suggestion")
     else
-        read -r -p "Common issues (comma-separated): " COMMON_ISSUES || {
-            echo -e "\n\033[1;33m⚠️  Input interrupted by user.\033[0m"
-            exit 130
-        }
+        if [[ "${NON_INTERACTIVE:-false}" == "true" ]]; then
+            COMMON_ISSUES="authentication, input validation, error handling"
+            echo "Common issues [authentication]: authentication, input validation, error handling (non-interactive mode)"
+        else
+            read -r -p "Common issues (comma-separated): " COMMON_ISSUES || {
+                echo -e "\n\033[1;33m⚠️  Input interrupted by user.\033[0m"
+                exit 130
+            }
+        fi
     fi
     COMMON_ISSUES=${COMMON_ISSUES:-"authentication, input validation"}
 }

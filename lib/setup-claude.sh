@@ -80,49 +80,77 @@ attempt_automatic_claude_analysis() {
     local confidence="MEDIUM"
 
     # Create a temporary file for Claude suggestions
-    CLAUDE_SUGGESTIONS_FILE=$(mktemp "/tmp/claude_suggestions_XXXXXX.txt")
+    CLAUDE_SUGGESTIONS_FILE="/tmp/claude_suggestions_$(date +%s)_$$.txt"
+    export CLAUDE_SUGGESTIONS_FILE
 
-    # Check if we have a basic repository structure to analyze
-    if [[ -f "$PROJECT_DIR/package.json" ]]; then
-        echo "📦 Found package.json - analyzing Node.js project..."
-        confidence="HIGH"
-        analysis_result="Node.js project detected"
-    elif [[ -f "$PROJECT_DIR/requirements.txt" ]] || [[ -f "$PROJECT_DIR/pyproject.toml" ]]; then
-        echo "🐍 Found Python project files..."
-        confidence="HIGH"
-        analysis_result="Python project detected"
-    elif [[ -f "$PROJECT_DIR/go.mod" ]]; then
-        echo "🐹 Found go.mod - analyzing Go project..."
-        confidence="HIGH"
-        analysis_result="Go project detected"
-    elif [[ -f "$PROJECT_DIR/Cargo.toml" ]]; then
-        echo "🦀 Found Cargo.toml - analyzing Rust project..."
-        confidence="HIGH"
-        analysis_result="Rust project detected"
-    elif [[ -f "$PROJECT_DIR/pom.xml" ]] || [[ -f "$PROJECT_DIR/build.gradle" ]]; then
-        echo "☕ Found Java project files..."
-        confidence="HIGH"
-        analysis_result="Java project detected"
-    else
-        echo "📁 Analyzing general project structure..."
-        confidence="MEDIUM"
-        analysis_result="General project detected"
+    # Use the existing stack detection system first
+    local detected_stack_info=""
+    if declare -f detect_project_stack > /dev/null; then
+        detected_stack_info=$(detect_project_stack "$PROJECT_DIR" 2>/dev/null || echo "")
     fi
 
-    # For now, we'll create a basic analysis template
-    # In a real Claude integration, this would involve actual Claude analysis
+    local suggested_project_type="web-app"
+    local suggested_tech_stack="Unknown"
+    local suggested_critical_assets="user data, configuration files"
+    local suggested_requirements="security validation, error handling"
+    local suggested_issues="configuration errors, dependency issues"
+
+    # Generate suggestions based on detected stack or basic analysis
+    if [[ -n "$detected_stack_info" ]]; then
+        # Parse the detected stack information
+        IFS='|' read -r stack_id tech_stack project_type confidence <<< "$detected_stack_info"
+
+        echo "🔍 Using detected stack: $tech_stack"
+        analysis_result="$tech_stack detected via stack detection"
+        suggested_tech_stack="$tech_stack"
+        confidence="HIGH"
+
+        # Map to appropriate project type suggestions based on detected stack
+        case "$stack_id" in
+            "nextjs-ai")
+                suggested_project_type="web-app"
+                suggested_critical_assets="user sessions, API keys, AI model data"
+                suggested_requirements="input validation, rate limiting, API security"
+                suggested_issues="async errors, AI model hallucinations, API limits"
+                ;;
+            "python-ai")
+                suggested_project_type="ai-ml-service"
+                suggested_critical_assets="training data, model weights, API keys"
+                suggested_requirements="data validation, model security, resource limits"
+                suggested_issues="dependency conflicts, model performance, data quality"
+                ;;
+            "cordova-hybrid")
+                suggested_project_type="mobile-app"
+                suggested_critical_assets="user data, device permissions, app store keys"
+                suggested_requirements="platform compatibility, secure storage"
+                suggested_issues="platform differences, performance issues"
+                ;;
+            *)
+                suggested_project_type="web-app"
+                suggested_critical_assets="user data, configuration files"
+                suggested_requirements="security validation, error handling"
+                suggested_issues="configuration errors, dependency issues"
+                ;;
+        esac
+    else
+        echo "📁 No specific stack detected - using general analysis"
+        confidence="MEDIUM"
+        analysis_result="General project structure analysis"
+    fi
+
+    # Create intelligent suggestions based on project analysis
     cat > "$CLAUDE_SUGGESTIONS_FILE" << EOF
 # Claude Analysis Results
 CONFIDENCE: $confidence
 ANALYSIS: $analysis_result
 
-# Suggested defaults based on project analysis
+# Tailored suggestions based on detected project type
 PROJECT_NAME_SUGGESTION: $(basename "$PROJECT_DIR")
-PROJECT_TYPE_SUGGESTION: web-app
-TECH_STACK_SUGGESTION: $analysis_result
-CRITICAL_ASSETS_SUGGESTION: user data, configuration files
-MANDATORY_REQUIREMENTS_SUGGESTION: security validation, error handling
-COMMON_ISSUES_SUGGESTION: configuration errors, dependency issues
+PROJECT_TYPE_SUGGESTION: $suggested_project_type
+TECH_STACK_SUGGESTION: $suggested_tech_stack
+CRITICAL_ASSETS_SUGGESTION: $suggested_critical_assets
+MANDATORY_REQUIREMENTS_SUGGESTION: $suggested_requirements
+COMMON_ISSUES_SUGGESTION: $suggested_issues
 EOF
 
     if [[ -f "$CLAUDE_SUGGESTIONS_FILE" ]]; then
