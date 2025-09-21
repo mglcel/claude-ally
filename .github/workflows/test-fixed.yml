@@ -208,11 +208,19 @@ jobs:
           chmod +x tests/unit/test_edge_cases.sh
           chmod +x tests/unit/test_claude_md_minimal.sh
           chmod +x tests/unit/test_analyze_feature.sh
-          timeout 300 ./tests/run_all_tests.sh unit || {
-            echo "❌ Unit tests timed out or failed on ${{ matrix.os }}"
-            echo "This may indicate a platform-specific issue that needs investigation"
-            exit 1
-          }
+
+          # Use cross-platform timeout approach
+          if command -v timeout >/dev/null 2>&1; then
+            # Linux/Ubuntu - use timeout command
+            timeout 300 ./tests/run_all_tests.sh unit
+          elif command -v gtimeout >/dev/null 2>&1; then
+            # macOS with GNU coreutils - use gtimeout
+            gtimeout 300 ./tests/run_all_tests.sh unit
+          else
+            # macOS default - rely on job-level timeout-minutes
+            echo "⚠️ Using job-level timeout (no timeout command available)"
+            ./tests/run_all_tests.sh unit
+          fi
 
   # Security and Code Quality
   security:
