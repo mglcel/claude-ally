@@ -252,27 +252,27 @@ perform_claude_project_analysis() {
                     package_content=$(grep -E '"(react|vue|angular|next|gatsby|nuxt)"' "$project_dir/package.json" 2>/dev/null || echo "")
                 fi
 
-                # Claude-like intelligent inference from package.json content
+                # Claude-like intelligent inference from package.json content - map to available options
                 if [[ "$package_content" == *"react"* ]] && [[ "$package_content" == *"next"* ]]; then
                     suggested_stack="Next.js + React"
                 elif [[ "$package_content" == *"react"* ]]; then
-                    suggested_stack="React + Node.js"
+                    suggested_stack="React + Node.js + PostgreSQL"
                 elif [[ "$package_content" == *"vue"* ]] && [[ "$package_content" == *"nuxt"* ]]; then
-                    suggested_stack="Nuxt.js + Vue"
+                    suggested_stack="Vue.js + Express + MongoDB"
                 elif [[ "$package_content" == *"vue"* ]]; then
-                    suggested_stack="Vue.js + Node.js"
+                    suggested_stack="Vue.js + Express + MongoDB"
                 elif [[ "$package_content" == *"angular"* ]]; then
                     suggested_stack="Angular + TypeScript"
                 elif [[ "$package_content" == *"gatsby"* ]]; then
-                    suggested_stack="Gatsby + React"
+                    suggested_stack="React + Node.js + PostgreSQL"
                 elif [[ "$framework_indicators" == *"next.config.js"* ]]; then
                     suggested_stack="Next.js + React"
                 elif [[ "$framework_indicators" == *"vue.config.js"* ]]; then
-                    suggested_stack="Vue.js"
+                    suggested_stack="Vue.js + Express + MongoDB"
                 elif [[ "$framework_indicators" == *"angular.json"* ]]; then
-                    suggested_stack="Angular"
+                    suggested_stack="Angular + TypeScript"
                 elif [[ "$directory_structure" == *"components/"* ]] && [[ "$directory_structure" == *"pages/"* ]]; then
-                    suggested_stack="React/Vue.js + Node.js"
+                    suggested_stack="React + Node.js + PostgreSQL"
                 else
                     suggested_stack="Node.js/JavaScript"
                 fi
@@ -282,11 +282,11 @@ perform_claude_project_analysis() {
         elif [[ "$config_files" == *"requirements.txt"* ]] || [[ "$config_files" == *"setup.py"* ]] || [[ "$config_files" == *"pyproject.toml"* ]]; then
             suggested_stack="Python"
         elif [[ "$config_files" == *"Gemfile"* ]]; then
-            suggested_stack="Ruby on Rails"
+            suggested_stack="Ruby on Rails + PostgreSQL"
         elif [[ "$config_files" == *"composer.json"* ]]; then
-            suggested_stack="PHP"
+            suggested_stack="PHP Laravel + MySQL"
         elif [[ "$config_files" == *"build.gradle.kts"* ]] || [[ "$config_files" == *"settings.gradle.kts"* ]]; then
-            # Analyze Kotlin Multiplatform project structure
+            # Analyze Kotlin Multiplatform project structure - this is unknown tech stack
             if [[ -d "$project_dir/composeApp" ]] && [[ -d "$project_dir/iosApp" ]]; then
                 suggested_stack="Kotlin Multiplatform Mobile + Compose"
             elif [[ -d "$project_dir/shared" ]] && { [[ -d "$project_dir/androidApp" ]] || [[ -d "$project_dir/iosApp" ]]; }; then
@@ -297,13 +297,13 @@ perform_claude_project_analysis() {
                 suggested_stack="Kotlin + Gradle"
             fi
         elif [[ "$config_files" == *"pom.xml"* ]] || [[ "$config_files" == *"build.gradle"* ]]; then
-            suggested_stack="Java"
+            suggested_stack="Java Spring Boot + MySQL"
         elif [[ "$config_files" == *"Cargo.toml"* ]]; then
             suggested_stack="Rust"
         elif [[ "$config_files" == *"go.mod"* ]]; then
-            suggested_stack="Go"
+            suggested_stack="Go + PostgreSQL"
         elif [[ "$config_files" == *"pubspec.yaml"* ]]; then
-            suggested_stack="Flutter/Dart"
+            suggested_stack="Flutter + Firebase"
         fi
     fi
 

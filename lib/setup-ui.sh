@@ -737,6 +737,53 @@ show_interactive_menu() {
     local recommended_index=-1  # No specific recommendation for generic menus
     local num_options=${#options[@]}
 
+    # Check if Claude suggestion matches any existing option
+    if [[ -n "$claude_suggestion" ]]; then
+        for i in "${!options[@]}"; do
+            if [[ "${options[$i]}" == "$claude_suggestion" ]]; then
+                recommended_index=$i
+                selected=$i
+                break
+            fi
+        done
+
+        # If Claude suggestion doesn't match any option, add it as a new option
+        if [[ $recommended_index -eq -1 ]]; then
+            # Find "Custom/Other" option and insert Claude suggestion before it
+            local custom_index=-1
+            for i in "${!options[@]}"; do
+                if [[ "${options[$i]}" == "Custom/Other" ]]; then
+                    custom_index=$i
+                    break
+                fi
+            done
+
+            if [[ $custom_index -ne -1 ]]; then
+                # Insert Claude suggestion before "Custom/Other"
+                local new_options=()
+                for i in "${!options[@]}"; do
+                    if [[ $i -eq $custom_index ]]; then
+                        # Add Claude suggestion before Custom/Other
+                        new_options+=("$claude_suggestion")
+                        new_options+=("${options[$i]}")
+                    else
+                        new_options+=("${options[$i]}")
+                    fi
+                done
+                options=("${new_options[@]}")
+                recommended_index=$custom_index  # Claude suggestion is now at the Custom/Other position
+                selected=$custom_index
+                num_options=${#options[@]}
+            else
+                # No Custom/Other found, just add at the end
+                options+=("$claude_suggestion")
+                recommended_index=$((${#options[@]} - 1))
+                selected=$recommended_index
+                num_options=${#options[@]}
+            fi
+        fi
+    fi
+
     # Ensure selected is within bounds
     if [[ $selected -ge $num_options ]]; then
         selected=$((num_options - 1))
