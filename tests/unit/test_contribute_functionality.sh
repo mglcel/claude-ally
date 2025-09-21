@@ -4,9 +4,10 @@
 # Use less strict error handling in CI environments to prevent immediate failures
 if [[ "${GITHUB_ACTIONS:-}" == "true" ]] && [[ "${RUNNER_OS:-}" == "macOS" ]]; then
     set -eo pipefail
-    echo "⚠️ Using relaxed error handling for macOS CI environment"
+    echo "⚠️ Using relaxed error handling for macOS CI environment (GITHUB_ACTIONS=${GITHUB_ACTIONS:-unset}, RUNNER_OS=${RUNNER_OS:-unset})"
 else
     set -euo pipefail
+    echo "🔍 Using strict error handling for local development"
 fi
 
 # Test framework
