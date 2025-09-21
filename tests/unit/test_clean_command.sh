@@ -83,6 +83,13 @@ create_mock_cache_files() {
     local project_dir="$1"
     local project_name="$2"
 
+    # Generate the same cache key that the system would generate
+    local cache_key
+    cache_key=$(echo "${project_dir}_${project_name}" | md5sum 2>/dev/null | cut -d' ' -f1)
+
+    # Create actual claude_analysis_cache file with real cache key
+    echo "Project analysis for $project_name at $project_dir" > "/tmp/claude_analysis_cache_${cache_key}.md"
+
     # Create analysis file that contains project information
     echo "Project analysis for $project_name at $project_dir" > "/tmp/claude_stack_analysis_test_${project_name}.md"
 
@@ -92,6 +99,9 @@ create_mock_cache_files() {
     # Create a generic cache file that shouldn't be cleaned
     echo "Generic cache not related to any project" > "/tmp/claude_stack_analysis_generic.md"
     echo "Generic suggestions not related to any project" > "/tmp/claude_suggestions_generic.txt"
+
+    # Return the cache key for verification
+    echo "$cache_key"
 }
 
 # Test: Clean command shows project information
@@ -117,10 +127,16 @@ test_clean_command_project_specific() {
     project_dir=$(create_test_project "test-project-specific")
     local project_name="test-project-specific"
 
-    # Create mock cache files
-    create_mock_cache_files "$project_dir" "$project_name"
+    # Create mock cache files and capture cache key
+    local cache_key
+    cache_key=$(create_mock_cache_files "$project_dir" "$project_name")
 
     # Verify files exist before cleaning
+    if [[ ! -f "/tmp/claude_analysis_cache_${cache_key}.md" ]]; then
+        assert_failure "Mock files created" "Real analysis cache file not created"
+        return
+    fi
+
     if [[ ! -f "/tmp/claude_stack_analysis_test_${project_name}.md" ]]; then
         assert_failure "Mock files created" "Project-specific analysis file not created"
         return
@@ -141,6 +157,12 @@ test_clean_command_project_specific() {
     result=$(cd "$project_dir" && "$ROOT_DIR/claude-ally.sh" clean 2>&1)
 
     # Check that project-specific files were removed
+    if [[ -f "/tmp/claude_analysis_cache_${cache_key}.md" ]]; then
+        assert_failure "Real analysis cache file removed" "File still exists"
+    else
+        assert_success "Real analysis cache file removed"
+    fi
+
     if [[ -f "/tmp/claude_stack_analysis_test_${project_name}.md" ]]; then
         assert_failure "Project-specific analysis file removed" "File still exists"
     else
@@ -168,6 +190,48 @@ test_clean_command_project_specific() {
 
     # Check output indicates files were found and removed
     assert_contains "Project-related" "$result" "Output indicates project-specific cleaning"
+}
+
+# Test: Real claude_analysis_cache file removal (exact reproduce of www-sender issue)
+test_real_claude_analysis_cache_removal() {
+    echo "Testing: Real claude_analysis_cache file removal"
+
+    local project_dir
+    project_dir=$(create_test_project "real-cache-test")
+    local project_name="real-cache-test"
+
+    # Generate the exact cache key that would be used
+    local cache_key
+    cache_key=$(echo "${project_dir}_${project_name}" | md5sum 2>/dev/null | cut -d' ' -f1)
+
+    # Create the exact file that contribute system creates
+    echo "**STACK_ID**: test-stack
+**TECH_STACK**: Test Stack
+**PROJECT_TYPE**: test-app
+**WORTH_ADDING**: NO - Test stack" > "/tmp/claude_analysis_cache_${cache_key}.md"
+
+    # Verify file exists before cleaning
+    if [[ ! -f "/tmp/claude_analysis_cache_${cache_key}.md" ]]; then
+        assert_failure "Real cache file created" "Cache file not created"
+        return
+    fi
+
+    # Run clean command
+    local result
+    result=$(cd "$project_dir" && "$ROOT_DIR/claude-ally.sh" clean 2>&1)
+
+    # Verify the real cache file was removed
+    if [[ -f "/tmp/claude_analysis_cache_${cache_key}.md" ]]; then
+        assert_failure "Real cache file removed" "Cache file still exists after clean"
+        echo "   Debug: Cache key was $cache_key"
+        echo "   Debug: File path was /tmp/claude_analysis_cache_${cache_key}.md"
+        echo "   Debug: Clean output was: $result"
+    else
+        assert_success "Real cache file removed"
+    fi
+
+    # Verify clean command reported finding and removing the file
+    assert_contains "Project-specific Claude analysis cache" "$result" "Clean output mentions analysis cache"
 }
 
 # Test: Clean command with custom directory parameter
@@ -247,6 +311,9 @@ main() {
     echo ""
 
     test_clean_command_project_specific
+    echo ""
+
+    test_real_claude_analysis_cache_removal
     echo ""
 
     test_clean_command_custom_directory

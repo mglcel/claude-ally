@@ -224,6 +224,26 @@ propose_contribution() {
     local claude_ally_dir="$3"
     local claude_result="$4"  # Optional: existing Claude analysis result
 
+    # Check Claude's WORTH_ADDING recommendation first (if we have analysis)
+    if [[ -n "$claude_result" ]]; then
+        local worth_adding
+        worth_adding=$(echo "$claude_result" | grep -i "WORTH_ADDING" | sed 's/.*WORTH_ADDING[^:]*:[[:space:]]*\(.*\)$/\1/' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | head -1)
+        worth_adding=$(echo "$worth_adding" | tr '[:lower:]' '[:upper:]' | sed 's/^["\*]*//;s/["\*]*$//')
+
+        if [[ "$worth_adding" =~ ^NO ]]; then
+            echo ""
+            echo -e "${YELLOW}ℹ️ Claude analysis suggests this project may not be suitable for contribution${NC}"
+            echo -e "${CYAN}Reason: Stack appears too minimal or generic for automated detection${NC}"
+            echo ""
+            echo -e "${BLUE}If you believe this assessment is incorrect, you can still contribute manually:${NC}"
+            echo -e "1. Review the analysis in the contribution template"
+            echo -e "2. Customize the detection logic for your specific use case"
+            echo -e "3. Fork claude-ally on GitHub: https://github.com/mglcel/claude-ally/fork"
+            echo -e "4. Submit a pull request with justification for why this stack should be supported"
+            return 0
+        fi
+    fi
+
     echo ""
     echo -e "${PURPLE}🚀 STACK CONTRIBUTION OPPORTUNITY DETECTED${NC}"
     echo -e "${BOLD}================================================${NC}"
@@ -326,24 +346,6 @@ Feel free to open an issue on GitHub if you need help with your contribution!
 EOF
 
         echo -e "${GREEN}✅ Contribution template created at: $contrib_dir${NC}"
-
-        # Check if Claude recommends adding this stack
-        local worth_adding
-        worth_adding=$(echo "$analysis_result" | grep -i "WORTH_ADDING" | sed 's/.*WORTH_ADDING[^:]*:[[:space:]]*\(.*\)$/\1/' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | head -1)
-        worth_adding=$(echo "$worth_adding" | tr '[:lower:]' '[:upper:]' | sed 's/^["\*]*//;s/["\*]*$//')
-
-        if [[ "$worth_adding" =~ ^NO ]]; then
-            echo ""
-            echo -e "${YELLOW}ℹ️ Claude analysis suggests this project may not be suitable for contribution${NC}"
-            echo -e "${CYAN}Reason: Stack appears too minimal or generic for automated detection${NC}"
-            echo ""
-            echo -e "${BLUE}If you believe this assessment is incorrect, you can still contribute manually:${NC}"
-            echo -e "1. Review the analysis in the contribution template"
-            echo -e "2. Customize the detection logic for your specific use case"
-            echo -e "3. Fork claude-ally on GitHub: https://github.com/mglcel/claude-ally/fork"
-            echo -e "4. Submit a pull request with justification for why this stack should be supported"
-            return 0
-        fi
 
         # Extract contribution details for GitHub PR
         local stack_info
