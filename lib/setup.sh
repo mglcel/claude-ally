@@ -116,7 +116,17 @@ main() {
     fi
 
     if [[ "$CONTRIBUTE_ACCEPTED" == "true" ]]; then
-        echo "4. 🤝 Run 'claude-ally contribute' to share this stack with the community"
+        echo "4. 🤝 Automatically running contribution workflow..."
+        echo ""
+
+        # Run the contribute command automatically
+        local contrib_script="$SCRIPT_DIR/contribute-stack.sh"
+        if [[ -f "$contrib_script" ]]; then
+            echo -e "${CYAN}🚀 Starting contribution process...${NC}"
+            bash "$contrib_script" "$PROJECT_DIR" "$(basename "$PROJECT_DIR")" "$SCRIPT_DIR/.."
+        else
+            echo -e "${YELLOW}⚠️ Contribution script not found. Please run 'claude-ally contribute' manually.${NC}"
+        fi
     fi
 
     echo ""

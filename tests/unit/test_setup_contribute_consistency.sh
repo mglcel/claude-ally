@@ -267,6 +267,51 @@ test_claude_analysis_caching() {
     fi
 }
 
+# Test: Setup automatically runs contribute when user answers yes
+test_automated_contribute_after_setup() {
+    echo "Testing: Setup automatically runs contribute when user answers yes"
+
+    # Test the setup.sh logic directly with CONTRIBUTE_ACCEPTED=true
+    local setup_script="$ROOT_DIR/lib/setup.sh"
+    local contrib_script="$ROOT_DIR/lib/contribute-stack.sh"
+
+    # Verify the contribute script exists
+    if [[ -f "$contrib_script" ]]; then
+        assert_success "Contribute script exists for automation"
+    else
+        assert_failure "Contribute script exists for automation" "Script not found at $contrib_script"
+        return
+    fi
+
+    # Test the automation logic by checking the setup.sh file content
+    local automation_logic
+    automation_logic=$(grep -A5 'CONTRIBUTE_ACCEPTED.*true' "$setup_script" 2>/dev/null || echo "")
+
+    if [[ "$automation_logic" == *"Automatically running contribution workflow"* ]]; then
+        assert_success "Setup contains automated contribute logic"
+    else
+        assert_failure "Setup contains automated contribute logic" "Automation logic not found in setup.sh"
+    fi
+
+    # Verify the contribute script execution path
+    if [[ "$automation_logic" == *"contribute-stack.sh"* ]]; then
+        assert_success "Setup references correct contribute script path"
+    else
+        assert_failure "Setup references correct contribute script path" "Incorrect path reference"
+    fi
+
+    # Test the setup-config.sh contribution prompt
+    local config_script="$ROOT_DIR/lib/setup-config.sh"
+    local prompt_logic
+    prompt_logic=$(grep -A3 'CONTRIBUTE_CHOICE.*Yy' "$config_script" 2>/dev/null || echo "")
+
+    if [[ "$prompt_logic" == *"automatically after setup completes"* ]]; then
+        assert_success "Setup-config explains automatic contribution"
+    else
+        assert_failure "Setup-config explains automatic contribution" "Doesn't mention automatic execution"
+    fi
+}
+
 # Main test execution
 main() {
     setup
@@ -288,6 +333,9 @@ main() {
     echo ""
 
     test_claude_analysis_caching
+    echo ""
+
+    test_automated_contribute_after_setup
     echo ""
 
     # Test summary
