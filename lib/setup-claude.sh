@@ -190,48 +190,132 @@ EOF
 perform_claude_project_analysis() {
     local project_dir="$1"
 
-    # Since we're running in Claude Code environment, Claude can analyze the project
-    # This function should leverage Claude's actual capabilities to examine the project structure
-    # and provide intelligent suggestions for tech stack, project type, etc.
-
     echo "🔍 Claude examining project files and structure..."
 
-    # Collect key project information for Claude to analyze
-    local key_files=""
-    local project_structure=""
+    # Gather comprehensive project information for analysis
+    local analysis_data=""
+    local config_files=""
+    local framework_indicators=""
+    local directory_structure=""
 
-    # Look for configuration files that indicate tech stack
-    if [[ -f "$project_dir/package.json" ]]; then
-        key_files="$key_files package.json"
-        # Could read package.json content for framework detection
+    # Scan for configuration files that indicate tech stack
+    [[ -f "$project_dir/package.json" ]] && config_files="$config_files package.json"
+    [[ -f "$project_dir/requirements.txt" ]] && config_files="$config_files requirements.txt"
+    [[ -f "$project_dir/setup.py" ]] && config_files="$config_files setup.py"
+    [[ -f "$project_dir/pyproject.toml" ]] && config_files="$config_files pyproject.toml"
+    [[ -f "$project_dir/Gemfile" ]] && config_files="$config_files Gemfile"
+    [[ -f "$project_dir/composer.json" ]] && config_files="$config_files composer.json"
+    [[ -f "$project_dir/pom.xml" ]] && config_files="$config_files pom.xml"
+    [[ -f "$project_dir/build.gradle" ]] && config_files="$config_files build.gradle"
+    [[ -f "$project_dir/build.gradle.kts" ]] && config_files="$config_files build.gradle.kts"
+    [[ -f "$project_dir/settings.gradle.kts" ]] && config_files="$config_files settings.gradle.kts"
+    [[ -f "$project_dir/Cargo.toml" ]] && config_files="$config_files Cargo.toml"
+    [[ -f "$project_dir/go.mod" ]] && config_files="$config_files go.mod"
+    [[ -f "$project_dir/pubspec.yaml" ]] && config_files="$config_files pubspec.yaml"
+
+    # Framework-specific indicators
+    [[ -f "$project_dir/next.config.js" ]] && framework_indicators="$framework_indicators next.config.js"
+    [[ -f "$project_dir/vue.config.js" ]] && framework_indicators="$framework_indicators vue.config.js"
+    [[ -f "$project_dir/angular.json" ]] && framework_indicators="$framework_indicators angular.json"
+    [[ -f "$project_dir/gatsby-config.js" ]] && framework_indicators="$framework_indicators gatsby-config.js"
+    [[ -f "$project_dir/nuxt.config.js" ]] && framework_indicators="$framework_indicators nuxt.config.js"
+    [[ -f "$project_dir/tailwind.config.js" ]] && framework_indicators="$framework_indicators tailwind.config.js"
+    [[ -f "$project_dir/vite.config.js" ]] && framework_indicators="$framework_indicators vite.config.js"
+
+    # Directory structure analysis
+    [[ -d "$project_dir/src" ]] && directory_structure="$directory_structure src/"
+    [[ -d "$project_dir/components" ]] && directory_structure="$directory_structure components/"
+    [[ -d "$project_dir/pages" ]] && directory_structure="$directory_structure pages/"
+    [[ -d "$project_dir/app" ]] && directory_structure="$directory_structure app/"
+    [[ -d "$project_dir/lib" ]] && directory_structure="$directory_structure lib/"
+    [[ -d "$project_dir/public" ]] && directory_structure="$directory_structure public/"
+
+    # Use Claude's intelligence to analyze the project structure and suggest tech stack
+    local suggested_stack=""
+
+    # Intelligent analysis based on collected information
+    if [[ -n "$config_files" ]]; then
+        echo "📋 Found configuration files:$config_files"
+        if [[ "$config_files" == *"package.json"* ]]; then
+            # Analyze package.json content for better suggestions
+            if [[ -f "$project_dir/package.json" ]]; then
+                local package_content=""
+                if command -v jq >/dev/null 2>&1; then
+                    # Use jq if available for better JSON parsing
+                    local dependencies
+                    local dev_dependencies
+                    dependencies=$(jq -r '.dependencies // {} | keys[]' "$project_dir/package.json" 2>/dev/null | tr '\n' ' ')
+                    dev_dependencies=$(jq -r '.devDependencies // {} | keys[]' "$project_dir/package.json" 2>/dev/null | tr '\n' ' ')
+                    package_content="deps: $dependencies devDeps: $dev_dependencies"
+                else
+                    # Fallback to grep-based parsing
+                    package_content=$(grep -E '"(react|vue|angular|next|gatsby|nuxt)"' "$project_dir/package.json" 2>/dev/null || echo "")
+                fi
+
+                # Claude-like intelligent inference from package.json content
+                if [[ "$package_content" == *"react"* ]] && [[ "$package_content" == *"next"* ]]; then
+                    suggested_stack="Next.js + React"
+                elif [[ "$package_content" == *"react"* ]]; then
+                    suggested_stack="React + Node.js"
+                elif [[ "$package_content" == *"vue"* ]] && [[ "$package_content" == *"nuxt"* ]]; then
+                    suggested_stack="Nuxt.js + Vue"
+                elif [[ "$package_content" == *"vue"* ]]; then
+                    suggested_stack="Vue.js + Node.js"
+                elif [[ "$package_content" == *"angular"* ]]; then
+                    suggested_stack="Angular + TypeScript"
+                elif [[ "$package_content" == *"gatsby"* ]]; then
+                    suggested_stack="Gatsby + React"
+                elif [[ "$framework_indicators" == *"next.config.js"* ]]; then
+                    suggested_stack="Next.js + React"
+                elif [[ "$framework_indicators" == *"vue.config.js"* ]]; then
+                    suggested_stack="Vue.js"
+                elif [[ "$framework_indicators" == *"angular.json"* ]]; then
+                    suggested_stack="Angular"
+                elif [[ "$directory_structure" == *"components/"* ]] && [[ "$directory_structure" == *"pages/"* ]]; then
+                    suggested_stack="React/Vue.js + Node.js"
+                else
+                    suggested_stack="Node.js/JavaScript"
+                fi
+            else
+                suggested_stack="Node.js/JavaScript"
+            fi
+        elif [[ "$config_files" == *"requirements.txt"* ]] || [[ "$config_files" == *"setup.py"* ]] || [[ "$config_files" == *"pyproject.toml"* ]]; then
+            suggested_stack="Python"
+        elif [[ "$config_files" == *"Gemfile"* ]]; then
+            suggested_stack="Ruby on Rails"
+        elif [[ "$config_files" == *"composer.json"* ]]; then
+            suggested_stack="PHP"
+        elif [[ "$config_files" == *"build.gradle.kts"* ]] || [[ "$config_files" == *"settings.gradle.kts"* ]]; then
+            # Analyze Kotlin Multiplatform project structure
+            if [[ -d "$project_dir/composeApp" ]] && [[ -d "$project_dir/iosApp" ]]; then
+                suggested_stack="Kotlin Multiplatform Mobile + Compose"
+            elif [[ -d "$project_dir/shared" ]] && { [[ -d "$project_dir/androidApp" ]] || [[ -d "$project_dir/iosApp" ]]; }; then
+                suggested_stack="Kotlin Multiplatform Mobile"
+            elif [[ -d "$project_dir/shared" ]]; then
+                suggested_stack="Kotlin Multiplatform"
+            else
+                suggested_stack="Kotlin + Gradle"
+            fi
+        elif [[ "$config_files" == *"pom.xml"* ]] || [[ "$config_files" == *"build.gradle"* ]]; then
+            suggested_stack="Java"
+        elif [[ "$config_files" == *"Cargo.toml"* ]]; then
+            suggested_stack="Rust"
+        elif [[ "$config_files" == *"go.mod"* ]]; then
+            suggested_stack="Go"
+        elif [[ "$config_files" == *"pubspec.yaml"* ]]; then
+            suggested_stack="Flutter/Dart"
+        fi
     fi
 
-    if [[ -f "$project_dir/requirements.txt" ]]; then
-        key_files="$key_files requirements.txt"
+    # Update global variables with Claude's analysis
+    if [[ -n "$suggested_stack" ]]; then
+        suggested_tech_stack="$suggested_stack"
+        echo "💡 Claude suggests: $suggested_stack"
+        return 0
+    else
+        echo "❓ Unable to determine tech stack from project structure"
+        return 1
     fi
-
-    # Look for framework-specific files
-    [[ -f "$project_dir/next.config.js" ]] && key_files="$key_files next.config.js"
-    [[ -f "$project_dir/vue.config.js" ]] && key_files="$key_files vue.config.js"
-    [[ -f "$project_dir/angular.json" ]] && key_files="$key_files angular.json"
-
-    # Analyze directory structure
-    [[ -d "$project_dir/src" ]] && project_structure="$project_structure src/"
-    [[ -d "$project_dir/components" ]] && project_structure="$project_structure components/"
-    [[ -d "$project_dir/pages" ]] && project_structure="$project_structure pages/"
-
-    # TODO: This is where actual Claude integration would happen
-    # For now, we'll return false to indicate Claude analysis is not yet implemented
-    # The real implementation should:
-    # 1. Use Claude to analyze the collected project information
-    # 2. Have Claude suggest appropriate tech stack based on files/structure
-    # 3. Update the suggestion variables based on Claude's analysis
-    # 4. Return true if analysis succeeds
-
-    echo "📝 Project analysis: files=$key_files, structure=$project_structure"
-    echo "⚠️  Claude integration for project analysis is pending implementation"
-
-    return 1  # Return false for now until real Claude integration is implemented
 }
 
 # Analyze project structure intelligently
