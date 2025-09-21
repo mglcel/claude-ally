@@ -94,7 +94,7 @@ attempt_automatic_claude_analysis() {
     local suggested_critical_assets="user data, configuration files"
     local suggested_requirements="security validation, error handling"
     local suggested_issues="configuration errors, dependency issues"
-    local suggested_compliance="7"
+    local suggested_compliance="No specific compliance"
 
     # Perform Claude-powered project analysis
     echo "🤖 Claude is analyzing your project structure..."
@@ -125,28 +125,28 @@ attempt_automatic_claude_analysis() {
                 suggested_critical_assets="user sessions, API keys, AI model data"
                 suggested_requirements="input validation, rate limiting, API security"
                 suggested_issues="async errors, AI model hallucinations, API limits"
-                suggested_compliance="8"
+                suggested_compliance="Custom/Other"
                 ;;
             "python-ai")
                 suggested_project_type="ai-ml-service"
                 suggested_critical_assets="training data, model weights, API keys"
                 suggested_requirements="data validation, model security, resource limits"
                 suggested_issues="dependency conflicts, model performance, data quality"
-                suggested_compliance="7"
+                suggested_compliance="No specific compliance"
                 ;;
             "cordova-hybrid")
                 suggested_project_type="mobile-app"
                 suggested_critical_assets="user data, device permissions, app store keys"
                 suggested_requirements="platform compatibility, secure storage"
                 suggested_issues="platform differences, performance issues"
-                suggested_compliance="6"
+                suggested_compliance="Internal company policies"
                 ;;
             *)
                 suggested_project_type="web-app"
                 suggested_critical_assets="user data, configuration files"
                 suggested_requirements="security validation, error handling"
                 suggested_issues="configuration errors, dependency issues"
-                suggested_compliance="7"
+                suggested_compliance="No specific compliance"
                 ;;
         esac
     elif [[ "$analysis_success" == "true" ]]; then
