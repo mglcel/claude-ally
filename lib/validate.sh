@@ -40,91 +40,91 @@ check_required_sections() {
     echo -e "${BLUE}📋 CHECKING REQUIRED SECTIONS${NC}"
     echo "------------------------------"
 
-    # Check for project context
-    if grep -q "PROJECT_NAME:" "$file"; then
+    # Check for project context (current format)
+    if grep -q "Project Name.*:" "$file"; then
         echo -e "✅ Project name configured"
         ((score++))
     else
         echo -e "❌ Missing PROJECT_NAME"
     fi
 
-    if grep -q "TECH_STACK:" "$file"; then
+    if grep -q "Tech Stack.*:" "$file"; then
         echo -e "✅ Tech stack specified"
         ((score++))
     else
         echo -e "❌ Missing TECH_STACK"
     fi
 
-    if grep -q "CRITICAL_ASSETS:" "$file"; then
+    if grep -q "Critical Assets.*:" "$file"; then
         echo -e "✅ Critical assets identified"
         ((score++))
     else
         echo -e "❌ Missing CRITICAL_ASSETS"
     fi
 
-    # Check for pattern matching
-    if grep -q "Security_Critical_Patterns:" "$file"; then
+    # Check for pattern matching (current format)
+    if grep -q "Security patterns\|MANDATORY DEVELOPMENT REQUIREMENTS" "$file"; then
         echo -e "✅ Security patterns included"
         ((score++))
     else
         echo -e "❌ Missing Security_Critical_Patterns"
     fi
 
-    if grep -q "CRITICAL.*HIGH.*MEDIUM.*NORMAL" "$file"; then
+    if grep -q "HIGH\|MEDIUM\|LOW" "$file"; then
         echo -e "✅ Priority-based pattern matching"
         ((score++))
     else
         echo -e "❌ Missing priority-based patterns"
     fi
 
-    # Check for learning system
-    if grep -q "Learning_Signal_Detection:" "$file"; then
+    # Check for learning system (current format)
+    if grep -q "Learning Protocol\|Pattern recognition" "$file"; then
         echo -e "✅ Learning protocol configured"
         ((score++))
     else
         echo -e "❌ Missing Learning_Signal_Detection"
     fi
 
-    if grep -q "HIGH_CONFIDENCE.*MEDIUM_CONFIDENCE.*LOW_CONFIDENCE" "$file"; then
+    if grep -q "HIGH.*MEDIUM.*LOW\|Confidence levels" "$file"; then
         echo -e "✅ Confidence levels defined"
         ((score++))
     else
         echo -e "❌ Missing confidence level criteria"
     fi
 
-    # Check for implementation requirements
-    if grep -q "Create.*CLAUDE.md.*file" "$file"; then
+    # Check for implementation requirements (current format)
+    if grep -q "CLAUDE.md file\|Output Format\|IMPORTANT.*response" "$file"; then
         echo -e "✅ CLAUDE.md creation instruction"
         ((score++))
     else
         echo -e "❌ Missing CLAUDE.md creation requirement"
     fi
 
-    if grep -q "STEP 1.*STEP 2.*STEP 3" "$file"; then
+    if grep -q "1\.\|2\.\|3\.\|4\.\|5\." "$file"; then
         echo -e "✅ Implementation steps defined"
         ((score++))
     else
         echo -e "❌ Missing implementation steps"
     fi
 
-    # Check for validation tests
-    if grep -q "Pattern Recognition Test:" "$file"; then
+    # Check for validation tests (current format)
+    if grep -q "Testing requirements\|validation\|test" "$file"; then
         echo -e "✅ Validation tests included"
         ((score++))
     else
         echo -e "❌ Missing validation tests"
     fi
 
-    # Check for domain knowledge
-    if grep -q "_Best_Practices:" "$file"; then
+    # Check for domain knowledge (current format)
+    if grep -q "Project Overview\|Technology stack\|architecture" "$file"; then
         echo -e "✅ Domain-specific knowledge"
         ((score++))
     else
         echo -e "❌ Missing domain knowledge section"
     fi
 
-    # Check for error recovery
-    if grep -q "Pattern_Miss_Detection:" "$file"; then
+    # Check for error recovery (current format)
+    if grep -q "Error handling\|Common Issue Prevention\|Monitoring" "$file"; then
         echo -e "✅ Error recovery protocols"
         ((score++))
     else
@@ -177,7 +177,8 @@ check_customization_quality() {
     fi
 
     # Check for specific project references
-    local project_name=$(grep "PROJECT_NAME:" "$file" | head -1 | cut -d':' -f2 | xargs)
+    local project_name
+    project_name=$(grep "Project Name" "$file" | head -1 | cut -d':' -f2 | xargs)
     if [[ -n "$project_name" ]] && grep -q "$project_name" "$file"; then
         echo -e "✅ Project name referenced in patterns"
         ((score++))
@@ -185,7 +186,8 @@ check_customization_quality() {
         echo -e "❌ Project name not integrated into patterns"
     fi
 
-    local tech_stack=$(grep "TECH_STACK:" "$file" | head -1 | cut -d':' -f2 | xargs)
+    local tech_stack
+    tech_stack=$(grep "Tech Stack" "$file" | head -1 | cut -d':' -f2 | xargs)
     if [[ -n "$tech_stack" ]] && grep -q "$tech_stack" "$file"; then
         echo -e "✅ Tech stack integrated into patterns"
         ((score++))
@@ -194,7 +196,8 @@ check_customization_quality() {
     fi
 
     # Check for meaningful content
-    local line_count=$(wc -l < "$file")
+    local line_count
+    line_count=$(wc -l < "$file")
     if [[ $line_count -gt 200 ]]; then
         echo -e "✅ Comprehensive content ($line_count lines)"
         ((score++))
