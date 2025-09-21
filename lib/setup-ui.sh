@@ -856,9 +856,6 @@ show_interactive_menu() {
         done
 
         echo ""
-        if [[ -n "$claude_suggestion" ]]; then
-            echo -e "${BLUE}Press 's' to use Claude suggestion directly${NC}"
-        fi
         echo -e "${YELLOW}Use ↑/↓ arrows to navigate, Enter to select, 'q' to quit${NC}"
 
         # Read single character
@@ -886,17 +883,6 @@ show_interactive_menu() {
                 echo "" # Clear line after selection
                 MENU_SELECTION=$selected
                 return 0
-                ;;
-            's'|'S') # Use Claude suggestion
-                if [[ -n "$claude_suggestion" ]]; then
-                    cleanup_menu
-                    trap - EXIT
-                    echo ""
-                    # Return special code to indicate suggestion was used
-                    MENU_SELECTION=-1
-                    CLAUDE_SUGGESTION_USED="$claude_suggestion"
-                    return 0
-                fi
                 ;;
             'q'|'Q') # Quit
                 cleanup_menu
@@ -1142,14 +1128,14 @@ get_security_info() {
     else
         if show_interactive_menu "$claude_suggestion" "What are your critical assets?" "${critical_assets_options[@]}"; then
             local selected_index=$MENU_SELECTION
-            if [[ $selected_index -eq -1 ]]; then
-                # Claude suggestion was used
-                CRITICAL_ASSETS="$CLAUDE_SUGGESTION_USED"
-            elif [[ $selected_index -eq $((${#critical_assets_options[@]} - 1)) ]]; then
+            # Get the actual selected option text (updated array after dynamic addition)
+            local selected_option="${critical_assets_options[$selected_index]}"
+            if [[ "$selected_option" == "Custom/Other" ]]; then
                 # Custom option selected
                 read -r -p "Enter custom critical assets: " CRITICAL_ASSETS
             else
-                CRITICAL_ASSETS="${critical_assets_options[$selected_index]}"
+                # Use the selected option (could be original option or Claude suggestion)
+                CRITICAL_ASSETS="$selected_option"
             fi
         else
             # Fallback if interactive menu fails
@@ -1181,14 +1167,14 @@ get_security_info() {
     else
         if show_interactive_menu "$compliance_suggestion" "What compliance requirements apply?" "${compliance_options[@]}"; then
             local selected_index=$MENU_SELECTION
-            if [[ $selected_index -eq -1 ]]; then
-                # Claude suggestion was used
-                COMPLIANCE="$CLAUDE_SUGGESTION_USED"
-            elif [[ $selected_index -eq $((${#compliance_options[@]} - 1)) ]]; then
+            # Get the actual selected option text (updated array after dynamic addition)
+            local selected_option="${compliance_options[$selected_index]}"
+            if [[ "$selected_option" == "Custom/Other" ]]; then
                 # Custom option selected
                 read -r -p "Enter custom compliance requirement: " COMPLIANCE
             else
-                COMPLIANCE="${compliance_options[$selected_index]}"
+                # Use the selected option (could be original option or Claude suggestion)
+                COMPLIANCE="$selected_option"
             fi
         else
             # Fallback if interactive menu fails
@@ -1231,14 +1217,14 @@ get_technical_info() {
     else
         if show_interactive_menu "$claude_suggestion" "What is your tech stack?" "${tech_stack_options[@]}"; then
             local selected_index=$MENU_SELECTION
-            if [[ $selected_index -eq -1 ]]; then
-                # Claude suggestion was used
-                TECH_STACK="$CLAUDE_SUGGESTION_USED"
-            elif [[ $selected_index -eq $((${#tech_stack_options[@]} - 1)) ]]; then
+            # Get the actual selected option text (updated array after dynamic addition)
+            local selected_option="${tech_stack_options[$selected_index]}"
+            if [[ "$selected_option" == "Custom/Other" ]]; then
                 # Custom option selected
                 read -r -p "Enter custom tech stack: " TECH_STACK
             else
-                TECH_STACK="${tech_stack_options[$selected_index]}"
+                # Use the selected option (could be original option or Claude suggestion)
+                TECH_STACK="$selected_option"
             fi
         else
             # Fallback if interactive menu fails
@@ -1274,14 +1260,14 @@ get_technical_info() {
     else
         if show_interactive_menu "$issues_suggestion" "What are common issues you want to address?" "${issues_options[@]}"; then
             local selected_index=$MENU_SELECTION
-            if [[ $selected_index -eq -1 ]]; then
-                # Claude suggestion was used
-                COMMON_ISSUES="$CLAUDE_SUGGESTION_USED"
-            elif [[ $selected_index -eq $((${#issues_options[@]} - 1)) ]]; then
+            # Get the actual selected option text (updated array after dynamic addition)
+            local selected_option="${issues_options[$selected_index]}"
+            if [[ "$selected_option" == "Custom/Other" ]]; then
                 # Custom option selected
                 read -r -p "Enter custom common issues: " COMMON_ISSUES
             else
-                COMMON_ISSUES="${issues_options[$selected_index]}"
+                # Use the selected option (could be original option or Claude suggestion)
+                COMMON_ISSUES="$selected_option"
             fi
         else
             # Fallback if interactive menu fails
