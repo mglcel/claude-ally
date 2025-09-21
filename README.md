@@ -87,3 +87,5 @@ Apache License 2.0 - see [LICENSE](LICENSE) file for details.
 ---
 
 Transform your Claude conversations from generic to project-specific in 30 seconds.
+✅ **Kotlin Multiplatform Mobile (KMM) with Jetpack Compose**
+- mobile-app with automatic detection
