@@ -67,38 +67,39 @@ analyze_unknown_stack_with_claude() {
     cat > "$analysis_file" << EOF
 # New Stack Detection Analysis for Claude-Ally
 
-Please analyze this project directory and determine if it represents a technology stack that should be added to claude-ally's detection system.
+Please analyze this project based on the provided file structure and determine if it represents a technology stack that should be added to claude-ally's detection system.
 
-**Project Directory:** \`$project_dir\`
 **Project Name:** $project_name
+**Project Location:** $project_dir
+
+IMPORTANT: Please analyze based ONLY on the information provided below. Do not request directory access.
+
+## Project Files Found:
+$(timeout 5 find "$project_dir" -maxdepth 2 -name "*.json" -o -name "*.toml" -o -name "*.yaml" -o -name "*.yml" -o -name "*.config.*" -o -name "Dockerfile" -o -name "README*" 2>/dev/null | head -10 || echo "File analysis timed out")
 
 ## Analysis Request:
 
-1. **Stack Identification**: What is the primary technology stack? (e.g., "Svelte + Tauri", "Flutter Web", "Nuxt.js + Supabase")
+Based on the file structure above, please provide:
+
+1. **Stack Identification**: What is the primary technology stack? (e.g., "Kotlin Multiplatform Mobile", "Flutter Web", "Nuxt.js + Supabase")
 
 2. **Detection Patterns**: What files/patterns would reliably identify this stack?
-   - Configuration files (package.json patterns, specific configs)
-   - Directory structure
-   - Dependencies that are unique indicators
+   - Configuration files (gradle files, toml patterns, specific configs)
+   - Directory structure (iosApp, composeApp, shared directories)
+   - File extensions and naming patterns
 
 3. **Project Type**: What category does this fit? (web-app, mobile-app, desktop-app, ai-ml-service, etc.)
 
-4. **Critical Patterns**: What are the CRITICAL and HIGH_PRIORITY patterns for this stack that Claude should watch for?
+4. **Worth Adding**: Should this be added to claude-ally? (YES/NO with reasoning)
 
-5. **Is this worth adding?**: Should this be added to claude-ally? (YES/NO with reasoning)
+Please provide your analysis in this exact format:
 
-## Project Files Analysis:
-$(timeout 5 find "$project_dir" -maxdepth 2 -name "*.json" -o -name "*.toml" -o -name "*.yaml" -o -name "*.yml" -o -name "*.config.*" -o -name "Dockerfile" -o -name "README*" 2>/dev/null | head -10 || echo "File analysis timed out")
-
-Please provide a structured analysis that I can use to generate a new stack detection module.
-
-Expected format:
-- **STACK_ID**: short-name (e.g., "svelte-tauri")
-- **TECH_STACK**: descriptive name (e.g., "Svelte/Tauri Desktop")
-- **PROJECT_TYPE**: category
-- **CONFIDENCE_PATTERNS**: list of detection patterns
-- **WORTH_ADDING**: YES/NO with reasoning
-- **DETECTION_CODE**: suggested bash detection logic
+**STACK_ID**: short-name (e.g., "kotlin-multiplatform-mobile")
+**TECH_STACK**: descriptive name (e.g., "Kotlin Multiplatform Mobile + Compose")
+**PROJECT_TYPE**: category (e.g., "mobile-app")
+**WORTH_ADDING**: YES/NO with brief reasoning
+**CONFIDENCE_PATTERNS**: list of key files/directories to detect
+**DETECTION_CODE**: bash logic to detect this stack
 EOF
 
     # Call Claude if available

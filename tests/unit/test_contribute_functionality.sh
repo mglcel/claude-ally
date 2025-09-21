@@ -142,8 +142,18 @@ setup_claude_mock() {
 # Read input from stdin
 input=$(cat)
 
-# Determine response based on input content
-if [[ "$input" == *"Kotlin Multiplatform"* ]] || [[ "$input" == *"moko-resources"* ]]; then
+# Determine response based on input content and file structure
+if [[ "$input" == *"pubspec.yaml"* ]] || [[ "$input" == *"flutter"* ]] || [[ "$input" == *"main.dart"* ]]; then
+    # Flutter stack response - prioritize Flutter detection
+    cat << 'FLUTTER_EOF'
+**STACK_ID**: flutter-app
+**TECH_STACK**: Flutter Mobile/Web Application
+**PROJECT_TYPE**: mobile-app
+**WORTH_ADDING**: YES - Flutter is a major cross-platform framework
+**CONFIDENCE_PATTERNS**: pubspec.yaml with flutter dependency, lib/ directory with .dart files
+**DETECTION_CODE**: if [[ -f "pubspec.yaml" ]] && grep -q "flutter:" pubspec.yaml; then echo "FLUTTER_DETECTED=true"; fi
+FLUTTER_EOF
+elif [[ "$input" == *"Kotlin Multiplatform"* ]] || [[ "$input" == *"moko-resources"* ]] || [[ "$input" == *"moko.versions.toml"* ]]; then
     # MOKO Resources stack response
     cat << 'MOKO_EOF'
 ## Stack Detection Analysis: MOKO Resources
@@ -171,33 +181,6 @@ fi
 ```
 MOKO_EOF
 
-elif [[ "$input" == *"Flutter"* ]] || [[ "$input" == *"pubspec.yaml"* ]]; then
-    # Flutter stack response
-    cat << 'FLUTTER_EOF'
-## Stack Detection Analysis: Flutter
-
-**STACK_ID**: `flutter-app`
-
-**TECH_STACK**: `Flutter Mobile/Web Application`
-
-**PROJECT_TYPE**: `mobile-app`
-
-**CONFIDENCE_PATTERNS**:
-- pubspec.yaml with flutter dependency
-- lib/ directory with .dart files
-- flutter SDK dependency
-
-**WORTH_ADDING**: **YES**
-
-**Reasoning**: Flutter is a major cross-platform framework that would benefit from specialized support
-
-**DETECTION_CODE**:
-```bash
-if [[ -f "pubspec.yaml" ]] && grep -q "flutter:" pubspec.yaml; then
-    echo "FLUTTER_DETECTED=true"
-fi
-```
-FLUTTER_EOF
 
 elif [[ "$input" == *"minimal"* ]] || [[ "$input" == *"test-framework"* ]]; then
     # Minimal/test project response
