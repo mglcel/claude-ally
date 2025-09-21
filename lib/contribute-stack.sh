@@ -8,6 +8,18 @@ CONTRIB_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Source utilities if available
 if [[ -f "$CONTRIB_SCRIPT_DIR/utilities.sh" ]]; then
     source "$CONTRIB_SCRIPT_DIR/utilities.sh"
+else
+    echo "Warning: utilities.sh not found at $CONTRIB_SCRIPT_DIR/utilities.sh" >&2
+    # Provide fallback implementations
+    create_cache_key() {
+        local project_dir="$1"
+        local project_name="$2"
+        echo "${project_dir}_${project_name}" | md5sum 2>/dev/null | cut -d' ' -f1 || echo "${project_dir}_${project_name}" | shasum -a 256 | cut -d' ' -f1
+    }
+    is_cache_valid() {
+        local cache_file="$1"
+        [[ -f "$cache_file" ]] && [[ $(find "$cache_file" -mmin -60 2>/dev/null) ]]
+    }
 fi
 
 # Colors for output
