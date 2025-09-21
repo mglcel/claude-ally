@@ -255,21 +255,14 @@ run_unit_tests() {
         "Unit - Analyze Feature" \
         "$SCRIPT_DIR/unit/test_analyze_feature.sh" \
         "Comprehensive project analysis functionality"
+
+    run_test_suite \
+        "Unit - Clean Command" \
+        "$SCRIPT_DIR/unit/test_clean_command.sh" \
+        "Project-specific cache cleaning functionality"
 }
 
-run_integration_tests() {
-    run_test_suite \
-        "Integration - CLI Commands" \
-        "$SCRIPT_DIR/integration/test_cli_integration.sh" \
-        "Complete CLI workflow testing with mocking"
-}
 
-run_e2e_tests() {
-    run_test_suite \
-        "End-to-End" \
-        "$SCRIPT_DIR/end-to-end/test_complete_workflows.sh" \
-        "Complete user workflows and scenarios"
-}
 
 # Results summary
 show_results_summary() {

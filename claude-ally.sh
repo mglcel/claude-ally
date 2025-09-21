@@ -80,6 +80,220 @@ show_help() {
     echo ""
     echo -e "  ${GREEN}# System management${NC}"
     echo "  claude-ally.sh validate                  # Check installation"
+    echo "  claude-ally.sh clean [directory]         # Clear project-specific caches"
+}
+
+# Clean project-specific caches and temporary files
+clean_caches() {
+    local project_dir="${1:-$(pwd)}"
+    local project_name
+    project_name=$(basename "$project_dir")
+
+    echo -e "${CYAN}🧹 Cleaning claude-ally caches for project: ${BOLD}$project_name${NC}"
+    echo -e "${BLUE}📂 Project directory: $project_dir${NC}"
+    echo ""
+
+    # Source utilities to get cache key generation
+    if [[ -f "$SCRIPT_DIR/lib/utilities.sh" ]]; then
+        source "$SCRIPT_DIR/lib/utilities.sh"
+    else
+        # Fallback implementation
+        create_cache_key() {
+            local proj_dir="$1"
+            local proj_name="$2"
+            echo "${proj_dir}_${proj_name}" | md5sum 2>/dev/null | cut -d' ' -f1 || echo "${proj_dir}_${proj_name}" | shasum -a 256 | cut -d' ' -f1
+        }
+    fi
+
+    # Generate project-specific cache key
+    local cache_key
+    cache_key=$(create_cache_key "$project_dir" "$project_name")
+
+    echo -e "${YELLOW}🔑 Project cache key: ${cache_key}${NC}"
+    echo ""
+
+    local total_removed=0
+    local total_size=0
+
+    # Function to safely remove files with reporting
+    clean_pattern() {
+        local pattern="$1"
+        local description="$2"
+        local files_found=0
+        local size_freed=0
+
+        # Use ls with glob pattern (more reliable on macOS)
+        local matching_files
+        matching_files=$(ls /tmp/"$pattern" 2>/dev/null || true)
+
+        if [[ -n "$matching_files" ]]; then
+            # Calculate total size and count files
+            for file in $matching_files; do
+                if [[ -f "$file" ]]; then
+                    local file_size
+                    file_size=$(stat -f%z "$file" 2>/dev/null || stat -c%s "$file" 2>/dev/null || echo "0")
+                    size_freed=$((size_freed + file_size))
+                    files_found=$((files_found + 1))
+                fi
+            done
+
+            # Remove the files
+            rm -f "$matching_files" 2>/dev/null || true
+
+            # Format size for display
+            local size_display
+            if [[ $size_freed -gt 1048576 ]]; then
+                size_display="$(echo "scale=1; $size_freed/1048576" | bc 2>/dev/null || echo "0")MB"
+            elif [[ $size_freed -gt 1024 ]]; then
+                size_display="$(echo "scale=1; $size_freed/1024" | bc 2>/dev/null || echo "0")KB"
+            else
+                size_display="${size_freed}B"
+            fi
+
+            echo -e "  ${GREEN}✅${NC} $description: ${files_found} files (${size_display})"
+            total_removed=$((total_removed + files_found))
+            total_size=$((total_size + size_freed))
+        else
+            echo -e "  ${BLUE}ℹ️${NC} $description: No files found"
+        fi
+    }
+
+    # Function to clean directories
+    clean_directories() {
+        local pattern="$1"
+        local description="$2"
+        local dirs_found=0
+
+        while IFS= read -r -d '' dir; do
+            if [[ -d "$dir" ]]; then
+                dirs_found=$((dirs_found + 1))
+                rm -rf "$dir" 2>/dev/null || true
+            fi
+        done < <(find /tmp -name "$pattern" -type d -maxdepth 1 -print0 2>/dev/null)
+
+        if [[ $dirs_found -gt 0 ]]; then
+            echo -e "  ${GREEN}✅${NC} $description: ${dirs_found} directories"
+        else
+            echo -e "  ${BLUE}ℹ️${NC} $description: No directories found"
+        fi
+    }
+
+    # Clean project-specific Claude analysis caches
+    clean_pattern "claude_analysis_cache_${cache_key}.md" "Project-specific Claude analysis cache"
+
+    # Clean project-specific temporary analysis files (broader pattern for timestamped files)
+    # Look for files that might contain the project path or name
+    echo -e "  ${YELLOW}🔍${NC} Scanning for project-related analysis files..."
+    local project_analysis_files=0
+    local project_analysis_size=0
+
+    # Find analysis files that might be related to this project
+    for file in /tmp/claude_stack_analysis_*.md /tmp/stack_analysis_*.md; do
+        if [[ -f "$file" ]]; then
+            # Check if file content or name relates to this project
+            if grep -q "$project_dir\|$project_name" "$file" 2>/dev/null; then
+                local file_size
+                file_size=$(stat -f%z "$file" 2>/dev/null || stat -c%s "$file" 2>/dev/null || echo "0")
+                project_analysis_size=$((project_analysis_size + file_size))
+                project_analysis_files=$((project_analysis_files + 1))
+                rm -f "$file" 2>/dev/null || true
+            fi
+        fi
+    done
+
+    if [[ $project_analysis_files -gt 0 ]]; then
+        local size_display
+        if [[ $project_analysis_size -gt 1048576 ]]; then
+            size_display="$(echo "scale=1; $project_analysis_size/1048576" | bc 2>/dev/null || echo "0")MB"
+        elif [[ $project_analysis_size -gt 1024 ]]; then
+            size_display="$(echo "scale=1; $project_analysis_size/1024" | bc 2>/dev/null || echo "0")KB"
+        else
+            size_display="${project_analysis_size}B"
+        fi
+        echo -e "  ${GREEN}✅${NC} Project-related analysis files: ${project_analysis_files} files (${size_display})"
+        total_removed=$((total_removed + project_analysis_files))
+        total_size=$((total_size + project_analysis_size))
+    else
+        echo -e "  ${BLUE}ℹ️${NC} Project-related analysis files: No files found"
+    fi
+
+    # Clean suggestions files that might be related to this project
+    echo -e "  ${YELLOW}🔍${NC} Scanning for project-related suggestion files..."
+    local project_suggestion_files=0
+    local project_suggestion_size=0
+
+    for file in /tmp/claude_suggestions_*.txt; do
+        if [[ -f "$file" ]]; then
+            # Check file modification time and content for project relation
+            if grep -q "$project_dir\|$project_name" "$file" 2>/dev/null; then
+                local file_size
+                file_size=$(stat -f%z "$file" 2>/dev/null || stat -c%s "$file" 2>/dev/null || echo "0")
+                project_suggestion_size=$((project_suggestion_size + file_size))
+                project_suggestion_files=$((project_suggestion_files + 1))
+                rm -f "$file" 2>/dev/null || true
+            fi
+        fi
+    done
+
+    if [[ $project_suggestion_files -gt 0 ]]; then
+        local size_display
+        if [[ $project_suggestion_size -gt 1048576 ]]; then
+            size_display="$(echo "scale=1; $project_suggestion_size/1048576" | bc 2>/dev/null || echo "0")MB"
+        elif [[ $project_suggestion_size -gt 1024 ]]; then
+            size_display="$(echo "scale=1; $project_suggestion_size/1024" | bc 2>/dev/null || echo "0")KB"
+        else
+            size_display="${project_suggestion_size}B"
+        fi
+        echo -e "  ${GREEN}✅${NC} Project-related suggestion files: ${project_suggestion_files} files (${size_display})"
+        total_removed=$((total_removed + project_suggestion_files))
+        total_size=$((total_size + project_suggestion_size))
+    else
+        echo -e "  ${BLUE}ℹ️${NC} Project-related suggestion files: No files found"
+    fi
+
+    # Clean project-specific temporary directories (contribution workflows)
+    echo -e "  ${YELLOW}🔍${NC} Scanning for project-related temporary directories..."
+    local project_temp_dirs=0
+
+    for dir in /tmp/claude-ally-contribution-*; do
+        if [[ -d "$dir" ]]; then
+            # Check if directory contains files related to this project
+            if find "$dir" -type f -exec grep -l "$project_dir\|$project_name" {} \; 2>/dev/null | head -1 | grep -q .; then
+                rm -rf "$dir" 2>/dev/null || true
+                project_temp_dirs=$((project_temp_dirs + 1))
+            fi
+        fi
+    done
+
+    if [[ $project_temp_dirs -gt 0 ]]; then
+        echo -e "  ${GREEN}✅${NC} Project-related temporary directories: ${project_temp_dirs} directories"
+    else
+        echo -e "  ${BLUE}ℹ️${NC} Project-related temporary directories: No directories found"
+    fi
+
+    echo ""
+    echo -e "${CYAN}📊 Cleanup Summary:${NC}"
+
+    # Format total size for display
+    local total_size_display
+    if [[ $total_size -gt 1048576 ]]; then
+        total_size_display="$(echo "scale=1; $total_size/1048576" | bc 2>/dev/null || echo "0")MB"
+    elif [[ $total_size -gt 1024 ]]; then
+        total_size_display="$(echo "scale=1; $total_size/1024" | bc 2>/dev/null || echo "0")KB"
+    else
+        total_size_display="${total_size}B"
+    fi
+
+    echo "  Files removed: ${total_removed}"
+    echo "  Space freed: ${total_size_display}"
+    echo ""
+
+    if [[ $total_removed -gt 0 ]]; then
+        echo -e "${GREEN}✨ Cache cleanup completed successfully!${NC}"
+        echo -e "${YELLOW}💡 Next analysis runs will be fresh and up-to-date${NC}"
+    else
+        echo -e "${GREEN}✨ No cleanup needed - system is already clean!${NC}"
+    fi
 }
 
 # Validate system setup
@@ -372,6 +586,10 @@ main() {
                 echo -e "${RED}❌ Validation script not found${NC}"
                 exit 1
             fi
+            ;;
+        "clean")
+            local project_dir="${1:-$(pwd)}"
+            clean_caches "$project_dir"
             ;;
         "version")
             show_version
