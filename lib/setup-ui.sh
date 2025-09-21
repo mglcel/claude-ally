@@ -1128,14 +1128,25 @@ get_security_info() {
     else
         if show_interactive_menu "$claude_suggestion" "What are your critical assets?" "${critical_assets_options[@]}"; then
             local selected_index=$MENU_SELECTION
-            # Get the actual selected option text (updated array after dynamic addition)
-            local selected_option="${critical_assets_options[$selected_index]}"
-            if [[ "$selected_option" == "Custom/Other" ]]; then
-                # Custom option selected
+
+            # Check if Claude suggestion was dynamically added (it would be inserted before Custom/Other)
+            local custom_index=-1
+            for i in "${!critical_assets_options[@]}"; do
+                if [[ "${critical_assets_options[$i]}" == "Custom/Other" ]]; then
+                    custom_index=$i
+                    break
+                fi
+            done
+
+            if [[ -n "$claude_suggestion" ]] && [[ $selected_index -eq $custom_index ]]; then
+                # Claude suggestion was selected (dynamically added at Custom/Other position)
+                CRITICAL_ASSETS="$claude_suggestion"
+            elif [[ $selected_index -eq $((${#critical_assets_options[@]})) ]]; then
+                # Custom/Other was selected (pushed to end after Claude suggestion added)
                 read -r -p "Enter custom critical assets: " CRITICAL_ASSETS
             else
-                # Use the selected option (could be original option or Claude suggestion)
-                CRITICAL_ASSETS="$selected_option"
+                # Original option was selected
+                CRITICAL_ASSETS="${critical_assets_options[$selected_index]}"
             fi
         else
             # Fallback if interactive menu fails
@@ -1167,14 +1178,25 @@ get_security_info() {
     else
         if show_interactive_menu "$compliance_suggestion" "What compliance requirements apply?" "${compliance_options[@]}"; then
             local selected_index=$MENU_SELECTION
-            # Get the actual selected option text (updated array after dynamic addition)
-            local selected_option="${compliance_options[$selected_index]}"
-            if [[ "$selected_option" == "Custom/Other" ]]; then
-                # Custom option selected
+
+            # Check if Claude suggestion was dynamically added (it would be inserted before Custom/Other)
+            local custom_index=-1
+            for i in "${!compliance_options[@]}"; do
+                if [[ "${compliance_options[$i]}" == "Custom/Other" ]]; then
+                    custom_index=$i
+                    break
+                fi
+            done
+
+            if [[ -n "$compliance_suggestion" ]] && [[ $selected_index -eq $custom_index ]]; then
+                # Claude suggestion was selected (dynamically added at Custom/Other position)
+                COMPLIANCE="$compliance_suggestion"
+            elif [[ $selected_index -eq $((${#compliance_options[@]})) ]]; then
+                # Custom/Other was selected (pushed to end after Claude suggestion added)
                 read -r -p "Enter custom compliance requirement: " COMPLIANCE
             else
-                # Use the selected option (could be original option or Claude suggestion)
-                COMPLIANCE="$selected_option"
+                # Original option was selected
+                COMPLIANCE="${compliance_options[$selected_index]}"
             fi
         else
             # Fallback if interactive menu fails
@@ -1217,14 +1239,25 @@ get_technical_info() {
     else
         if show_interactive_menu "$claude_suggestion" "What is your tech stack?" "${tech_stack_options[@]}"; then
             local selected_index=$MENU_SELECTION
-            # Get the actual selected option text (updated array after dynamic addition)
-            local selected_option="${tech_stack_options[$selected_index]}"
-            if [[ "$selected_option" == "Custom/Other" ]]; then
-                # Custom option selected
+
+            # Check if Claude suggestion was dynamically added (it would be inserted before Custom/Other)
+            local custom_index=-1
+            for i in "${!tech_stack_options[@]}"; do
+                if [[ "${tech_stack_options[$i]}" == "Custom/Other" ]]; then
+                    custom_index=$i
+                    break
+                fi
+            done
+
+            if [[ -n "$claude_suggestion" ]] && [[ $selected_index -eq $custom_index ]]; then
+                # Claude suggestion was selected (dynamically added at Custom/Other position)
+                TECH_STACK="$claude_suggestion"
+            elif [[ $selected_index -eq $((${#tech_stack_options[@]})) ]]; then
+                # Custom/Other was selected (pushed to end after Claude suggestion added)
                 read -r -p "Enter custom tech stack: " TECH_STACK
             else
-                # Use the selected option (could be original option or Claude suggestion)
-                TECH_STACK="$selected_option"
+                # Original option was selected
+                TECH_STACK="${tech_stack_options[$selected_index]}"
             fi
         else
             # Fallback if interactive menu fails
@@ -1260,14 +1293,25 @@ get_technical_info() {
     else
         if show_interactive_menu "$issues_suggestion" "What are common issues you want to address?" "${issues_options[@]}"; then
             local selected_index=$MENU_SELECTION
-            # Get the actual selected option text (updated array after dynamic addition)
-            local selected_option="${issues_options[$selected_index]}"
-            if [[ "$selected_option" == "Custom/Other" ]]; then
-                # Custom option selected
+
+            # Check if Claude suggestion was dynamically added (it would be inserted before Custom/Other)
+            local custom_index=-1
+            for i in "${!issues_options[@]}"; do
+                if [[ "${issues_options[$i]}" == "Custom/Other" ]]; then
+                    custom_index=$i
+                    break
+                fi
+            done
+
+            if [[ -n "$issues_suggestion" ]] && [[ $selected_index -eq $custom_index ]]; then
+                # Claude suggestion was selected (dynamically added at Custom/Other position)
+                COMMON_ISSUES="$issues_suggestion"
+            elif [[ $selected_index -eq $((${#issues_options[@]})) ]]; then
+                # Custom/Other was selected (pushed to end after Claude suggestion added)
                 read -r -p "Enter custom common issues: " COMMON_ISSUES
             else
-                # Use the selected option (could be original option or Claude suggestion)
-                COMMON_ISSUES="$selected_option"
+                # Original option was selected
+                COMMON_ISSUES="${issues_options[$selected_index]}"
             fi
         else
             # Fallback if interactive menu fails
