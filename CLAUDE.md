@@ -273,11 +273,55 @@ LOW_CONFIDENCE (Monitor for Patterns):
 - [ ] **GitHub Actions workflows pass (MANDATORY)**
 
 ### Testing Requirements
+
+#### 🚨 CRITICAL: Comprehensive Test Coverage Standards
+**Execution Environment Parity** (MANDATORY):
+- Test execution methods MUST match production (source vs bash subprocess)
+- Unit tests using `source` while production uses `bash script.sh` will miss critical bugs
+- Integration tests MUST call scripts exactly as users do: `bash script.sh`
+- Environment differences between test and production environments can mask dependency issues
+
+#### Test Coverage Requirements
+**Unit Tests**:
+- Test individual functions in isolation
+- Mock external dependencies appropriately
+- Verify function behavior with edge cases
+- Test error conditions and recovery
+
+**Integration Tests** (MANDATORY):
+- Test complete workflows end-to-end
+- Execute scripts as subprocesses (not sourced)
+- Test with production-like environment setup
+- Verify dependency loading in subprocess execution
+- Test cache functionality in real environments
+
+**Dependency Verification Tests** (MANDATORY):
+- Verify all required functions are accessible in different execution contexts
+- Test utility function sourcing in both direct and subprocess execution
+- Verify fallback implementations work when dependencies are missing
+- Test script initialization and dependency loading
+
+#### Critical Testing Anti-Patterns to Avoid
+🚫 **Test Shortcuts That Mask Production Issues**:
+- Manually implementing utility logic in tests instead of calling actual functions
+- Using `source` in tests when production uses `bash subprocess`
+- Bypassing dependency loading mechanisms in test setup
+- Creating overly isolated unit tests that don't catch integration problems
+
+#### Real-World Testing Standards
 - Test setup procedures on clean environments
-- Validate cross-platform compatibility
+- Validate cross-platform compatibility (macOS, Linux, Windows)
 - Test error conditions and edge cases
 - Verify security measures are effective
 - Confirm user experience is intuitive
+- **Execute tests in CI/CD environments that match production deployment**
+
+#### Testing Lessons Learned (HIGH CONFIDENCE)
+**Bug Case Study**: Utilities.sh dependency issue not caught by tests
+- **Root Cause**: Tests used `source` while production used `bash subprocess`
+- **Detection Gap**: Tests manually implemented cache logic instead of using `create_cache_key()`
+- **Fix**: Added integration tests that execute scripts exactly as production does
+- **Prevention**: Always test execution methods that match production environments
 
 ## 📚 DEVELOPMENT GUIDELINES
 

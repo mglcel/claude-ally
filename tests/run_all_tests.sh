@@ -247,6 +247,11 @@ run_unit_tests() {
         "CLAUDE.md file management, merging, and backup functionality"
 
     run_test_suite \
+        "Unit - Dependency Verification" \
+        "$SCRIPT_DIR/unit/test_dependency_verification.sh" \
+        "Dependency loading and utility function accessibility"
+
+    run_test_suite \
         "Unit - Analyze Feature" \
         "$SCRIPT_DIR/unit/test_analyze_feature.sh" \
         "Comprehensive project analysis functionality"
@@ -304,6 +309,20 @@ show_results_summary() {
         echo ""
         return 1
     fi
+}
+
+# Integration test execution
+run_integration_tests() {
+    run_test_suite \
+        "Integration - Contribute Workflow" \
+        "$SCRIPT_DIR/integration/test_contribute_integration.sh" \
+        "End-to-end contribute workflow testing with production execution paths"
+}
+
+# End-to-end test execution (placeholder)
+run_e2e_tests() {
+    log_info "End-to-end tests not yet implemented"
+    return 0
 }
 
 # Main execution logic
