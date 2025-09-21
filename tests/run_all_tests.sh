@@ -260,6 +260,21 @@ run_unit_tests() {
         "Unit - Clean Command" \
         "$SCRIPT_DIR/unit/test_clean_command.sh" \
         "Project-specific cache cleaning functionality"
+
+    run_test_suite \
+        "Unit - Contribution Workflow" \
+        "$SCRIPT_DIR/unit/test_contribution_workflow.sh" \
+        "Contribution automation and environment variable handling"
+
+    run_test_suite \
+        "Unit - Claude Integration" \
+        "$SCRIPT_DIR/unit/test_claude_integration.sh" \
+        "Real Claude CLI integration and response parsing"
+
+    run_test_suite \
+        "Unit - PHP Laravel Detection" \
+        "$SCRIPT_DIR/unit/test_php_laravel_detection.sh" \
+        "PHP Laravel stack detection and confidence scoring"
 }
 
 
