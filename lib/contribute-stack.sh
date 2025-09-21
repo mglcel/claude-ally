@@ -3,7 +3,7 @@
 # Helps users contribute new stack detection modules to claude-ally
 
 # Get script directory for sourcing utilities
-CONTRIB_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CONTRIB_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 
 # Source utilities if available
 if [[ -f "$CONTRIB_SCRIPT_DIR/utilities.sh" ]]; then
@@ -447,7 +447,7 @@ EOF
 main() {
     local project_dir="${1:-$(pwd)}"
     local project_name="${2:-$(basename "$project_dir")}"
-    local claude_ally_dir="${3:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
+    local claude_ally_dir="${3:-$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)}"
 
     echo -e "${CYAN}🔍 Checking for contribution opportunities...${NC}"
 
@@ -490,6 +490,6 @@ main() {
 }
 
 # Run if called directly
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+if [[ "${BASH_SOURCE[0]:-$0}" == "${0}" ]]; then
     main "$@"
 fi

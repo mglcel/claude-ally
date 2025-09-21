@@ -3,7 +3,7 @@
 # Loads and executes individual stack detection modules
 
 # Get the directory of this script (lib directory)
-STACK_DETECTOR_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+STACK_DETECTOR_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 STACKS_DIR="$(dirname "$STACK_DETECTOR_DIR")/stacks"
 
 # Load all stack detection modules

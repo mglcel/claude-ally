@@ -152,7 +152,7 @@ EOF
 }
 
 # Export all functions
-if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
+if [[ "${BASH_SOURCE[0]:-$0}" != "${0}" ]]; then
     export -f detect_bash_cli
     export -f get_bash_cli_patterns
     export -f get_bash_cli_assets
