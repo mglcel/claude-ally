@@ -94,6 +94,7 @@ attempt_automatic_claude_analysis() {
     local suggested_critical_assets="user data, configuration files"
     local suggested_requirements="security validation, error handling"
     local suggested_issues="configuration errors, dependency issues"
+    local suggested_compliance="7"
 
     # Generate suggestions based on detected stack or basic analysis
     if [[ -n "$detected_stack_info" ]]; then
@@ -112,24 +113,28 @@ attempt_automatic_claude_analysis() {
                 suggested_critical_assets="user sessions, API keys, AI model data"
                 suggested_requirements="input validation, rate limiting, API security"
                 suggested_issues="async errors, AI model hallucinations, API limits"
+                suggested_compliance="8"
                 ;;
             "python-ai")
                 suggested_project_type="ai-ml-service"
                 suggested_critical_assets="training data, model weights, API keys"
                 suggested_requirements="data validation, model security, resource limits"
                 suggested_issues="dependency conflicts, model performance, data quality"
+                suggested_compliance="7"
                 ;;
             "cordova-hybrid")
                 suggested_project_type="mobile-app"
                 suggested_critical_assets="user data, device permissions, app store keys"
                 suggested_requirements="platform compatibility, secure storage"
                 suggested_issues="platform differences, performance issues"
+                suggested_compliance="6"
                 ;;
             *)
                 suggested_project_type="web-app"
                 suggested_critical_assets="user data, configuration files"
                 suggested_requirements="security validation, error handling"
                 suggested_issues="configuration errors, dependency issues"
+                suggested_compliance="7"
                 ;;
         esac
     else
@@ -151,6 +156,7 @@ TECH_STACK_SUGGESTION: $suggested_tech_stack
 CRITICAL_ASSETS_SUGGESTION: $suggested_critical_assets
 MANDATORY_REQUIREMENTS_SUGGESTION: $suggested_requirements
 COMMON_ISSUES_SUGGESTION: $suggested_issues
+COMPLIANCE_SUGGESTION: $suggested_compliance
 EOF
 
     if [[ -f "$CLAUDE_SUGGESTIONS_FILE" ]]; then

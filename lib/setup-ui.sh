@@ -53,6 +53,130 @@ read_with_suggestion() {
     printf '%s' "$result"
 }
 
+# Simple but robust interactive selection with options
+interactive_select_with_options() {
+    local prompt="$1"
+    local suggestion="$2"
+    shift 2
+    local -a options=("$@")
+    local result
+
+    # Non-interactive mode
+    if [[ "${NON_INTERACTIVE:-false}" == "true" ]]; then
+        result="$suggestion"
+        echo "$prompt$suggestion (non-interactive mode)" >&2
+        printf '%s' "$result"
+        return 0
+    fi
+
+    # Check terminal capabilities
+    if [[ ! -t 0 ]] || ! command -v tput >/dev/null 2>&1; then
+        # Fallback to simple input
+        result=$(read_with_suggestion "$prompt" "$suggestion")
+        printf '%s' "$result"
+        return 0
+    fi
+
+    # Interactive mode
+    local -a full_options=()
+    for opt in "${options[@]}"; do
+        full_options+=("$opt")
+    done
+    full_options+=("Type custom input")
+
+    local selected=0
+    local num_options=${#full_options[@]}
+
+    # Save terminal state
+    local old_stty
+    old_stty=$(stty -g 2>/dev/null) || old_stty=""
+
+    # Setup terminal
+    tput civis 2>/dev/null || true
+    stty -echo -icanon 2>/dev/null || true
+
+    # Cleanup function
+    cleanup() {
+        tput cnorm 2>/dev/null || true
+        if [[ -n "$old_stty" ]]; then
+            stty "$old_stty" 2>/dev/null || true
+        else
+            stty echo icanon 2>/dev/null || true
+        fi
+    }
+
+    # Set trap
+    trap cleanup EXIT INT TERM
+
+    while true; do
+        # Clear and display
+        clear
+        echo -e "${CYAN}$prompt${NC}"
+        echo ""
+        if [[ -n "$suggestion" ]]; then
+            echo -e "${CYAN}🤖 Claude suggests: $suggestion${NC}"
+            echo ""
+        fi
+
+        for i in "${!full_options[@]}"; do
+            if [[ $i -eq $selected ]]; then
+                echo -e "  ${GREEN}► $((i+1)). ${full_options[$i]}${NC}"
+            else
+                echo "    $((i+1)). ${full_options[$i]}"
+            fi
+        done
+
+        echo ""
+        echo -e "${YELLOW}↑↓ arrows, Enter to select"
+        if [[ -n "$suggestion" ]]; then
+            echo -e "Press 's' for Claude suggestion"
+        fi
+        echo -e "Press 'q' to quit${NC}"
+
+        # Read key
+        read -r -s -n1 key 2>/dev/null || key=""
+
+        case "$key" in
+            $'\x1b') # Arrow keys
+                read -r -s -n2 arrow 2>/dev/null || arrow=""
+                case "$arrow" in
+                    '[A') [[ $selected -gt 0 ]] && ((selected--)) ;;
+                    '[B') [[ $selected -lt $((num_options-1)) ]] && ((selected++)) ;;
+                esac
+                ;;
+            '') # Enter
+                cleanup
+                trap - EXIT INT TERM
+                echo ""
+                if [[ $selected -eq $((num_options-1)) ]]; then
+                    echo -e "${CYAN}Enter your input:${NC}"
+                    read -r -p "> " result
+                else
+                    result="${full_options[$selected]}"
+                fi
+                printf '%s' "$result"
+                return 0
+                ;;
+            's'|'S')
+                if [[ -n "$suggestion" ]]; then
+                    cleanup
+                    trap - EXIT INT TERM
+                    echo ""
+                    printf '%s' "$suggestion"
+                    return 0
+                fi
+                ;;
+            'q'|'Q')
+                cleanup
+                trap - EXIT INT TERM
+                echo ""
+                echo -e "${YELLOW}Cancelled${NC}"
+                exit 0
+                ;;
+        esac
+    done
+}
+
 # Show database options
 show_database_options() {
     echo ""
@@ -300,14 +424,22 @@ show_interactive_choice() {
         return 1 # Fallback to traditional prompt
     fi
 
+    # Save original terminal settings
+    local original_settings
+    original_settings=$(stty -g 2>/dev/null || echo "")
+
     # Hide cursor and enable raw mode
     tput civis 2>/dev/null || true
-    stty -echo 2>/dev/null || true
+    stty -echo -icanon min 1 time 0 2>/dev/null || true
 
     cleanup_choice() {
         # Restore cursor and normal mode
         tput cnorm 2>/dev/null || true
-        stty echo 2>/dev/null || true
+        if [[ -n "$original_settings" ]]; then
+            stty "$original_settings" 2>/dev/null || true
+        else
+            stty echo icanon 2>/dev/null || true
+        fi
     }
     trap cleanup_choice EXIT
 
@@ -336,10 +468,14 @@ show_interactive_choice() {
                 read -r -s -n2 char
                 case "$char" in
                     '[A') # Up arrow
-                        ((selected > 0)) && ((selected--))
+                        if [[ $selected -gt 0 ]]; then
+                            ((selected--))
+                        fi
                         ;;
                     '[B') # Down arrow
-                        ((selected < num_choices - 1)) && ((selected++))
+                        if [[ $selected -lt $((num_choices - 1)) ]]; then
+                            ((selected++))
+                        fi
                         ;;
                 esac
                 ;;
@@ -361,8 +497,119 @@ show_interactive_choice() {
     done
 }
 
-# Interactive menu with arrow key navigation (for complex menus)
-show_interactive_menu() {
+# Interactive menu with Claude suggestions support
+show_interactive_menu_with_suggestions() {
+    local suggestion="$1"
+    shift
+    local -a options=("$@")
+    local selected=0
+    local num_options=${#options[@]}
+
+    # Check if terminal supports interactive features
+    if [[ ! -t 0 ]] || [[ "${NON_INTERACTIVE:-false}" == "true" ]]; then
+        # Non-interactive mode - return the suggestion or first option
+        if [[ -n "$suggestion" ]]; then
+            echo "$suggestion"
+        else
+            echo "${options[0]}"
+        fi
+        return 0
+    fi
+
+    # Save original terminal settings
+    local original_settings
+    original_settings=$(stty -g 2>/dev/null || echo "")
+
+    # Hide cursor and enable raw mode
+    tput civis 2>/dev/null || true
+    stty -echo -icanon min 1 time 0 2>/dev/null || true
+
+    cleanup_menu() {
+        tput cnorm 2>/dev/null || true
+        if [[ -n "$original_settings" ]]; then
+            stty "$original_settings" 2>/dev/null || true
+        else
+            stty echo icanon 2>/dev/null || true
+        fi
+    }
+    trap cleanup_menu EXIT
+
+    while true; do
+        # Clear and redraw menu
+        echo -e "\033[2J\033[H" # Clear screen and move to top
+
+        if [[ -n "$suggestion" ]]; then
+            echo -e "${CYAN}🤖 Claude suggests: $suggestion${NC}"
+            echo ""
+        fi
+
+        echo -e "${CYAN}Use ↑↓ arrows, Enter to select:${NC}"
+        echo ""
+
+        for i in "${!options[@]}"; do
+            local option_text="$((i+1)). ${options[$i]}"
+            if [[ $i -eq $selected ]]; then
+                echo -e "  ${GREEN}► $option_text${NC}"
+            else
+                echo "    $option_text"
+            fi
+        done
+
+        echo ""
+        if [[ -n "$suggestion" ]]; then
+            echo -e "${BLUE}Press 's' to use Claude suggestion directly${NC}"
+        fi
+        echo -e "${YELLOW}Use ↑/↓ arrows to navigate, Enter to select, 'q' to quit${NC}"
+
+        # Read single character
+        IFS= read -r -s -n1 char
+
+        case "$char" in
+            $'\x1b') # ESC sequence
+                read -r -s -n2 char
+                case "$char" in
+                    '[A') # Up arrow
+                        if [[ $selected -gt 0 ]]; then
+                            ((selected--))
+                        fi
+                        ;;
+                    '[B') # Down arrow
+                        if [[ $selected -lt $((num_options - 1)) ]]; then
+                            ((selected++))
+                        fi
+                        ;;
+                esac
+                ;;
+            '') # Enter
+                cleanup_menu
+                trap - EXIT
+                echo ""
+                MENU_SELECTION=$selected
+                echo "${options[$selected]}"
+                return 0
+                ;;
+            's'|'S') # Use suggestion
+                if [[ -n "$suggestion" ]]; then
+                    cleanup_menu
+                    trap - EXIT
+                    echo ""
+                    echo "$suggestion"
+                    return 0
+                fi
+                ;;
+            'q'|'Q') # Quit
+                cleanup_menu
+                trap - EXIT
+                echo ""
+                echo -e "${YELLOW}Setup cancelled by user${NC}"
+                exit 0
+                ;;
+        esac
+    done
+}
+
+# Interactive menu for project types (special case)
+show_project_type_menu() {
     # Parse arguments: first argument might be default selection, rest are options
     local default_selected=0
     local recommended_index=-1
@@ -395,14 +642,22 @@ show_interactive_menu() {
         return 0
     fi
 
+    # Save original terminal settings
+    local original_settings
+    original_settings=$(stty -g 2>/dev/null || echo "")
+
     # Hide cursor and enable raw mode
     tput civis 2>/dev/null || true
-    stty -echo 2>/dev/null || true
+    stty -echo -icanon min 1 time 0 2>/dev/null || true
 
     cleanup_menu() {
         # Restore cursor and normal mode
         tput cnorm 2>/dev/null || true
-        stty echo 2>/dev/null || true
+        if [[ -n "$original_settings" ]]; then
+            stty "$original_settings" 2>/dev/null || true
+        else
+            stty echo icanon 2>/dev/null || true
+        fi
     }
     trap cleanup_menu EXIT
 
@@ -442,10 +697,14 @@ show_interactive_menu() {
                 read -r -s -n2 char
                 case "$char" in
                     '[A') # Up arrow
-                        ((selected > 0)) && ((selected--))
+                        if [[ $selected -gt 0 ]]; then
+                            ((selected--))
+                        fi
                         ;;
                     '[B') # Down arrow
-                        ((selected < num_options - 1)) && ((selected++))
+                        if [[ $selected -lt $((num_options - 1)) ]]; then
+                            ((selected++))
+                        fi
                         ;;
                 esac
                 ;;
@@ -455,6 +714,142 @@ show_interactive_menu() {
                 echo "" # Clear line after selection
                 MENU_SELECTION=$selected
                 return 0
+                ;;
+            'q'|'Q') # Quit
+                cleanup_menu
+                trap - EXIT
+                echo ""
+                echo -e "${YELLOW}Setup cancelled by user${NC}"
+                exit 0
+                ;;
+        esac
+    done
+}
+
+# Interactive menu with arrow key navigation (for complex menus)
+show_interactive_menu() {
+    # New signature: claude_suggestion, question_title, options...
+    local claude_suggestion="$1"
+    local question_title="$2"
+    shift 2
+    local -a options=("$@")
+    local selected=0
+    local recommended_index=-1  # No specific recommendation for generic menus
+    local num_options=${#options[@]}
+
+    # Ensure selected is within bounds
+    if [[ $selected -ge $num_options ]]; then
+        selected=$((num_options - 1))
+    fi
+
+    # Check if terminal supports interactive features
+    if [[ ! -t 0 ]] || [[ "${NON_INTERACTIVE:-false}" == "true" ]]; then
+        # Fallback to numbered list for non-interactive mode
+        echo ""
+        echo -e "${CYAN}Project Types:${NC}"
+        for i in "${!options[@]}"; do
+            echo "$((i+1)). ${options[$i]}"
+        done
+        return 0
+    fi
+
+    # Save original terminal settings
+    local original_settings
+    original_settings=$(stty -g 2>/dev/null || echo "")
+
+    # Hide cursor and enable raw mode
+    tput civis 2>/dev/null || true
+    stty -echo -icanon min 1 time 0 2>/dev/null || true
+
+    cleanup_menu() {
+        # Restore cursor and normal mode
+        tput cnorm 2>/dev/null || true
+        if [[ -n "$original_settings" ]]; then
+            stty "$original_settings" 2>/dev/null || true
+        else
+            stty echo icanon 2>/dev/null || true
+        fi
+    }
+    trap cleanup_menu EXIT
+
+    while true; do
+        # Clear and redraw menu
+        echo -e "\033[2J\033[H" # Clear screen and move to top
+
+        # Show question title
+        echo -e "${CYAN}$question_title${NC}"
+        echo ""
+
+        # Show Claude suggestion if available
+        if [[ -n "$claude_suggestion" ]]; then
+            echo -e "${CYAN}🤖 Claude suggests: $claude_suggestion${NC}"
+            echo ""
+        fi
+
+        echo -e "${YELLOW}Use ↑↓ arrows, Enter to select:${NC}"
+        echo ""
+
+        for i in "${!options[@]}"; do
+            local prefix="  "
+            local option_text="$((i+1)). ${options[$i]}"
+
+            if [[ $i -eq $selected ]]; then
+                if [[ $i -eq $recommended_index ]]; then
+                    echo -e "  ${GREEN}► 🎯 $option_text (Recommended)${NC}"
+                else
+                    echo -e "  ${GREEN}► $option_text${NC}"
+                fi
+            else
+                if [[ $i -eq $recommended_index ]]; then
+                    echo -e "    ${BLUE}🎯 $option_text (Recommended)${NC}"
+                else
+                    echo "    $option_text"
+                fi
+            fi
+        done
+
+        echo ""
+        if [[ -n "$claude_suggestion" ]]; then
+            echo -e "${BLUE}Press 's' to use Claude suggestion directly${NC}"
+        fi
+        echo -e "${YELLOW}Use ↑/↓ arrows to navigate, Enter to select, 'q' to quit${NC}"
+
+        # Read single character
+        IFS= read -r -s -n1 char
+
+        case "$char" in
+            $'\x1b') # ESC sequence
+                read -r -s -n2 char
+                case "$char" in
+                    '[A') # Up arrow
+                        if [[ $selected -gt 0 ]]; then
+                            ((selected--))
+                        fi
+                        ;;
+                    '[B') # Down arrow
+                        if [[ $selected -lt $((num_options - 1)) ]]; then
+                            ((selected++))
+                        fi
+                        ;;
+                esac
+                ;;
+            '') # Enter
+                cleanup_menu
+                trap - EXIT
+                echo "" # Clear line after selection
+                MENU_SELECTION=$selected
+                return 0
+                ;;
+            's'|'S') # Use Claude suggestion
+                if [[ -n "$claude_suggestion" ]]; then
+                    cleanup_menu
+                    trap - EXIT
+                    echo ""
+                    # Return special code to indicate suggestion was used
+                    MENU_SELECTION=-1
+                    CLAUDE_SUGGESTION_USED="$claude_suggestion"
+                    return 0
+                fi
                 ;;
             'q'|'Q') # Quit
                 cleanup_menu
@@ -617,7 +1012,7 @@ get_project_info() {
                 default_index=$((suggested_option - 1)) # Convert 1-based to 0-based
             fi
 
-            if show_interactive_menu "$default_index" "${menu_options[@]}"; then
+            if show_project_type_menu "$default_index" "${menu_options[@]}"; then
                 PROJECT_TYPE_NUM=$((MENU_SELECTION + 1)) # Convert 0-based to 1-based
             else
                 # Fallback if interactive menu fails
@@ -677,39 +1072,81 @@ get_security_info() {
     echo -e "${BLUE}🔐 Security & Compliance${NC}"
     echo "=============================="
 
-    # Critical assets
-    show_critical_assets_options
-
+    # Critical assets - use working interactive menu pattern
     local claude_suggestion=""
     if [[ -f "$CLAUDE_SUGGESTIONS_FILE" ]]; then
         claude_suggestion=$(grep "CRITICAL_ASSETS_SUGGESTION:" "$CLAUDE_SUGGESTIONS_FILE" 2>/dev/null | cut -d: -f2- | xargs || echo "")
     fi
 
-    if [[ -n "$claude_suggestion" ]]; then
-        CRITICAL_ASSETS=$(read_with_suggestion "Critical assets (comma-separated or describe): " "$claude_suggestion")
+    local -a critical_assets_options=(
+        "User data (PII, passwords, emails)"
+        "Payment information"
+        "API keys and secrets"
+        "Configuration files"
+        "Database credentials"
+        "Source code"
+        "Business logic"
+        "Custom/Other"
+    )
+
+    if [[ "${NON_INTERACTIVE:-false}" == "true" ]]; then
+        CRITICAL_ASSETS="$claude_suggestion"
+        echo "Critical assets: $CRITICAL_ASSETS (non-interactive mode)"
     else
-        if [[ "${NON_INTERACTIVE:-false}" == "true" ]]; then
-            CRITICAL_ASSETS="user data, configuration files"
-            echo "Critical assets [user data]: user data, configuration files (non-interactive mode)"
+        if show_interactive_menu "$claude_suggestion" "What are your critical assets?" "${critical_assets_options[@]}"; then
+            local selected_index=$MENU_SELECTION
+            if [[ $selected_index -eq -1 ]]; then
+                # Claude suggestion was used
+                CRITICAL_ASSETS="$CLAUDE_SUGGESTION_USED"
+            elif [[ $selected_index -eq $((${#critical_assets_options[@]} - 1)) ]]; then
+                # Custom option selected
+                read -r -p "Enter custom critical assets: " CRITICAL_ASSETS
+            else
+                CRITICAL_ASSETS="${critical_assets_options[$selected_index]}"
+            fi
         else
-            read -r -p "Critical assets (comma-separated or describe): " CRITICAL_ASSETS || {
-                echo -e "\n\033[1;33m⚠️  Input interrupted by user.\033[0m"
-                exit 130
-            }
+            # Fallback if interactive menu fails
+            CRITICAL_ASSETS=$(read_with_suggestion "Critical assets: " "$claude_suggestion")
         fi
     fi
     CRITICAL_ASSETS=${CRITICAL_ASSETS:-"user data"}
 
     # Compliance requirements
-    show_compliance_options
+    local compliance_suggestion=""
+    if [[ -f "$CLAUDE_SUGGESTIONS_FILE" ]]; then
+        compliance_suggestion=$(grep "COMPLIANCE_SUGGESTION:" "$CLAUDE_SUGGESTIONS_FILE" 2>/dev/null | cut -d: -f2- | xargs || echo "")
+    fi
+
+    local -a compliance_options=(
+        "GDPR (EU data protection)"
+        "HIPAA (Healthcare)"
+        "PCI DSS (Payment processing)"
+        "SOX (Financial reporting)"
+        "ISO 27001 (Information security)"
+        "Internal company policies"
+        "No specific compliance"
+        "Custom/Other"
+    )
+
     if [[ "${NON_INTERACTIVE:-false}" == "true" ]]; then
-        COMPLIANCE="7"
-        echo "Compliance requirements [7]: 7 (non-interactive mode)"
+        COMPLIANCE="$compliance_suggestion"
+        echo "Compliance requirements: $COMPLIANCE (non-interactive mode)"
     else
-        read -r -p "Compliance requirements (1-8) [7]: " COMPLIANCE || {
-            echo -e "\n\033[1;33m⚠️  Input interrupted by user.\033[0m"
-            exit 130
-        }
+        if show_interactive_menu "$compliance_suggestion" "What compliance requirements apply?" "${compliance_options[@]}"; then
+            local selected_index=$MENU_SELECTION
+            if [[ $selected_index -eq -1 ]]; then
+                # Claude suggestion was used
+                COMPLIANCE="$CLAUDE_SUGGESTION_USED"
+            elif [[ $selected_index -eq $((${#compliance_options[@]} - 1)) ]]; then
+                # Custom option selected
+                read -r -p "Enter custom compliance requirement: " COMPLIANCE
+            else
+                COMPLIANCE="${compliance_options[$selected_index]}"
+            fi
+        else
+            # Fallback if interactive menu fails
+            COMPLIANCE=$(read_with_suggestion "Compliance requirements (1-8) [7]: " "$compliance_suggestion")
+        fi
     fi
     COMPLIANCE=${COMPLIANCE:-7}
 }
@@ -726,41 +1163,82 @@ get_technical_info() {
         claude_suggestion=$(grep "TECH_STACK_SUGGESTION:" "$CLAUDE_SUGGESTIONS_FILE" 2>/dev/null | cut -d: -f2- | xargs || echo "")
     fi
 
-    if [[ -n "$claude_suggestion" ]]; then
-        TECH_STACK=$(read_with_suggestion "Tech stack: " "$claude_suggestion")
+    local -a tech_stack_options=(
+        "React + Node.js + PostgreSQL"
+        "Vue.js + Express + MongoDB"
+        "Python Django + PostgreSQL"
+        "Python FastAPI + SQLAlchemy"
+        "Java Spring Boot + MySQL"
+        "Go + PostgreSQL"
+        "Ruby on Rails + PostgreSQL"
+        "PHP Laravel + MySQL"
+        "ASP.NET Core + SQL Server"
+        "Flutter + Firebase"
+        "React Native + Node.js"
+        "Custom/Other"
+    )
+
+    if [[ "${NON_INTERACTIVE:-false}" == "true" ]]; then
+        TECH_STACK="$claude_suggestion"
+        echo "Tech stack: $TECH_STACK (non-interactive mode)"
     else
-        show_tech_stack_options
-        if [[ "${NON_INTERACTIVE:-false}" == "true" ]]; then
-            TECH_STACK="React + Node.js + PostgreSQL"
-            echo "Tech stack [React + Node.js]: React + Node.js + PostgreSQL (non-interactive mode)"
+        if show_interactive_menu "$claude_suggestion" "What is your tech stack?" "${tech_stack_options[@]}"; then
+            local selected_index=$MENU_SELECTION
+            if [[ $selected_index -eq -1 ]]; then
+                # Claude suggestion was used
+                TECH_STACK="$CLAUDE_SUGGESTION_USED"
+            elif [[ $selected_index -eq $((${#tech_stack_options[@]} - 1)) ]]; then
+                # Custom option selected
+                read -r -p "Enter custom tech stack: " TECH_STACK
+            else
+                TECH_STACK="${tech_stack_options[$selected_index]}"
+            fi
         else
-            read -r -p "Tech stack (describe or select): " TECH_STACK || {
-                echo -e "\n\033[1;33m⚠️  Input interrupted by user.\033[0m"
-                exit 130
-            }
+            # Fallback if interactive menu fails
+            TECH_STACK=$(read_with_suggestion "Tech stack: " "$claude_suggestion")
         fi
-        TECH_STACK=${TECH_STACK:-"React + Node.js"}
     fi
 
     # Common issues
-    show_common_issues_options
-
-    local claude_suggestion=""
+    local issues_suggestion=""
     if [[ -f "$CLAUDE_SUGGESTIONS_FILE" ]]; then
-        claude_suggestion=$(grep "COMMON_ISSUES_SUGGESTION:" "$CLAUDE_SUGGESTIONS_FILE" 2>/dev/null | cut -d: -f2- | xargs || echo "")
+        issues_suggestion=$(grep "COMMON_ISSUES_SUGGESTION:" "$CLAUDE_SUGGESTIONS_FILE" 2>/dev/null | cut -d: -f2- | xargs || echo "")
     fi
 
-    if [[ -n "$claude_suggestion" ]]; then
-        COMMON_ISSUES=$(read_with_suggestion "Common issues (comma-separated): " "$claude_suggestion")
+    local -a issues_options=(
+        "Authentication and authorization"
+        "Input validation and sanitization"
+        "Database performance"
+        "API rate limiting"
+        "Memory leaks"
+        "Security vulnerabilities"
+        "Error handling"
+        "Data consistency"
+        "Scalability issues"
+        "Testing coverage"
+        "Deployment issues"
+        "Configuration management"
+        "Custom/Other"
+    )
+
+    if [[ "${NON_INTERACTIVE:-false}" == "true" ]]; then
+        COMMON_ISSUES="$issues_suggestion"
+        echo "Common issues: $COMMON_ISSUES (non-interactive mode)"
     else
-        if [[ "${NON_INTERACTIVE:-false}" == "true" ]]; then
-            COMMON_ISSUES="authentication, input validation, error handling"
-            echo "Common issues [authentication]: authentication, input validation, error handling (non-interactive mode)"
+        if show_interactive_menu "$issues_suggestion" "What are common issues you want to address?" "${issues_options[@]}"; then
+            local selected_index=$MENU_SELECTION
+            if [[ $selected_index -eq -1 ]]; then
+                # Claude suggestion was used
+                COMMON_ISSUES="$CLAUDE_SUGGESTION_USED"
+            elif [[ $selected_index -eq $((${#issues_options[@]} - 1)) ]]; then
+                # Custom option selected
+                read -r -p "Enter custom common issues: " COMMON_ISSUES
+            else
+                COMMON_ISSUES="${issues_options[$selected_index]}"
+            fi
         else
-            read -r -p "Common issues (comma-separated): " COMMON_ISSUES || {
-                echo -e "\n\033[1;33m⚠️  Input interrupted by user.\033[0m"
-                exit 130
-            }
+            # Fallback if interactive menu fails
+            COMMON_ISSUES=$(read_with_suggestion "Common issues: " "$issues_suggestion")
         fi
     fi
     COMMON_ISSUES=${COMMON_ISSUES:-"authentication, input validation"}
