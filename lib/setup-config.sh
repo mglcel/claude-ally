@@ -242,8 +242,10 @@ check_stack_and_offer_contribution() {
 
         if [[ "$CONTRIBUTE_CHOICE" =~ ^[Yy]$ ]] || [[ -z "$CONTRIBUTE_CHOICE" ]]; then
             echo -e "${GREEN}🎉 Thank you for contributing!${NC}"
-            echo "After setup completes, run: claude-ally contribute"
-            echo "This will analyze your project and help add the new project type detection."
+            echo "The contribution workflow will run automatically after setup completes."
+            echo "This will help the community detect similar projects automatically."
+            CONTRIBUTE_ACCEPTED=true
+            STACK_IS_UNKNOWN=true
         fi
         return 0
     fi
