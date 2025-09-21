@@ -198,6 +198,7 @@ jobs:
           ./claude-ally.sh detect .
 
       - name: Run unit tests (cross-platform)
+        timeout-minutes: 5
         run: |
           echo "🧩 Running unit tests on ${{ matrix.os }}"
           chmod +x tests/run_all_tests.sh
@@ -207,7 +208,11 @@ jobs:
           chmod +x tests/unit/test_edge_cases.sh
           chmod +x tests/unit/test_claude_md_minimal.sh
           chmod +x tests/unit/test_analyze_feature.sh
-          ./tests/run_all_tests.sh unit
+          timeout 300 ./tests/run_all_tests.sh unit || {
+            echo "❌ Unit tests timed out or failed on ${{ matrix.os }}"
+            echo "This may indicate a platform-specific issue that needs investigation"
+            exit 1
+          }
 
   # Security and Code Quality
   security:
