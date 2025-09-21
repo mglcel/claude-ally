@@ -18,7 +18,7 @@ BOLD='\033[1m'
 NC='\033[0m'
 
 # Version
-VERSION="1.0.0"
+VERSION="2.2"
 
 # Load essential modules only
 load_modules() {
@@ -61,7 +61,7 @@ show_help() {
     echo "  detect [directory]     Show detected technology stack"
     echo "  analyze [directory]    Comprehensive project analysis"
     echo "  contribute [directory] Add your stack to the community"
-    echo "  validate              Validate system installation"
+    echo "  validate [file]       Validate system installation or prompt file"
     echo "  version               Show version information"
     echo "  help                  Show this help message"
     echo ""
@@ -80,6 +80,7 @@ show_help() {
     echo ""
     echo -e "  ${GREEN}# System management${NC}"
     echo "  claude-ally.sh validate                  # Check installation"
+    echo "  claude-ally.sh validate prompt_file.txt # Validate prompt file"
     echo "  claude-ally.sh clean [directory]         # Clear project-specific caches"
 }
 
@@ -440,38 +441,51 @@ main() {
             fi
             ;;
         "detect")
-            if declare -f detect_project_stack > /dev/null; then
-                local project_dir="${1:-$(pwd)}"
+            local project_dir="${1:-$(pwd)}"
+            echo -e "${CYAN}🔍 Detecting project stack: $project_dir${NC}"
 
-                echo -e "${CYAN}🔍 Detecting project stack: $project_dir${NC}"
+            # Load Claude integration module
+            if [[ -f "$SCRIPT_DIR/lib/setup-claude.sh" ]]; then
+                source "$SCRIPT_DIR/lib/setup-claude.sh"
+            fi
 
-                if result=$(detect_project_stack "$project_dir"); then
+            # Always try Claude analysis first (bypass cache)
+            local claude_detected=false
+            if declare -f perform_claude_project_analysis > /dev/null; then
+                echo -e "${BLUE}🤖 Using Claude AI for stack detection (bypassing cache)${NC}"
+                unset CLAUDE_DETECTED_STACK  # Clear any cached results
 
-                    local stack_id tech_stack project_type confidence
-                    IFS='|' read -r stack_id tech_stack project_type confidence <<< "$result"
+                if perform_claude_project_analysis "$project_dir"; then
+                    if [[ -n "${CLAUDE_DETECTED_STACK:-}" ]]; then
+                        echo -e "${GREEN}✅ Claude detected: $CLAUDE_DETECTED_STACK${NC}"
+                        echo -e "${BLUE}   Source: Claude AI Analysis${NC}"
+                        echo -e "${YELLOW}   Confidence: HIGH${NC}"
+                        claude_detected=true
+                    fi
+                fi
+            fi
 
-                    if declare -f show_success > /dev/null; then
-                        show_success "Detected: $tech_stack"
-                    else
+            # Fall back to static detection only if Claude fails
+            if [[ "$claude_detected" != "true" ]]; then
+                echo -e "${YELLOW}⚠️ Claude analysis unavailable, falling back to static detection${NC}"
+
+                if declare -f detect_project_stack > /dev/null; then
+                    if result=$(detect_project_stack "$project_dir"); then
+                        local stack_id tech_stack project_type confidence
+                        IFS='|' read -r stack_id tech_stack project_type confidence <<< "$result"
+
                         echo -e "${GREEN}✅ Detected: $tech_stack${NC}"
-                    fi
-                    echo -e "${BLUE}   Type: $project_type${NC}"
-                    echo -e "${YELLOW}   Confidence: $confidence%${NC}"
-                else
-                    if declare -f stop_progress > /dev/null; then
-                        stop_progress
-                    fi
-                    if declare -f show_warning > /dev/null; then
-                        show_warning "Unknown stack detected"
-                        show_info "Run 'claude-ally contribute' to add this stack"
+                        echo -e "${BLUE}   Type: $project_type${NC}"
+                        echo -e "${YELLOW}   Confidence: $confidence%${NC}"
+                        echo -e "${CYAN}   Source: Static Pattern Detection${NC}"
                     else
                         echo -e "${YELLOW}⚠️ Unknown stack detected${NC}"
                         echo -e "${CYAN}💡 Run 'claude-ally contribute' to add this stack${NC}"
                     fi
+                else
+                    echo -e "${RED}❌ No detection methods available${NC}"
+                    exit 1
                 fi
-            else
-                echo -e "${RED}❌ Stack detector not available${NC}"
-                exit 1
             fi
             ;;
         "analyze")
@@ -574,17 +588,94 @@ main() {
             fi
             ;;
         "validate")
-            if [[ -f "$SCRIPT_DIR/lib/validate.sh" ]]; then
-                local file_path="${1}"
-                if [[ -z "$file_path" ]]; then
-                    echo -e "${RED}❌ Please specify a file to validate${NC}"
-                    echo -e "${CYAN}Usage: claude-ally.sh validate <file>${NC}"
+            local file_path="${1}"
+            if [[ -n "$file_path" ]]; then
+                # File validation mode - validate a specific prompt file
+                if [[ -f "$SCRIPT_DIR/lib/validate.sh" ]]; then
+                    bash "$SCRIPT_DIR/lib/validate.sh" "$file_path"
+                else
+                    echo -e "${RED}❌ Prompt validation script not found${NC}"
                     exit 1
                 fi
-                bash "$SCRIPT_DIR/lib/validate.sh" "$file_path"
             else
-                echo -e "${RED}❌ Validation script not found${NC}"
-                exit 1
+                # System validation mode - validate installation
+                echo -e "${CYAN}🔍 Validating Claude-Ally System Installation${NC}"
+                echo "============================================="
+                echo ""
+
+                local validation_errors=0
+
+                # Check core files
+                echo -e "${BLUE}📂 Checking core files...${NC}"
+                if [[ -f "$SCRIPT_DIR/claude-ally.sh" ]]; then
+                    echo -e "${GREEN}✅ Main script: claude-ally.sh${NC}"
+                else
+                    echo -e "${RED}❌ Missing: claude-ally.sh${NC}"
+                    ((validation_errors++))
+                fi
+
+                # Check lib directory and modules
+                echo -e "${BLUE}📚 Checking library modules...${NC}"
+                local required_modules=(
+                    "lib/stack-detector.sh"
+                    "lib/setup-claude.sh"
+                    "lib/contribute-stack.sh"
+                    "lib/setup-config.sh"
+                )
+
+                for module in "${required_modules[@]}"; do
+                    if [[ -f "$SCRIPT_DIR/$module" ]]; then
+                        echo -e "${GREEN}✅ Module: $module${NC}"
+                    else
+                        echo -e "${RED}❌ Missing: $module${NC}"
+                        ((validation_errors++))
+                    fi
+                done
+
+                # Check stacks directory
+                echo -e "${BLUE}🏗️  Checking stack detectors...${NC}"
+                if [[ -d "$SCRIPT_DIR/stacks" ]]; then
+                    local stack_count
+                    stack_count=$(find "$SCRIPT_DIR/stacks" -name "*.sh" -type f 2>/dev/null | wc -l | tr -d '[:space:]')
+                    echo -e "${GREEN}✅ Stacks directory found with $stack_count detectors${NC}"
+                else
+                    echo -e "${RED}❌ Missing: stacks directory${NC}"
+                    ((validation_errors++))
+                fi
+
+                # Check system dependencies
+                echo -e "${BLUE}🔧 Checking system dependencies...${NC}"
+                local deps=("bash" "git" "grep" "find" "sed")
+                for dep in "${deps[@]}"; do
+                    if command -v "$dep" &> /dev/null; then
+                        echo -e "${GREEN}✅ System dependency: $dep${NC}"
+                    else
+                        echo -e "${RED}❌ Missing dependency: $dep${NC}"
+                        ((validation_errors++))
+                    fi
+                done
+
+                # Check optional dependencies
+                echo -e "${BLUE}🌟 Checking optional dependencies...${NC}"
+                local opt_deps=("claude" "gh" "jq")
+                for dep in "${opt_deps[@]}"; do
+                    if command -v "$dep" &> /dev/null; then
+                        echo -e "${GREEN}✅ Optional dependency: $dep${NC}"
+                    else
+                        echo -e "${YELLOW}⚠️  Optional dependency not found: $dep${NC}"
+                    fi
+                done
+
+                # Summary
+                echo ""
+                if [[ $validation_errors -eq 0 ]]; then
+                    echo -e "${GREEN}✅ System validation passed!${NC}"
+                    echo "Claude-Ally is properly installed and ready to use."
+                else
+                    echo -e "${RED}❌ System validation failed with $validation_errors errors${NC}"
+                    echo "Please check the missing files and dependencies above."
+                    exit 1
+                fi
             fi
             ;;
         "clean")
