@@ -73,11 +73,9 @@ check_claude_availability() {
 attempt_automatic_claude_analysis() {
     echo -e "${BLUE}🤖 Attempting automatic Claude analysis...${NC}"
 
-    # Since we're running in Claude Code, we can use a more direct approach
-    # We'll analyze the repository directly using available information
-
+    # Since we're running in Claude Code, we can leverage Claude for intelligent analysis
     local analysis_result=""
-    local confidence="MEDIUM"
+    local confidence="HIGH"
 
     # Create a temporary file for Claude suggestions
     CLAUDE_SUGGESTIONS_FILE="/tmp/claude_suggestions_$(date +%s)_$$.txt"
@@ -85,10 +83,12 @@ attempt_automatic_claude_analysis() {
 
     # Use the existing stack detection system first
     local detected_stack_info=""
+    local project_path="${PROJECT_DIR:-$(pwd)}"
     if declare -f detect_project_stack > /dev/null; then
-        detected_stack_info=$(detect_project_stack "$PROJECT_DIR" 2>/dev/null || echo "")
+        detected_stack_info=$(detect_project_stack "$project_path" 2>/dev/null || echo "")
     fi
 
+    # Initialize with defaults that will be overridden by Claude analysis
     local suggested_project_type="web-app"
     local suggested_tech_stack="Unknown"
     local suggested_critical_assets="user data, configuration files"
@@ -96,7 +96,19 @@ attempt_automatic_claude_analysis() {
     local suggested_issues="configuration errors, dependency issues"
     local suggested_compliance="7"
 
-    # Generate suggestions based on detected stack or basic analysis
+    # Perform Claude-powered project analysis
+    echo "🤖 Claude is analyzing your project structure..."
+    local analysis_success=false
+
+    # Try to leverage Claude for intelligent project analysis
+    if perform_claude_project_analysis "$project_path"; then
+        analysis_success=true
+        echo "✅ Claude analysis completed successfully"
+    else
+        echo "⚠️  Claude analysis unavailable, using stack detection"
+    fi
+
+    # Generate suggestions based on detected stack or intelligent analysis
     if [[ -n "$detected_stack_info" ]]; then
         # Parse the detected stack information
         IFS='|' read -r stack_id tech_stack project_type confidence <<< "$detected_stack_info"
@@ -137,10 +149,16 @@ attempt_automatic_claude_analysis() {
                 suggested_compliance="7"
                 ;;
         esac
+    elif [[ "$analysis_success" == "true" ]]; then
+        echo "🤖 Using Claude analysis results"
+        confidence="HIGH"
+        analysis_result="Claude AI project analysis"
+        # Claude analysis would have updated the suggestion variables
     else
-        echo "📁 No specific stack detected - using general analysis"
-        confidence="MEDIUM"
-        analysis_result="General project structure analysis"
+        echo "📁 No specific stack detected - using fallback analysis"
+        confidence="LOW"
+        analysis_result="Fallback analysis - Claude integration needed"
+        # suggested_tech_stack remains "Unknown" until Claude analysis is implemented
     fi
 
     # Create intelligent suggestions based on project analysis
@@ -150,7 +168,7 @@ CONFIDENCE: $confidence
 ANALYSIS: $analysis_result
 
 # Tailored suggestions based on detected project type
-PROJECT_NAME_SUGGESTION: $(basename "$PROJECT_DIR")
+PROJECT_NAME_SUGGESTION: $(basename "$project_path")
 PROJECT_TYPE_SUGGESTION: $suggested_project_type
 TECH_STACK_SUGGESTION: $suggested_tech_stack
 CRITICAL_ASSETS_SUGGESTION: $suggested_critical_assets
@@ -166,6 +184,91 @@ EOF
         echo -e "${YELLOW}⚠️  Automatic analysis could not complete${NC}"
         return 1
     fi
+}
+
+# Perform actual Claude analysis of the project
+perform_claude_project_analysis() {
+    local project_dir="$1"
+
+    # Since we're running in Claude Code environment, Claude can analyze the project
+    # This function should leverage Claude's actual capabilities to examine the project structure
+    # and provide intelligent suggestions for tech stack, project type, etc.
+
+    echo "🔍 Claude examining project files and structure..."
+
+    # Collect key project information for Claude to analyze
+    local key_files=""
+    local project_structure=""
+
+    # Look for configuration files that indicate tech stack
+    if [[ -f "$project_dir/package.json" ]]; then
+        key_files="$key_files package.json"
+        # Could read package.json content for framework detection
+    fi
+
+    if [[ -f "$project_dir/requirements.txt" ]]; then
+        key_files="$key_files requirements.txt"
+    fi
+
+    # Look for framework-specific files
+    [[ -f "$project_dir/next.config.js" ]] && key_files="$key_files next.config.js"
+    [[ -f "$project_dir/vue.config.js" ]] && key_files="$key_files vue.config.js"
+    [[ -f "$project_dir/angular.json" ]] && key_files="$key_files angular.json"
+
+    # Analyze directory structure
+    [[ -d "$project_dir/src" ]] && project_structure="$project_structure src/"
+    [[ -d "$project_dir/components" ]] && project_structure="$project_structure components/"
+    [[ -d "$project_dir/pages" ]] && project_structure="$project_structure pages/"
+
+    # TODO: This is where actual Claude integration would happen
+    # For now, we'll return false to indicate Claude analysis is not yet implemented
+    # The real implementation should:
+    # 1. Use Claude to analyze the collected project information
+    # 2. Have Claude suggest appropriate tech stack based on files/structure
+    # 3. Update the suggestion variables based on Claude's analysis
+    # 4. Return true if analysis succeeds
+
+    echo "📝 Project analysis: files=$key_files, structure=$project_structure"
+    echo "⚠️  Claude integration for project analysis is pending implementation"
+
+    return 1  # Return false for now until real Claude integration is implemented
+}
+
+# Analyze project structure intelligently
+analyze_project_structure() {
+    local project_dir="$1"
+
+    # Gather project information for intelligent analysis
+    local project_files=""
+    local config_files=""
+    local source_files=""
+
+    # Key configuration files
+    [[ -f "$project_dir/package.json" ]] && config_files="$config_files package.json"
+    [[ -f "$project_dir/requirements.txt" ]] && config_files="$config_files requirements.txt"
+    [[ -f "$project_dir/Gemfile" ]] && config_files="$config_files Gemfile"
+    [[ -f "$project_dir/composer.json" ]] && config_files="$config_files composer.json"
+    [[ -f "$project_dir/pom.xml" ]] && config_files="$config_files pom.xml"
+    [[ -f "$project_dir/Cargo.toml" ]] && config_files="$config_files Cargo.toml"
+    [[ -f "$project_dir/go.mod" ]] && config_files="$config_files go.mod"
+    [[ -f "$project_dir/pubspec.yaml" ]] && config_files="$config_files pubspec.yaml"
+
+    # Framework indicators
+    [[ -f "$project_dir/next.config.js" ]] && project_files="$project_files next.config.js"
+    [[ -f "$project_dir/vue.config.js" ]] && project_files="$project_files vue.config.js"
+    [[ -f "$project_dir/angular.json" ]] && project_files="$project_files angular.json"
+    [[ -f "$project_dir/gatsby-config.js" ]] && project_files="$project_files gatsby-config.js"
+    [[ -f "$project_dir/nuxt.config.js" ]] && project_files="$project_files nuxt.config.js"
+
+    # Directory structure indicators
+    [[ -d "$project_dir/src" ]] && source_files="$source_files src/"
+    [[ -d "$project_dir/lib" ]] && source_files="$source_files lib/"
+    [[ -d "$project_dir/components" ]] && source_files="$source_files components/"
+    [[ -d "$project_dir/pages" ]] && source_files="$source_files pages/"
+    [[ -d "$project_dir/app" ]] && source_files="$source_files app/"
+
+    # Output analysis summary
+    echo "CONFIG_FILES:$config_files|FRAMEWORK_FILES:$project_files|SOURCE_DIRS:$source_files"
 }
 
 # Analyze repository structure
