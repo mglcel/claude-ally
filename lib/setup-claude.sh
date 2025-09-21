@@ -108,18 +108,36 @@ attempt_automatic_claude_analysis() {
         echo "⚠️  Claude analysis unavailable, using stack detection"
     fi
 
-    # Generate suggestions based on detected stack or intelligent analysis
-    if [[ -n "$detected_stack_info" ]]; then
-        # Parse the detected stack information
-        IFS='|' read -r stack_id tech_stack project_type confidence <<< "$detected_stack_info"
-
-        echo "🔍 Using detected stack: $tech_stack"
-        analysis_result="$tech_stack detected via stack detection"
-        suggested_tech_stack="$tech_stack"
+    # Generate suggestions based on Claude analysis or fallback to static detection
+    if [[ "$analysis_success" == "true" && -n "$CLAUDE_DETECTED_STACK" ]]; then
+        echo "🤖 Using Claude analysis results"
+        suggested_tech_stack="$CLAUDE_DETECTED_STACK"
+        analysis_result="Claude AI project analysis"
         confidence="HIGH"
+
+        # Extract stack components for mapping
+        local stack_id=""
+        if [[ "$CLAUDE_DETECTED_STACK" == *"PHP Laravel"* ]] || [[ "$CLAUDE_DETECTED_STACK" == *"Laravel"* ]]; then
+            stack_id="php-laravel"
+        elif [[ "$CLAUDE_DETECTED_STACK" == *"Next.js"* ]] || [[ "$CLAUDE_DETECTED_STACK" == *"React"* ]]; then
+            stack_id="nextjs-ai"
+        elif [[ "$CLAUDE_DETECTED_STACK" == *"Python"* ]]; then
+            stack_id="python-ai"
+        elif [[ "$CLAUDE_DETECTED_STACK" == *"Node.js"* ]]; then
+            stack_id="nextjs-ai"
+        else
+            stack_id="unknown"
+        fi
 
         # Map to appropriate project type suggestions based on detected stack
         case "$stack_id" in
+            "php-laravel")
+                suggested_project_type="web-app"
+                suggested_critical_assets="user data, database credentials, configuration files, API keys, session data"
+                suggested_requirements="SQL injection prevention, XSS protection, CSRF protection, input validation"
+                suggested_issues="configuration errors, dependency issues, database migration problems, permission issues, cache conflicts"
+                suggested_compliance="No specific compliance"
+                ;;
             "nextjs-ai")
                 suggested_project_type="web-app"
                 suggested_critical_assets="user sessions, API keys, AI model data"
@@ -149,16 +167,36 @@ attempt_automatic_claude_analysis() {
                 suggested_compliance="No specific compliance"
                 ;;
         esac
-    elif [[ "$analysis_success" == "true" ]]; then
-        echo "🤖 Using Claude analysis results"
-        confidence="HIGH"
-        analysis_result="Claude AI project analysis"
-        # Claude analysis would have updated the suggestion variables
+    elif [[ -n "$detected_stack_info" ]]; then
+        # Fallback to static detection if Claude analysis failed
+        IFS='|' read -r stack_id tech_stack project_type confidence <<< "$detected_stack_info"
+        echo "🔍 Using detected stack: $tech_stack"
+        analysis_result="$tech_stack detected via static detection"
+        suggested_tech_stack="$tech_stack"
+        confidence="MEDIUM"
+
+        # Use the same case mapping for static detection
+        case "$stack_id" in
+            "php-laravel")
+                suggested_project_type="web-app"
+                suggested_critical_assets="user data, database credentials, configuration files, API keys, session data"
+                suggested_requirements="SQL injection prevention, XSS protection, CSRF protection, input validation"
+                suggested_issues="configuration errors, dependency issues, database migration problems, permission issues, cache conflicts"
+                suggested_compliance="No specific compliance"
+                ;;
+            *)
+                suggested_project_type="web-app"
+                suggested_critical_assets="user data, configuration files"
+                suggested_requirements="security validation, error handling"
+                suggested_issues="configuration errors, dependency issues"
+                suggested_compliance="No specific compliance"
+                ;;
+        esac
     else
-        echo "📁 No specific stack detected - using fallback analysis"
+        echo "📁 No stack detected - using generic defaults"
         confidence="LOW"
-        analysis_result="Fallback analysis - Claude integration needed"
-        # suggested_tech_stack remains "Unknown" until Claude analysis is implemented
+        analysis_result="Generic analysis - no specific stack detected"
+        suggested_tech_stack="Unknown"
     fi
 
     # Create intelligent suggestions based on project analysis
@@ -192,128 +230,69 @@ perform_claude_project_analysis() {
 
     echo "🔍 Claude examining project files and structure..."
 
-    # Gather comprehensive project information for analysis
-    local analysis_data=""
-    local config_files=""
-    local framework_indicators=""
-    local directory_structure=""
-
-    # Scan for configuration files that indicate tech stack
-    [[ -f "$project_dir/package.json" ]] && config_files="$config_files package.json"
-    [[ -f "$project_dir/requirements.txt" ]] && config_files="$config_files requirements.txt"
-    [[ -f "$project_dir/setup.py" ]] && config_files="$config_files setup.py"
-    [[ -f "$project_dir/pyproject.toml" ]] && config_files="$config_files pyproject.toml"
-    [[ -f "$project_dir/Gemfile" ]] && config_files="$config_files Gemfile"
-    [[ -f "$project_dir/composer.json" ]] && config_files="$config_files composer.json"
-    [[ -f "$project_dir/pom.xml" ]] && config_files="$config_files pom.xml"
-    [[ -f "$project_dir/build.gradle" ]] && config_files="$config_files build.gradle"
-    [[ -f "$project_dir/build.gradle.kts" ]] && config_files="$config_files build.gradle.kts"
-    [[ -f "$project_dir/settings.gradle.kts" ]] && config_files="$config_files settings.gradle.kts"
-    [[ -f "$project_dir/Cargo.toml" ]] && config_files="$config_files Cargo.toml"
-    [[ -f "$project_dir/go.mod" ]] && config_files="$config_files go.mod"
-    [[ -f "$project_dir/pubspec.yaml" ]] && config_files="$config_files pubspec.yaml"
-
-    # Framework-specific indicators
-    [[ -f "$project_dir/next.config.js" ]] && framework_indicators="$framework_indicators next.config.js"
-    [[ -f "$project_dir/vue.config.js" ]] && framework_indicators="$framework_indicators vue.config.js"
-    [[ -f "$project_dir/angular.json" ]] && framework_indicators="$framework_indicators angular.json"
-    [[ -f "$project_dir/gatsby-config.js" ]] && framework_indicators="$framework_indicators gatsby-config.js"
-    [[ -f "$project_dir/nuxt.config.js" ]] && framework_indicators="$framework_indicators nuxt.config.js"
-    [[ -f "$project_dir/tailwind.config.js" ]] && framework_indicators="$framework_indicators tailwind.config.js"
-    [[ -f "$project_dir/vite.config.js" ]] && framework_indicators="$framework_indicators vite.config.js"
-
-    # Directory structure analysis
-    [[ -d "$project_dir/src" ]] && directory_structure="$directory_structure src/"
-    [[ -d "$project_dir/components" ]] && directory_structure="$directory_structure components/"
-    [[ -d "$project_dir/pages" ]] && directory_structure="$directory_structure pages/"
-    [[ -d "$project_dir/app" ]] && directory_structure="$directory_structure app/"
-    [[ -d "$project_dir/lib" ]] && directory_structure="$directory_structure lib/"
-    [[ -d "$project_dir/public" ]] && directory_structure="$directory_structure public/"
-
-    # Use Claude's intelligence to analyze the project structure and suggest tech stack
-    local suggested_stack=""
-
-    # Intelligent analysis based on collected information
-    if [[ -n "$config_files" ]]; then
-        echo "📋 Found configuration files:$config_files"
-        if [[ "$config_files" == *"package.json"* ]]; then
-            # Analyze package.json content for better suggestions
-            if [[ -f "$project_dir/package.json" ]]; then
-                local package_content=""
-                if command -v jq >/dev/null 2>&1; then
-                    # Use jq if available for better JSON parsing
-                    local dependencies
-                    local dev_dependencies
-                    dependencies=$(jq -r '.dependencies // {} | keys[]' "$project_dir/package.json" 2>/dev/null | tr '\n' ' ')
-                    dev_dependencies=$(jq -r '.devDependencies // {} | keys[]' "$project_dir/package.json" 2>/dev/null | tr '\n' ' ')
-                    package_content="deps: $dependencies devDeps: $dev_dependencies"
-                else
-                    # Fallback to grep-based parsing
-                    package_content=$(grep -E '"(react|vue|angular|next|gatsby|nuxt)"' "$project_dir/package.json" 2>/dev/null || echo "")
-                fi
-
-                # Claude-like intelligent inference from package.json content - map to available options
-                if [[ "$package_content" == *"react"* ]] && [[ "$package_content" == *"next"* ]]; then
-                    suggested_stack="Next.js + React"
-                elif [[ "$package_content" == *"react"* ]]; then
-                    suggested_stack="React + Node.js + PostgreSQL"
-                elif [[ "$package_content" == *"vue"* ]] && [[ "$package_content" == *"nuxt"* ]]; then
-                    suggested_stack="Vue.js + Express + MongoDB"
-                elif [[ "$package_content" == *"vue"* ]]; then
-                    suggested_stack="Vue.js + Express + MongoDB"
-                elif [[ "$package_content" == *"angular"* ]]; then
-                    suggested_stack="Angular + TypeScript"
-                elif [[ "$package_content" == *"gatsby"* ]]; then
-                    suggested_stack="React + Node.js + PostgreSQL"
-                elif [[ "$framework_indicators" == *"next.config.js"* ]]; then
-                    suggested_stack="Next.js + React"
-                elif [[ "$framework_indicators" == *"vue.config.js"* ]]; then
-                    suggested_stack="Vue.js + Express + MongoDB"
-                elif [[ "$framework_indicators" == *"angular.json"* ]]; then
-                    suggested_stack="Angular + TypeScript"
-                elif [[ "$directory_structure" == *"components/"* ]] && [[ "$directory_structure" == *"pages/"* ]]; then
-                    suggested_stack="React + Node.js + PostgreSQL"
-                else
-                    suggested_stack="Node.js/JavaScript"
-                fi
-            else
-                suggested_stack="Node.js/JavaScript"
-            fi
-        elif [[ "$config_files" == *"requirements.txt"* ]] || [[ "$config_files" == *"setup.py"* ]] || [[ "$config_files" == *"pyproject.toml"* ]]; then
-            suggested_stack="Python"
-        elif [[ "$config_files" == *"Gemfile"* ]]; then
-            suggested_stack="Ruby on Rails + PostgreSQL"
-        elif [[ "$config_files" == *"composer.json"* ]]; then
-            suggested_stack="PHP Laravel + MySQL"
-        elif [[ "$config_files" == *"build.gradle.kts"* ]] || [[ "$config_files" == *"settings.gradle.kts"* ]]; then
-            # Analyze Kotlin Multiplatform project structure - this is unknown tech stack
-            if [[ -d "$project_dir/composeApp" ]] && [[ -d "$project_dir/iosApp" ]]; then
-                suggested_stack="Kotlin Multiplatform Mobile + Compose"
-            elif [[ -d "$project_dir/shared" ]] && { [[ -d "$project_dir/androidApp" ]] || [[ -d "$project_dir/iosApp" ]]; }; then
-                suggested_stack="Kotlin Multiplatform Mobile"
-            elif [[ -d "$project_dir/shared" ]]; then
-                suggested_stack="Kotlin Multiplatform"
-            else
-                suggested_stack="Kotlin + Gradle"
-            fi
-        elif [[ "$config_files" == *"pom.xml"* ]] || [[ "$config_files" == *"build.gradle"* ]]; then
-            suggested_stack="Java Spring Boot + MySQL"
-        elif [[ "$config_files" == *"Cargo.toml"* ]]; then
-            suggested_stack="Rust"
-        elif [[ "$config_files" == *"go.mod"* ]]; then
-            suggested_stack="Go + PostgreSQL"
-        elif [[ "$config_files" == *"pubspec.yaml"* ]]; then
-            suggested_stack="Flutter + Firebase"
-        fi
+    # Check if claude command is available
+    if ! command -v claude >/dev/null 2>&1; then
+        echo "⚠️  Claude CLI not available"
+        return 1
     fi
 
-    # Update global variables with Claude's analysis
-    if [[ -n "$suggested_stack" ]]; then
-        suggested_tech_stack="$suggested_stack"
-        echo "💡 Claude suggests: $suggested_stack"
+    # Gather project structure information for Claude analysis
+    local project_structure=""
+    project_structure=$(find "$project_dir" -maxdepth 3 -type f \( \
+        -name "*.json" -o -name "*.js" -o -name "*.ts" -o \
+        -name "*.php" -o -name "*.py" -o -name "*.rb" -o \
+        -name "*.go" -o -name "*.rs" -o -name "*.java" -o \
+        -name "*.toml" -o -name "*.yaml" -o -name "*.yml" -o \
+        -name "Dockerfile" -o -name "Makefile" -o -name "artisan" -o \
+        -name "composer.*" -o -name "package*.json" -o -name "requirements.txt" \
+        \) 2>/dev/null | head -20)
+
+    # Get sample file contents for better analysis
+    local sample_configs=""
+    for config_file in "package.json" "composer.json" "requirements.txt" "Cargo.toml" "go.mod"; do
+        if [[ -f "$project_dir/$config_file" ]]; then
+            sample_configs="$sample_configs\n\n=== $config_file ===\n"
+            sample_configs="$sample_configs$(head -20 "$project_dir/$config_file" 2>/dev/null)"
+        fi
+    done
+
+    # Create analysis prompt for Claude
+    local claude_prompt
+    claude_prompt="Analyze this project structure and determine the technology stack:
+
+Project Directory: $(basename "$project_dir")
+
+Files found:
+$project_structure
+
+Configuration file samples:
+$sample_configs
+
+Please respond with ONLY a single line in this exact format:
+TECH_STACK: [technology stack name]
+
+Examples:
+TECH_STACK: PHP Laravel + MySQL
+TECH_STACK: Node.js + React + PostgreSQL
+TECH_STACK: Python Django + SQLite
+TECH_STACK: Go + Gin + MongoDB
+
+Be specific about frameworks and databases when evident from the files."
+
+    # Call Claude for analysis
+    local claude_response=""
+    claude_response=$(echo "$claude_prompt" | claude 2>/dev/null | grep "TECH_STACK:" | head -1)
+
+    if [[ -n "$claude_response" ]]; then
+        local detected_stack
+        detected_stack=$(echo "$claude_response" | sed 's/TECH_STACK: //' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+        echo "💡 Claude suggests: $detected_stack"
+
+        # Export the result for use by calling function
+        export CLAUDE_DETECTED_STACK="$detected_stack"
         return 0
     else
-        echo "❓ Unable to determine tech stack from project structure"
+        echo "⚠️  Claude analysis failed or returned no result"
         return 1
     fi
 }
@@ -423,15 +402,15 @@ offer_automatic_claude_setup() {
     fi
 
     echo ""
-    echo -e "${GREEN}🚀 AUTOMATIC CLAUDE SETUP${NC}"
+    echo -e "${GREEN}🤖 AUTOMATIC CLAUDE SETUP${NC}"
     echo "------------------------------"
-    echo -e "${GREEN}✅ Claude is available for automatic setup!${NC}"
+    echo -e "${GREEN}✅ Claude Code CLI detected and ready${NC}"
     echo ""
-    echo "I can automatically set up your CLAUDE.md file by:"
-    echo "1. 📋 Reading the generated prompt"
-    echo "2. 🤖 Invoking Claude with the prompt"
-    echo "3. 📝 Creating your project's CLAUDE.md file"
-    echo "4. ✅ Validating the setup is working"
+    echo "This will:"
+    echo "1. 📋 Read the generated prompt file"
+    echo "2. 🤖 Invoke Claude with the project-specific prompt"
+    echo "3. 📝 Create your CLAUDE.md file automatically"
+    echo "4. ✅ Validate the setup is working"
     echo ""
 
     if [[ "${NON_INTERACTIVE:-false}" == "true" ]]; then
@@ -455,6 +434,10 @@ offer_automatic_claude_setup() {
 # Set up Claude automatically
 setup_claude_automatically() {
     local prompt_file="$1"
+    local project_dir
+    local claude_md_file
+    project_dir="$(dirname "$prompt_file")"
+    claude_md_file="$project_dir/CLAUDE.md"
 
     echo -e "${BLUE}🤖 Setting up Claude automatically...${NC}"
     echo ""
@@ -464,10 +447,38 @@ setup_claude_automatically() {
         return 1
     fi
 
-    echo "📋 Reading prompt file..."
-    echo "🤖 This would invoke Claude with the prompt..."
-    echo "📝 This would create the CLAUDE.md file..."
-    echo -e "${GREEN}✅ Automatic setup completed!${NC}"
+    # Check if claude command is available
+    if ! command -v claude >/dev/null 2>&1; then
+        echo -e "${YELLOW}⚠️  Claude CLI not available - falling back to manual process${NC}"
+        echo "📋 Reading prompt file..."
+        echo "📝 ❌ CLAUDE.md file was NOT created"
+        echo ""
+        echo -e "${BLUE}Please manually copy the prompt content to Claude to create your CLAUDE.md${NC}"
+        return 1
+    fi
 
-    return 0
+    echo "📋 Reading prompt file..."
+    echo "🤖 Calling Claude to generate CLAUDE.md..."
+
+    # Use Claude to generate the CLAUDE.md file
+    local claude_response=""
+    if claude_response=$(cat "$prompt_file" | claude 2>/dev/null); then
+        # Save Claude's response as CLAUDE.md
+        echo "$claude_response" > "$claude_md_file"
+
+        if [[ -f "$claude_md_file" && -s "$claude_md_file" ]]; then
+            echo "📝 ✅ CLAUDE.md file created successfully"
+            echo -e "${GREEN}✅ Automatic setup completed!${NC}"
+            return 0
+        else
+            echo "📝 ❌ Failed to create CLAUDE.md file"
+            return 1
+        fi
+    else
+        echo "🤖 ❌ Claude analysis failed"
+        echo "📝 ❌ CLAUDE.md file was NOT created"
+        echo ""
+        echo -e "${BLUE}Please manually copy the prompt content to Claude to create your CLAUDE.md${NC}"
+        return 1
+    fi
 }

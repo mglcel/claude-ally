@@ -194,7 +194,17 @@ Please create a comprehensive CLAUDE.md file for this project that includes:
    - Automatic CLAUDE.md updates
 
 ## Output Format
-Please format the response as a complete CLAUDE.md file that can be directly saved to the project directory.
+
+**IMPORTANT**: Your response must be the complete CLAUDE.md file content, starting with "# Project Name" and ending with the learning protocol. Do NOT provide a summary or description of what you would create. Output the actual file content that can be saved directly as CLAUDE.md.
+
+Your response should start with:
+
+# ProjectName
+
+## Project Overview
+(Description of the project and its purpose)
+
+And continue with ALL sections including detailed content, code examples, and specific guidance.
 EOF
 
     echo -e "${GREEN}✅ Prompt generated: $prompt_file${NC}" >&2

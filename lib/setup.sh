@@ -38,9 +38,7 @@ main() {
 
     # Claude integration
     if check_claude_availability; then
-        if attempt_automatic_claude_analysis; then
-            echo -e "${GREEN}🔍 Automatic analysis completed with confidence: HIGH${NC}"
-        else
+        if ! attempt_automatic_claude_analysis; then
             echo -e "${YELLOW}⚠️  Continuing with manual input${NC}"
         fi
     fi
@@ -90,7 +88,8 @@ main() {
         # Offer automatic Claude setup
         if offer_automatic_claude_setup "$prompt_file"; then
             if setup_claude_automatically "$prompt_file"; then
-                echo -e "${GREEN}✅ Automatic setup completed${NC}"
+                # Success message already printed by setup_claude_automatically
+                :
             else
                 echo -e "${YELLOW}⚠️  Automatic setup failed, use manual process${NC}"
             fi

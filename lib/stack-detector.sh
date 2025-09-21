@@ -11,6 +11,7 @@ load_stack_modules() {
     if [[ -d "$STACKS_DIR" ]]; then
         for stack_file in "$STACKS_DIR"/*.sh; do
             if [[ -f "$stack_file" ]]; then
+                # shellcheck source=/dev/null
                 source "$stack_file"
             fi
         done
@@ -31,6 +32,7 @@ detect_project_stack() {
 
     # Try all known detection functions (expandable list)
     local detection_functions=(
+        "detect_php_laravel"
         "detect_nextjs_ai"
         "detect_python_ai"
         "detect_cordova"
@@ -71,6 +73,9 @@ get_stack_patterns() {
     load_stack_modules
 
     case "$stack_id" in
+        "php-laravel")
+            get_php_laravel_patterns
+            ;;
         "nextjs-ai")
             get_nextjs_ai_patterns
             ;;
@@ -95,6 +100,9 @@ get_stack_assets() {
     load_stack_modules
 
     case "$stack_id" in
+        "php-laravel")
+            get_php_laravel_assets
+            ;;
         "nextjs-ai")
             get_nextjs_ai_assets
             ;;
@@ -119,6 +127,9 @@ get_stack_requirements() {
     load_stack_modules
 
     case "$stack_id" in
+        "php-laravel")
+            get_php_laravel_issues
+            ;;
         "nextjs-ai")
             get_nextjs_ai_requirements
             ;;
@@ -191,7 +202,8 @@ analyze_unknown_stack() {
     # Analyze package.json for new frameworks
     if [[ -f "$project_dir/package.json" ]]; then
         # Extract potential new frameworks (not in our current detection)
-        local new_frameworks=$(grep -o '"[^"]*":\s*"[^"]*"' "$project_dir/package.json" | head -20)
+        local new_frameworks
+        new_frameworks=$(grep -o '"[^"]*":\s*"[^"]*"' "$project_dir/package.json" | head -20)
         interesting_deps+=("$new_frameworks")
     fi
 

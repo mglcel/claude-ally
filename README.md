@@ -32,14 +32,16 @@ That's it! Claude will now understand your project structure and give more relev
 
 ## How It Works
 
-1. **Detects your tech stack** - Analyzes your project files (package.json, requirements.txt, etc.)
-2. **Creates a CLAUDE.md file** - Contains your project context and requirements
-3. **Claude reads this context** - Gives responses specific to your setup
+1. **Intelligently analyzes your project** - Uses Claude AI to examine your project structure and files
+2. **Detects your exact tech stack** - Goes beyond simple file patterns to understand your architecture
+3. **Automatically creates CLAUDE.md** - Generates comprehensive project context using Claude
+4. **Enhanced Claude conversations** - All future Claude interactions use your project-specific context
 
 ## Commands
 
 ```bash
-claude-ally.sh setup      # Configure Claude for your project
+claude-ally.sh setup      # Auto-configure Claude with AI analysis
+claude-ally.sh clean      # Clean project-specific caches
 claude-ally.sh detect     # See what tech stack was detected
 claude-ally.sh analyze    # Comprehensive project analysis
 claude-ally.sh contribute # Add your stack to the community
@@ -47,12 +49,13 @@ claude-ally.sh validate   # Validate system installation
 claude-ally.sh help       # Show all commands
 ```
 
-### New in v2.1
-- **🔍 Project Analysis**: New `analyze` command provides comprehensive project insights
-- **🚀 Enhanced Performance**: Consolidated utility modules (95% size reduction)
-- **🧩 Modular Setup**: Split setup system into focused, maintainable modules
-- **🔧 Better Error Handling**: Improved error messages and progress indication
-- **✅ Enhanced Testing**: 17 additional tests for new features
+### New in v2.2
+- **🤖 Real Claude Integration**: Automatic CLAUDE.md generation using Claude AI analysis
+- **🔍 Intelligent Stack Detection**: Claude-powered project analysis beyond static file patterns
+- **🧹 Project-Specific Caching**: New `clean` command for targeted cache management
+- **⚡ Prioritized Analysis**: Claude analysis → static detection → generic fallback hierarchy
+- **🛡️ Enhanced Security Patterns**: Comprehensive PHP Laravel support with security best practices
+- **🔧 Improved Error Handling**: Better Claude CLI availability detection and fallbacks
 
 ## Example
 
@@ -75,7 +78,7 @@ This analyzes your project and helps add it to the community stack library.
 
 - Bash shell (Linux, macOS, Windows with WSL)
 - Git (for contributing new stacks)
-- Claude CLI (optional, for automatic setup)
+- Claude Code CLI (recommended, enables automatic CLAUDE.md generation)
 
 ## License
 
